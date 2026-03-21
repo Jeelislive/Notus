@@ -1,0 +1,52 @@
+{
+  "name": "notus",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "next": "^15.2.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "@supabase/supabase-js": "^2.49.1",
+    "@supabase/ssr": "^0.6.1",
+    "drizzle-orm": "^0.41.0",
+    "postgres": "^3.4.5",
+    "resend": "^4.2.0",
+    "@react-email/components": "^0.0.34",
+    "react-email": "^3.0.7",
+    "lucide-react": "^0.476.0",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.6.0",
+    "class-variance-authority": "^0.7.1",
+    "@radix-ui/react-label": "^2.1.1",
+    "@radix-ui/react-slot": "^1.1.2",
+    "@radix-ui/react-dialog": "^1.1.4",
+    "@radix-ui/react-checkbox": "^1.1.4",
+    "@radix-ui/react-dropdown-menu": "^2.1.6",
+    "@radix-ui/react-toast": "^1.2.5",
+    "@radix-ui/react-separator": "^1.1.1",
+    "zod": "^3.24.2",
+    "react-hook-form": "^7.54.2",
+    "@hookform/resolvers": "^3.10.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.2",
+    "@types/node": "^22.13.10",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "tailwindcss": "^4.0.14",
+    "@tailwindcss/postcss": "^4.0.14",
+    "drizzle-kit": "^0.30.4",
+    "eslint": "^9.22.0",
+    "eslint-config-next": "^15.2.1"
+  }
+}
