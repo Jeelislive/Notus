@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Link from 'next/link'
 import { Loader2 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { signIn } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -33,13 +33,13 @@ export function LoginForm() {
     setError(null)
     setLoading(true)
     try {
-      const supabase = createClient()
-      const { error } = await supabase.auth.signInWithPassword({
+      const { error } = await signIn.email({
         email: data.email,
         password: data.password,
+        callbackURL: '/dashboard',
       })
       if (error) {
-        setError(error.message)
+        setError(error.message ?? 'Invalid email or password')
         return
       }
       window.location.href = '/dashboard'
@@ -50,13 +50,12 @@ export function LoginForm() {
 
   async function handleGoogleLogin() {
     setGoogleLoading(true)
-    const supabase = createClient()
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    })
+    try {
+      await signIn.social({ provider: 'google', callbackURL: '/dashboard' })
+    } catch {
+      setError('Google sign-in failed. Please try again.')
+      setGoogleLoading(false)
+    }
   }
 
   return (
@@ -97,10 +96,10 @@ export function LoginForm() {
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-zinc-800" />
+          <span className="w-full border-t border-border" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-zinc-950 px-2 text-zinc-500">or</span>
+          <span className="bg-background px-2 text-muted-foreground">or</span>
         </div>
       </div>
 
@@ -116,7 +115,7 @@ export function LoginForm() {
             {...register('email')}
           />
           {errors.email && (
-            <p className="text-xs text-red-400">{errors.email.message}</p>
+            <p className="text-xs text-red-500">{errors.email.message}</p>
           )}
         </div>
 
@@ -125,7 +124,8 @@ export function LoginForm() {
             <Label htmlFor="password">Password</Label>
             <Link
               href="/forgot-password"
-              className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+              className="text-xs text-indigo-600 hover:text-indigo-500"
+            style={{ transition: 'color 150ms ease-out' }}
             >
               Forgot password?
             </Link>
@@ -138,12 +138,12 @@ export function LoginForm() {
             {...register('password')}
           />
           {errors.password && (
-            <p className="text-xs text-red-400">{errors.password.message}</p>
+            <p className="text-xs text-red-500">{errors.password.message}</p>
           )}
         </div>
 
         {error && (
-          <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-400">
+          <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-500 animate-fade-up">
             {error}
           </div>
         )}
@@ -154,9 +154,9 @@ export function LoginForm() {
         </Button>
       </form>
 
-      <p className="text-center text-sm text-zinc-500">
+      <p className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{' '}
-        <Link href="/signup" className="text-indigo-400 hover:text-indigo-300 transition-colors">
+        <Link href="/signup" className="text-indigo-600 hover:text-indigo-500" style={{ transition: 'color 150ms ease-out' }}>
           Sign up
         </Link>
       </p>

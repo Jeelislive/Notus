@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Link from 'next/link'
 import { Loader2 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { signIn, signUp } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -51,51 +51,43 @@ export function SignupForm() {
   async function onSubmit(data: FormData) {
     setError(null)
     setLoading(true)
-    try {
-      const supabase = createClient()
-      const { error } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          data: { full_name: data.fullName },
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
-      })
-      if (error) {
-        setError(error.message)
-        return
-      }
-      setSuccess(true)
-    } finally {
+    const { error } = await signUp.email({
+      name: data.fullName,
+      email: data.email,
+      password: data.password,
+      callbackURL: '/dashboard',
+    })
+    if (error) {
+      setError(error.message ?? 'Something went wrong')
       setLoading(false)
+      return
     }
+    setSuccess(true)
+    setLoading(false)
+    window.location.href = '/dashboard'
   }
 
   async function handleGoogleSignup() {
     setGoogleLoading(true)
-    const supabase = createClient()
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    })
+    try {
+      await signIn.social({ provider: 'google', callbackURL: '/dashboard' })
+    } catch {
+      setError('Google sign-in failed. Please try again.')
+      setGoogleLoading(false)
+    }
   }
 
   if (success) {
     return (
-      <div className="w-full space-y-4 text-center">
-        <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-indigo-500/10">
-          <svg className="size-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="w-full space-y-4 text-center animate-fade-up">
+        <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-indigo-600/10">
+          <svg className="size-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
         </div>
-        <h2 className="text-xl font-semibold text-zinc-100">Check your email</h2>
-        <p className="text-sm text-zinc-400">
-          We sent a verification link to your email. Click it to activate your account.
-        </p>
-        <p className="text-xs text-zinc-600">
-          Didn&apos;t receive it? Check your spam folder.
+        <h2 className="text-xl font-semibold text-foreground">Account created!</h2>
+        <p className="text-sm text-muted-foreground">
+          You&apos;re all set. Redirecting to your dashboard...
         </p>
       </div>
     )
@@ -129,10 +121,10 @@ export function SignupForm() {
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-zinc-800" />
+          <span className="w-full border-t border-border" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-zinc-950 px-2 text-zinc-500">or</span>
+          <span className="bg-background px-2 text-muted-foreground">or</span>
         </div>
       </div>
 
@@ -147,7 +139,7 @@ export function SignupForm() {
             {...register('fullName')}
           />
           {errors.fullName && (
-            <p className="text-xs text-red-400">{errors.fullName.message}</p>
+            <p className="text-xs text-red-500">{errors.fullName.message}</p>
           )}
         </div>
 
@@ -161,7 +153,7 @@ export function SignupForm() {
             {...register('email')}
           />
           {errors.email && (
-            <p className="text-xs text-red-400">{errors.email.message}</p>
+            <p className="text-xs text-red-500">{errors.email.message}</p>
           )}
         </div>
 
@@ -175,14 +167,14 @@ export function SignupForm() {
             {...register('password')}
           />
           {errors.password && (
-            <p className="text-xs text-red-400">{errors.password.message}</p>
+            <p className="text-xs text-red-500">{errors.password.message}</p>
           )}
         </div>
 
         {/* Recording Consent */}
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 space-y-3">
-          <p className="text-xs font-medium text-zinc-300 uppercase tracking-wide">Recording Consent (Required)</p>
-          <p className="text-xs text-zinc-500 leading-relaxed">
+        <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
+          <p className="text-xs font-medium text-foreground uppercase tracking-wide">Recording Consent (Required)</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">
             Notus records audio from your meetings to generate transcripts and AI-powered notes.
             You are responsible for informing all meeting participants that recording is taking place.
             By using Notus, you confirm you have obtained consent from all participants as required by
@@ -190,7 +182,8 @@ export function SignupForm() {
             <button
               type="button"
               onClick={() => setConsentOpen(true)}
-              className="text-indigo-400 hover:text-indigo-300 underline transition-colors"
+              className="text-indigo-600 hover:text-indigo-500 underline"
+              style={{ transition: 'color 150ms ease-out' }}
             >
               Read full policy
             </button>
@@ -201,17 +194,17 @@ export function SignupForm() {
               checked={consentChecked}
               onCheckedChange={(checked) => setValue('consent', checked === true)}
             />
-            <label htmlFor="consent" className="text-xs text-zinc-400 leading-relaxed cursor-pointer">
+            <label htmlFor="consent" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
               I understand and agree to the recording consent requirements
             </label>
           </div>
           {errors.consent && (
-            <p className="text-xs text-red-400">{errors.consent.message}</p>
+            <p className="text-xs text-red-500">{errors.consent.message}</p>
           )}
         </div>
 
         {error && (
-          <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-400">
+          <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-500 animate-fade-up">
             {error}
           </div>
         )}
@@ -222,9 +215,9 @@ export function SignupForm() {
         </Button>
       </form>
 
-      <p className="text-center text-sm text-zinc-500">
+      <p className="text-center text-sm text-muted-foreground">
         Already have an account?{' '}
-        <Link href="/login" className="text-indigo-400 hover:text-indigo-300 transition-colors">
+        <Link href="/login" className="text-indigo-600 hover:text-indigo-500" style={{ transition: 'color 150ms ease-out' }}>
           Sign in
         </Link>
       </p>

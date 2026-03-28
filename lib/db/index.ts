@@ -2,9 +2,24 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import * as schema from './schema'
 
+// Global singleton prevents Next.js HMR from creating a new pool on every hot reload.
+// Without this, dev mode blows past Supabase free tier's ~20 connection limit.
+declare global {
+  // eslint-disable-next-line no-var
+  var __pgClient: ReturnType<typeof postgres> | undefined
+}
+
 const connectionString = process.env.DATABASE_URL!
 
-// Disable prefetch as it is not supported for "Transaction" pool mode
-const client = postgres(connectionString, { prepare: false })
+const client =
+  globalThis.__pgClient ??
+  postgres(connectionString, {
+    prepare: false, // required for pgBouncer / Supabase transaction pooler
+    max: 3,         // hard cap — leave headroom for Better Auth + app queries
+  })
+
+if (process.env.NODE_ENV !== 'production') {
+  globalThis.__pgClient = client
+}
 
 export const db = drizzle(client, { schema })

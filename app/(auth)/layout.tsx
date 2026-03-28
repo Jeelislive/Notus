@@ -10,16 +10,20 @@ export const metadata: Metadata = {
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-zinc-950 flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="p-6">
-        <Link href="/" className="inline-flex items-center gap-2 group">
-          <div className="size-7 rounded-lg bg-indigo-600 flex items-center justify-center group-hover:bg-indigo-500 transition-colors">
-            <svg className="size-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+        <Link href="/" className="inline-flex items-center gap-2 group active:scale-[0.97]" style={{ transition: 'transform 120ms cubic-bezier(0.23,1,0.32,1)' }}>
+          <div className="size-7 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: '#6366f1', transition: 'background-color 150ms ease-out' }}>
+            <svg width="16" height="14" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0"    y="5"   width="2.5" height="4"  rx="1.25" fill="white" fillOpacity="0.5"/>
+              <rect x="3.5"  y="2"   width="2.5" height="10" rx="1.25" fill="white"/>
+              <rect x="7"    y="3.5" width="2.5" height="7"  rx="1.25" fill="white" fillOpacity="0.75"/>
+              <rect x="10.5" y="0"   width="2.5" height="14" rx="1.25" fill="white"/>
+              <rect x="14"   y="4.5" width="2.5" height="5"  rx="1.25" fill="white" fillOpacity="0.5"/>
             </svg>
           </div>
-          <span className="text-lg font-bold text-zinc-100">Notus</span>
+          <span className="text-lg font-bold text-foreground">Notus</span>
         </Link>
       </header>
 
@@ -31,11 +35,11 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </main>
 
       {/* Footer */}
-      <footer className="p-6 text-center text-xs text-zinc-600">
+      <footer className="p-6 text-center text-xs text-muted-foreground">
         <span>© {new Date().getFullYear()} Notus. </span>
-        <Link href="/privacy" className="hover:text-zinc-400 transition-colors">Privacy Policy</Link>
+        <Link href="/privacy" className="hover:text-foreground" style={{ transition: 'color 150ms ease-out' }}>Privacy Policy</Link>
         <span> · </span>
-        <Link href="/terms" className="hover:text-zinc-400 transition-colors">Terms of Service</Link>
+        <Link href="/terms" className="hover:text-foreground" style={{ transition: 'color 150ms ease-out' }}>Terms of Service</Link>
       </footer>
     </div>
   )

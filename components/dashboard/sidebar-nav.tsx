@@ -1,84 +1,251 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Settings, LogOut } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
+import { useEffect, useRef, useState } from 'react'
+import { LayoutDashboard, Settings, LogOut, Users, FileText, Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { signOut } from '@/lib/auth-client'
+import { ThemeSwitcher } from '@/components/theme-switcher'
+
+const EXPANDED_W = 256
+const COLLAPSED_W = 56
+
+// Drawer curve (iOS-like punch) for opening; strong ease-out for closing
+const DRAWER  = 'cubic-bezier(0.32, 0.72, 0, 1)'
+const EASE_OUT = 'cubic-bezier(0.23, 1, 0.32, 1)'
+const EXPAND_MS  = 320
+const COLLAPSE_MS = 180
 
 interface SidebarNavProps {
   user: { email: string; name: string }
 }
 
 export function SidebarNav({ user }: SidebarNavProps) {
-  const pathname = usePathname()
-  const router = useRouter()
+  const pathname  = usePathname()
+  const router    = useRouter()
+  const [hovered, setHovered] = useState(false)
+  const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    document.documentElement.style.setProperty('--sidebar-width', `${COLLAPSED_W}px`)
+  }, [])
+
+  function handleMouseEnter() {
+    // 100ms intent delay — prevents accidental triggers when mousing past
+    hoverTimer.current = setTimeout(() => {
+      setHovered(true)
+      document.documentElement.style.setProperty('--sidebar-width', `${EXPANDED_W}px`)
+    }, 150)
+  }
+
+  function handleMouseLeave() {
+    if (hoverTimer.current) clearTimeout(hoverTimer.current)
+    setHovered(false)
+    document.documentElement.style.setProperty('--sidebar-width', `${COLLAPSED_W}px`)
+  }
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        router.push('/dashboard/search')
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [router])
 
   async function handleSignOut() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/login')
+    await signOut({ fetchOptions: { onSuccess: () => router.push('/login') } })
   }
 
   const navItems = [
-    { href: '/dashboard', label: 'Meetings', icon: LayoutDashboard },
+    { href: '/dashboard',          label: 'Meetings', icon: LayoutDashboard },
+    { href: '/dashboard/notes',    label: 'Notes',    icon: FileText },
+    { href: '/dashboard/search',   label: 'Search',   icon: Search },
+    { href: '/dashboard/teams',    label: 'Teams',    icon: Users },
     { href: '/dashboard/settings', label: 'Settings', icon: Settings },
   ]
 
+  const isCollapsed = !hovered
+
+  // Helpers: returns the right transition string depending on direction
+  const t = (props: string, delay = 0) =>
+    isCollapsed
+      ? `${props.split(',').map(p => `${p.trim()} ${COLLAPSE_MS}ms ${EASE_OUT}`).join(', ')}`
+      : `${props.split(',').map(p => `${p.trim()} ${EXPAND_MS}ms ${DRAWER}${delay ? ` ${delay}ms` : ''}`).join(', ')}`
+
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 bg-[#0d0d0f] border-r border-white/[0.05] flex flex-col z-30">
-      {/* Logo */}
-      <div className="flex items-center gap-2.5 px-5 py-5 border-b border-white/[0.05]">
-        <div className="size-7 rounded-lg bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-          <svg className="size-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-          </svg>
+    <aside
+      className="fixed left-0 top-0 h-full bg-background flex flex-col z-30 overflow-hidden"
+      style={{
+        width: isCollapsed ? `${COLLAPSED_W}px` : `${EXPANDED_W}px`,
+        boxShadow: isCollapsed ? 'none' : '4px 0 24px rgba(0,0,0,0.09)',
+        transition: isCollapsed
+          ? `width ${COLLAPSE_MS}ms ${EASE_OUT}, box-shadow ${COLLAPSE_MS}ms ${EASE_OUT}`
+          : `width ${EXPAND_MS}ms ${DRAWER}, box-shadow ${EXPAND_MS}ms ${DRAWER}`,
+      }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      {/* ── Logo ── */}
+      <div
+        className="flex items-center shrink-0"
+        style={{
+          padding: isCollapsed ? '18px 10px' : '18px 20px',
+          justifyContent: isCollapsed ? 'center' : 'space-between',
+          transition: t('padding'),
+        }}
+      >
+        <div className="flex items-center" style={{ gap: isCollapsed ? 0 : '12px' }}>
+          <div className="size-8 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: '#6366f1' }}>
+            <svg width="16" height="14" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0"    y="5"   width="2.5" height="4"  rx="1.25" fill="white" fillOpacity="0.5"/>
+              <rect x="3.5"  y="2"   width="2.5" height="10" rx="1.25" fill="white"/>
+              <rect x="7"    y="3.5" width="2.5" height="7"  rx="1.25" fill="white" fillOpacity="0.75"/>
+              <rect x="10.5" y="0"   width="2.5" height="14" rx="1.25" fill="white"/>
+              <rect x="14"   y="4.5" width="2.5" height="5"  rx="1.25" fill="white" fillOpacity="0.5"/>
+            </svg>
+          </div>
+          {/* Text slides in — overflow-hidden is on the text wrapper only, not the icon */}
+          <div style={{ overflow: 'hidden', width: isCollapsed ? 0 : 'auto', transition: t('width') }}>
+            <span
+              className="font-bold text-foreground text-[17px] tracking-tight whitespace-nowrap block"
+              style={{
+                opacity:   isCollapsed ? 0 : 1,
+                transform: isCollapsed ? 'translateX(-6px)' : 'translateX(0)',
+                transition: t('opacity, transform'),
+              }}
+            >
+              Notus
+            </span>
+          </div>
         </div>
-        <span className="font-bold text-zinc-100 text-[15px]">Notus</span>
+        <div
+          style={{
+            opacity:      isCollapsed ? 0 : 1,
+            width:        isCollapsed ? 0 : 'auto',
+            overflow:     'hidden',
+            pointerEvents: isCollapsed ? 'none' : 'auto',
+            transition:   t('opacity, width'),
+          }}
+        >
+          <ThemeSwitcher />
+        </div>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5">
-        {navItems.map((item) => {
-          const Icon = item.icon
-          const active = pathname === item.href
+      {/* ── Nav items — labels stagger in on expand, all exit together ── */}
+      <nav className="flex-1 px-2 py-4 space-y-0.5">
+        {navItems.map((item, index) => {
+          const Icon   = item.icon
+          const active = item.href === '/dashboard'
+            ? pathname === '/dashboard'
+            : pathname.startsWith(item.href)
+          // Stagger delay only on expand; collapse is instant
+          const stagger = isCollapsed ? 0 : index * 25
+
           return (
             <Link
               key={item.href}
               href={item.href}
+              title={isCollapsed ? item.label : undefined}
               className={cn(
-                'flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all',
+                'flex items-center rounded-xl text-[15px] active:scale-[0.97] overflow-hidden',
+                isCollapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5',
                 active
-                  ? 'bg-indigo-600/10 text-indigo-400 font-medium'
-                  : 'text-zinc-500 hover:text-zinc-200 hover:bg-white/[0.04]'
+                  ? 'bg-primary/10 text-indigo-500 dark:text-indigo-400 font-semibold'
+                  : 'text-muted-foreground font-medium hover:text-foreground hover:bg-muted/50'
               )}
+              style={{
+                transition: `transform 100ms ${EASE_OUT}, background-color 150ms ease, color 150ms ease`,
+              }}
             >
-              <Icon className="size-4 shrink-0" strokeWidth={active ? 2 : 1.5} />
-              {item.label}
+              <Icon className="size-[18px] shrink-0" strokeWidth={active ? 2.25 : 1.75} />
+              <span
+                className="whitespace-nowrap"
+                style={{
+                  opacity:   isCollapsed ? 0 : 1,
+                  transform: isCollapsed ? 'translateX(-6px)' : 'translateX(0)',
+                  maxWidth:  isCollapsed ? 0 : 200,
+                  overflow:  'hidden',
+                  transition: isCollapsed
+                    ? `opacity ${COLLAPSE_MS}ms ${EASE_OUT}, transform ${COLLAPSE_MS}ms ${EASE_OUT}, max-width ${COLLAPSE_MS}ms ${EASE_OUT}`
+                    : `opacity ${EXPAND_MS}ms ${DRAWER} ${stagger}ms, transform ${EXPAND_MS}ms ${DRAWER} ${stagger}ms, max-width ${EXPAND_MS}ms ${DRAWER} ${stagger}ms`,
+                }}
+              >
+                {item.label}
+              </span>
             </Link>
           )
         })}
       </nav>
 
-      {/* User + sign out */}
-      <div className="px-3 py-4 border-t border-white/[0.05]">
-        <div className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-white/[0.04] transition-colors group">
-          <div className="size-7 rounded-full bg-indigo-600/20 border border-indigo-500/20 flex items-center justify-center shrink-0">
-            <span className="text-xs font-semibold text-indigo-400">
+      {/* ── Search bar — slides down + fades in after nav items ── */}
+      <div
+        className="px-4 pb-3"
+        style={{
+          opacity:       isCollapsed ? 0 : 1,
+          transform:     isCollapsed ? 'translateY(-4px)' : 'translateY(0)',
+          maxHeight:     isCollapsed ? 0 : 60,
+          overflow:      'hidden',
+          pointerEvents: isCollapsed ? 'none' : 'auto',
+          transition: isCollapsed
+            ? `opacity ${COLLAPSE_MS}ms ${EASE_OUT}, transform ${COLLAPSE_MS}ms ${EASE_OUT}, max-height ${COLLAPSE_MS}ms ${EASE_OUT}`
+            : `opacity ${EXPAND_MS}ms ${DRAWER} ${navItems.length * 25}ms, transform ${EXPAND_MS}ms ${DRAWER} ${navItems.length * 25}ms, max-height ${EXPAND_MS}ms ${DRAWER}`,
+        }}
+      >
+        <button
+          onClick={() => router.push('/dashboard/search')}
+          className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-border text-[13px] text-muted-foreground hover:text-foreground hover:bg-muted/50 active:scale-[0.97]"
+          style={{ transition: `transform 100ms ${EASE_OUT}, background-color 120ms ease, color 120ms ease` }}
+        >
+          <Search className="size-4 shrink-0" strokeWidth={1.75} />
+          <span className="flex-1 text-left">Search…</span>
+          <kbd className="inline-flex items-center font-mono text-[11px] text-muted-foreground/60 bg-muted/60 px-1.5 py-0.5 rounded-md">⌘K</kbd>
+        </button>
+      </div>
+
+      {/* ── User section ── */}
+      <div className="px-2 py-3">
+        <div
+          className={cn(
+            'flex items-center rounded-xl hover:bg-muted/50 group cursor-default',
+            isCollapsed ? 'justify-center px-1 py-2' : 'gap-3 px-3 py-2.5'
+          )}
+          style={{ transition: 'background-color 120ms ease' }}
+        >
+          <div
+            className="size-8 rounded-full bg-primary/15 border border-indigo-500/20 flex items-center justify-center shrink-0"
+            title={isCollapsed ? (user.name || user.email) : undefined}
+          >
+            <span className="text-[13px] font-bold text-indigo-500 dark:text-indigo-400">
               {(user.name || user.email).charAt(0).toUpperCase()}
             </span>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-zinc-300 truncate">{user.name || 'Account'}</p>
-            <p className="text-[11px] text-zinc-600 truncate">{user.email}</p>
+
+          <div
+            className="flex-1 min-w-0 overflow-hidden"
+            style={{
+              opacity:   isCollapsed ? 0 : 1,
+              transform: isCollapsed ? 'translateX(-6px)' : 'translateX(0)',
+              maxWidth:  isCollapsed ? 0 : 200,
+              transition: isCollapsed
+                ? `opacity ${COLLAPSE_MS}ms ${EASE_OUT}, transform ${COLLAPSE_MS}ms ${EASE_OUT}, max-width ${COLLAPSE_MS}ms ${EASE_OUT}`
+                : `opacity ${EXPAND_MS}ms ${DRAWER} ${(navItems.length + 1) * 25}ms, transform ${EXPAND_MS}ms ${DRAWER} ${(navItems.length + 1) * 25}ms, max-width ${EXPAND_MS}ms ${DRAWER} ${(navItems.length + 1) * 25}ms`,
+            }}
+          >
+            <p className="text-[14px] font-semibold text-foreground truncate leading-snug">{user.name || 'Account'}</p>
+            <p className="text-[12px] text-muted-foreground/70 truncate leading-snug">{user.email}</p>
           </div>
+
           <button
             onClick={handleSignOut}
-            className="shrink-0 p-1 rounded-lg text-zinc-600 hover:text-zinc-300 hover:bg-white/[0.06] transition-colors opacity-0 group-hover:opacity-100"
+            className="shrink-0 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted active:scale-[0.85] opacity-0 group-hover:opacity-100"
+            style={{ transition: `transform 100ms ${EASE_OUT}, opacity 150ms ease, background-color 120ms ease` }}
             title="Sign out"
           >
-            <LogOut className="size-3.5" />
+            <LogOut className="size-4" />
           </button>
         </div>
       </div>

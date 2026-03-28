@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Link from 'next/link'
 import { Loader2, ArrowLeft } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { authClient } from '@/lib/auth-client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -31,31 +31,29 @@ export function ForgotPasswordForm() {
   async function onSubmit(data: FormData) {
     setError(null)
     setLoading(true)
-    try {
-      const supabase = createClient()
-      const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      })
-      if (error) {
-        setError(error.message)
-        return
-      }
-      setSuccess(true)
-    } finally {
+    const { error } = await authClient.requestPasswordReset({
+      email: data.email,
+      redirectTo: `${window.location.origin}/reset-password`,
+    })
+    if (error) {
+      setError(error.message ?? 'Something went wrong')
       setLoading(false)
+      return
     }
+    setSuccess(true)
+    setLoading(false)
   }
 
   if (success) {
     return (
       <div className="w-full space-y-4 text-center">
         <div className="mx-auto flex size-16 items-center justify-center rounded-full bg-indigo-500/10">
-          <svg className="size-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="size-8 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
         </div>
-        <h2 className="text-xl font-semibold text-zinc-100">Check your email</h2>
-        <p className="text-sm text-zinc-400">
+        <h2 className="text-xl font-semibold text-foreground">Check your email</h2>
+        <p className="text-sm text-muted-foreground">
           We sent a password reset link to your email address.
         </p>
         <Link href="/login">
@@ -81,12 +79,12 @@ export function ForgotPasswordForm() {
             {...register('email')}
           />
           {errors.email && (
-            <p className="text-xs text-red-400">{errors.email.message}</p>
+            <p className="text-xs text-red-500">{errors.email.message}</p>
           )}
         </div>
 
         {error && (
-          <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-400">
+          <div className="rounded-lg bg-red-500/10 border border-red-500/20 px-4 py-3 text-sm text-red-500">
             {error}
           </div>
         )}

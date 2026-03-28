@@ -11,12 +11,79 @@ import {
 } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 
+// ===========================
+// BETTER AUTH TABLES
+// ===========================
+
+export const authUser = pgTable('user', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull().unique(),
+  emailVerified: boolean('emailVerified').notNull(),
+  image: text('image'),
+  createdAt: timestamp('createdAt').notNull(),
+  updatedAt: timestamp('updatedAt').notNull(),
+})
+
+export const authSession = pgTable('session', {
+  id: text('id').primaryKey(),
+  expiresAt: timestamp('expiresAt').notNull(),
+  token: text('token').notNull().unique(),
+  createdAt: timestamp('createdAt').notNull(),
+  updatedAt: timestamp('updatedAt').notNull(),
+  ipAddress: text('ipAddress'),
+  userAgent: text('userAgent'),
+  userId: text('userId')
+    .notNull()
+    .references(() => authUser.id, { onDelete: 'cascade' }),
+})
+
+export const authAccount = pgTable('account', {
+  id: text('id').primaryKey(),
+  accountId: text('accountId').notNull(),
+  providerId: text('providerId').notNull(),
+  userId: text('userId')
+    .notNull()
+    .references(() => authUser.id, { onDelete: 'cascade' }),
+  accessToken: text('accessToken'),
+  refreshToken: text('refreshToken'),
+  idToken: text('idToken'),
+  accessTokenExpiresAt: timestamp('accessTokenExpiresAt'),
+  refreshTokenExpiresAt: timestamp('refreshTokenExpiresAt'),
+  scope: text('scope'),
+  password: text('password'),
+  createdAt: timestamp('createdAt').notNull(),
+  updatedAt: timestamp('updatedAt').notNull(),
+})
+
+export const authVerification = pgTable('verification', {
+  id: text('id').primaryKey(),
+  identifier: text('identifier').notNull(),
+  value: text('value').notNull(),
+  expiresAt: timestamp('expiresAt').notNull(),
+  createdAt: timestamp('createdAt'),
+  updatedAt: timestamp('updatedAt'),
+})
+
+// ===========================
+// APP TABLES
+// ===========================
+
 export const meetingStatusEnum = pgEnum('meeting_status', [
   'pending',
   'recording',
   'processing',
   'completed',
   'failed',
+])
+
+export const meetingTypeEnum = pgEnum('meeting_type', [
+  'one_on_one',
+  'team_meeting',
+  'standup',
+  'interview',
+  'client',
+  'other',
 ])
 
 export const teamRoleEnum = pgEnum('team_role', ['admin', 'member'])
@@ -28,7 +95,7 @@ export const meetingVisibilityEnum = pgEnum('meeting_visibility', [
 ])
 
 export const profiles = pgTable('profiles', {
-  id: uuid('id').primaryKey(), // matches auth.users.id
+  id: text('id').primaryKey(), // matches authUser.id
   email: text('email').notNull(),
   fullName: text('full_name'),
   avatarUrl: text('avatar_url'),
@@ -52,7 +119,7 @@ export const teams = pgTable('teams', {
     .default(sql`gen_random_uuid()`),
   name: text('name').notNull(),
   slug: text('slug').notNull().unique(),
-  ownerId: uuid('owner_id')
+  ownerId: text('owner_id')
     .notNull()
     .references(() => profiles.id, { onDelete: 'cascade' }),
   createdAt: timestamp('created_at', { withTimezone: true })
@@ -69,7 +136,7 @@ export const teamMembers = pgTable(
     teamId: uuid('team_id')
       .notNull()
       .references(() => teams.id, { onDelete: 'cascade' }),
-    userId: uuid('user_id')
+    userId: text('user_id')
       .notNull()
       .references(() => profiles.id, { onDelete: 'cascade' }),
     role: teamRoleEnum('role').default('member').notNull(),
@@ -84,12 +151,14 @@ export const meetings = pgTable('meetings', {
   id: uuid('id')
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  userId: uuid('user_id')
+  userId: text('user_id')
     .notNull()
     .references(() => profiles.id, { onDelete: 'cascade' }),
   teamId: uuid('team_id').references(() => teams.id, { onDelete: 'set null' }),
   title: text('title').notNull().default('Untitled Meeting'),
   status: meetingStatusEnum('status').default('pending').notNull(),
+  meetingType: meetingTypeEnum('meeting_type').default('other').notNull(),
+  templateName: text('template_name'),
   visibility: meetingVisibilityEnum('visibility').default('private').notNull(),
   durationSeconds: integer('duration_seconds').default(0),
   audioStoragePath: text('audio_storage_path'),
@@ -133,13 +202,14 @@ export const notes = pgTable('notes', {
     .default(sql`gen_random_uuid()`),
   meetingId: uuid('meeting_id')
     .notNull()
-    .unique()
     .references(() => meetings.id, { onDelete: 'cascade' }),
-  userId: uuid('user_id')
+  userId: text('user_id')
     .notNull()
     .references(() => profiles.id, { onDelete: 'cascade' }),
+  title: text('title').default('Note').notNull(),
   content: text('content').default('').notNull(),
   summary: text('summary'),
+  summaryStructured: text('summary_structured'),
   actionItems: text('action_items'),
   followUpEmail: text('follow_up_email'),
   aiProcessedAt: timestamp('ai_processed_at', { withTimezone: true }),
@@ -155,7 +225,7 @@ export const templates = pgTable('templates', {
   id: uuid('id')
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  userId: uuid('user_id').references(() => profiles.id, { onDelete: 'cascade' }),
+  userId: text('user_id').references(() => profiles.id, { onDelete: 'cascade' }),
   teamId: uuid('team_id').references(() => teams.id, { onDelete: 'cascade' }),
   name: text('name').notNull(),
   description: text('description'),
@@ -170,7 +240,7 @@ export const usageTracking = pgTable('usage_tracking', {
   id: uuid('id')
     .primaryKey()
     .default(sql`gen_random_uuid()`),
-  userId: uuid('user_id')
+  userId: text('user_id')
     .notNull()
     .references(() => profiles.id, { onDelete: 'cascade' }),
   billingPeriodStart: timestamp('billing_period_start', {
@@ -188,6 +258,7 @@ export const usageTracking = pgTable('usage_tracking', {
     .notNull(),
 })
 
+export type AuthUser = typeof authUser.$inferSelect
 export type Profile = typeof profiles.$inferSelect
 export type Team = typeof teams.$inferSelect
 export type TeamMember = typeof teamMembers.$inferSelect

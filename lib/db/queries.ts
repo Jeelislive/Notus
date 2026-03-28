@@ -1,6 +1,6 @@
 import { db } from './index'
-import { meetings, notes, transcriptSegments, profiles } from './schema'
-import { eq, desc, ilike, or, sql, and } from 'drizzle-orm'
+import { meetings, notes, transcriptSegments, profiles, teams, teamMembers } from './schema'
+import { eq, desc, ilike, sql, and } from 'drizzle-orm'
 
 export async function getMeetingsByUser(userId: string) {
   return db
@@ -24,7 +24,21 @@ export async function getNoteByMeetingId(meetingId: string) {
     .select()
     .from(notes)
     .where(eq(notes.meetingId, meetingId))
+    .orderBy(notes.createdAt)
     .limit(1)
+  return result[0] ?? null
+}
+
+export async function getNotesByMeetingId(meetingId: string) {
+  return db
+    .select()
+    .from(notes)
+    .where(eq(notes.meetingId, meetingId))
+    .orderBy(notes.createdAt)
+}
+
+export async function getNoteById(noteId: string) {
+  const result = await db.select().from(notes).where(eq(notes.id, noteId)).limit(1)
   return result[0] ?? null
 }
 
@@ -48,4 +62,66 @@ export async function searchMeetingsByUser(userId: string, query: string) {
     )
     .orderBy(desc(meetings.createdAt))
     .limit(20)
+}
+
+export async function getMeetingByShareToken(token: string) {
+  const result = await db.select().from(meetings).where(eq(meetings.shareToken, token)).limit(1)
+  return result[0] ?? null
+}
+
+export async function getTeamsByUser(userId: string) {
+  return db
+    .select({
+      id: teams.id,
+      name: teams.name,
+      slug: teams.slug,
+      ownerId: teams.ownerId,
+      createdAt: teams.createdAt,
+      role: teamMembers.role,
+    })
+    .from(teamMembers)
+    .innerJoin(teams, eq(teamMembers.teamId, teams.id))
+    .where(eq(teamMembers.userId, userId))
+    .orderBy(desc(teams.createdAt))
+}
+
+export async function getTeamById(teamId: string, userId: string) {
+  const result = await db
+    .select({
+      id: teams.id,
+      name: teams.name,
+      slug: teams.slug,
+      ownerId: teams.ownerId,
+      createdAt: teams.createdAt,
+      role: teamMembers.role,
+    })
+    .from(teamMembers)
+    .innerJoin(teams, eq(teamMembers.teamId, teams.id))
+    .where(and(eq(teamMembers.teamId, teamId), eq(teamMembers.userId, userId)))
+    .limit(1)
+  return result[0] ?? null
+}
+
+export async function getTeamMembers(teamId: string) {
+  return db
+    .select({
+      id: teamMembers.id,
+      role: teamMembers.role,
+      joinedAt: teamMembers.joinedAt,
+      userId: teamMembers.userId,
+      name: profiles.fullName,
+      email: profiles.email,
+      avatarUrl: profiles.avatarUrl,
+    })
+    .from(teamMembers)
+    .innerJoin(profiles, eq(teamMembers.userId, profiles.id))
+    .where(eq(teamMembers.teamId, teamId))
+}
+
+export async function getMeetingsByTeam(teamId: string) {
+  return db
+    .select()
+    .from(meetings)
+    .where(eq(meetings.teamId, teamId))
+    .orderBy(desc(meetings.createdAt))
 }

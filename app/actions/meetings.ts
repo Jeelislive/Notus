@@ -2,20 +2,25 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getSession } from '@/lib/session'
 import { db } from '@/lib/db'
 import { meetings, notes } from '@/lib/db/schema'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, inArray } from 'drizzle-orm'
+
 async function getAuthenticatedUser() {
-  const supabase = await createClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
-  if (error || !user) throw new Error('Unauthorized')
-  return user
+  const session = await getSession()
+  if (!session) throw new Error('Unauthorized')
+  return session.user
 }
 
 export async function createMeeting(formData: FormData) {
   const user = await getAuthenticatedUser()
   const title = (formData.get('title') as string)?.trim() || 'Untitled Meeting'
+  const templateContent = (formData.get('templateContent') as string) ?? ''
+  const templateId = (formData.get('templateId') as string) ?? null
+  const templateName = (formData.get('templateName') as string)?.trim() ?? ''
+  const meetingType = ((formData.get('meetingType') as string) || 'other') as
+    'one_on_one' | 'team_meeting' | 'standup' | 'interview' | 'client' | 'other'
 
   const [meeting] = await db
     .insert(meetings)
@@ -23,14 +28,19 @@ export async function createMeeting(formData: FormData) {
       userId: user.id,
       title,
       status: 'pending',
+      templateId: templateId || null,
+      meetingType,
+      templateName: templateName || null,
     })
     .returning()
 
-  // Create an empty notes record for this meeting
+  // Pre-fill notes with template content if one was chosen
+  // Store template name as note title so the meeting type is always recoverable
   await db.insert(notes).values({
     meetingId: meeting.id,
     userId: user.id,
-    content: '',
+    content: templateContent,
+    title: templateName || 'Note',
   })
 
   revalidatePath('/dashboard')
@@ -63,19 +73,108 @@ export async function deleteMeeting(meetingId: string) {
   redirect('/dashboard')
 }
 
-export async function updateNoteContent(meetingId: string, content: string) {
+export async function deleteAllMeetings() {
   const user = await getAuthenticatedUser()
 
-  // Verify meeting ownership
+  await db
+    .delete(meetings)
+    .where(eq(meetings.userId, user.id))
+
+  revalidatePath('/dashboard')
+}
+
+export async function startRecording(meetingId: string) {
+  const user = await getAuthenticatedUser()
+
+  await db
+    .update(meetings)
+    .set({ status: 'recording', startedAt: new Date(), updatedAt: new Date() })
+    .where(and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)))
+
+  revalidatePath(`/dashboard/meetings/${meetingId}`)
+  return { success: true }
+}
+
+export async function stopRecording(meetingId: string, durationSeconds: number) {
+  const user = await getAuthenticatedUser()
+
+  await db
+    .update(meetings)
+    .set({
+      status: 'processing',
+      endedAt: new Date(),
+      durationSeconds,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)))
+
+  revalidatePath(`/dashboard/meetings/${meetingId}`)
+  revalidatePath('/dashboard')
+  return { success: true }
+}
+
+export async function updateNoteContent(meetingId: string, content: string, noteId?: string) {
+  const user = await getAuthenticatedUser()
+
   const meeting = await db.query.meetings.findFirst({
     where: and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)),
   })
   if (!meeting) return { error: 'Meeting not found' }
 
-  await db
-    .update(notes)
-    .set({ content, updatedAt: new Date() })
-    .where(eq(notes.meetingId, meetingId))
+  if (noteId) {
+    await db.update(notes).set({ content, updatedAt: new Date() }).where(eq(notes.id, noteId))
+  } else {
+    // fallback: update first note for meeting
+    await db.update(notes).set({ content, updatedAt: new Date() }).where(eq(notes.meetingId, meetingId))
+  }
 
+  return { success: true }
+}
+
+export async function createNote(meetingId: string, title: string) {
+  const user = await getAuthenticatedUser()
+
+  const meeting = await db.query.meetings.findFirst({
+    where: and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)),
+  })
+  if (!meeting) return { error: 'Meeting not found' }
+
+  const [note] = await db
+    .insert(notes)
+    .values({ meetingId, userId: user.id, title: title.trim() || 'Untitled note', content: '' })
+    .returning()
+
+  revalidatePath('/dashboard/notes')
+  return { note }
+}
+
+export async function renameNote(noteId: string, title: string) {
+  const user = await getAuthenticatedUser()
+  const note = await db.query.notes.findFirst({ where: eq(notes.id, noteId) })
+  if (!note) return { error: 'Note not found' }
+
+  // Verify ownership via meeting
+  const meeting = await db.query.meetings.findFirst({
+    where: and(eq(meetings.id, note.meetingId), eq(meetings.userId, user.id)),
+  })
+  if (!meeting) return { error: 'Unauthorized' }
+
+  await db.update(notes).set({ title: title.trim() || 'Untitled note', updatedAt: new Date() }).where(eq(notes.id, noteId))
+  revalidatePath('/dashboard/notes')
+  return { success: true }
+}
+
+export async function deleteNote(noteId: string) {
+  const user = await getAuthenticatedUser()
+  const note = await db.query.notes.findFirst({ where: eq(notes.id, noteId) })
+  if (!note) return { error: 'Note not found' }
+
+  const meeting = await db.query.meetings.findFirst({
+    where: and(eq(meetings.id, note.meetingId), eq(meetings.userId, user.id)),
+  })
+  if (!meeting) return { error: 'Unauthorized' }
+
+  await db.delete(notes).where(eq(notes.id, noteId))
+  revalidatePath('/dashboard/notes')
   return { success: true }
 }

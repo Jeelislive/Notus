@@ -2,37 +2,36 @@
 
 import { useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { Check } from 'lucide-react'
+import { ArrowRight, Check } from 'lucide-react'
 
 const plans = [
   {
     name: 'Free',
-    price: '$0',
-    description: 'For individuals trying Notus.',
-    cta: 'Start for free',
     href: '/signup',
+    description: 'Try Notus for a few meetings',
+    features: ['300 minutes per month', 'AI summaries & action items', '7-day meeting history', 'Basic search'],
+    cta: 'Start for free',
     featured: false,
-    features: ['300 minutes/month', 'AI summaries & action items', 'Full-text search', '5 meeting templates', 'Public share links', 'Email export'],
+    footnote: 'Learn about the Notus platform and core features.',
   },
   {
     name: 'Pro',
-    price: '$19',
-    period: '/mo',
-    description: 'For professionals who live in meetings.',
+    href: '/signup?plan=pro',
+    description: 'For professionals in back-to-back meetings',
+    features: ['Unlimited minutes', 'Human-like summaries', 'Unlimited history', 'Semantic search', 'CRM & Slack integrations', 'Priority support'],
     cta: 'Start Pro trial',
-    href: '/signup',
     featured: true,
-    features: ['Unlimited recording', 'AI chat with transcripts', 'Follow-up email drafts', 'Google Calendar sync', 'Slack & Notion export', 'Custom AI prompts', 'Priority support'],
+    price: '$12/mo',
+    footnote: null,
   },
   {
-    name: 'Team',
-    price: '$49',
-    period: '/mo',
-    description: 'For teams that meet and collaborate.',
-    cta: 'Start team trial',
-    href: '/signup',
+    name: 'Enterprise',
+    href: '/contact',
+    description: 'For larger teams and custom needs',
+    features: ['Everything in Pro', 'SSO & advanced security', 'Custom integrations', 'Dedicated support', 'SLA guarantees'],
+    cta: 'Get a quote',
     featured: false,
-    features: ['Everything in Pro', 'Up to 10 members', 'Shared meeting library', 'Team templates', 'Admin dashboard', 'Usage analytics'],
+    footnote: 'See our standard pricing and get a customized quote.',
   },
 ]
 
@@ -42,74 +41,102 @@ export function Pricing() {
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => entries.forEach((e) => e.isIntersecting && e.target.classList.add('visible')),
-      { threshold: 0.1 }
+      { threshold: 0.08 }
     )
     ref.current?.querySelectorAll('.section-reveal').forEach((el) => observer.observe(el))
     return () => observer.disconnect()
   }, [])
 
   return (
-    <section id="pricing" className="py-32 px-5 border-t border-white/[0.04]" ref={ref}>
-      <div className="max-w-6xl mx-auto">
-        <div className="section-reveal max-w-xl mb-20">
-          <p className="text-xs font-semibold text-indigo-400 uppercase tracking-[0.15em] mb-4">Pricing</p>
-          <h2 className="text-4xl sm:text-5xl font-bold text-white leading-tight tracking-tight">
-            Simple, honest pricing
+    <section id="pricing" className="py-28 px-5 border-t border-border" ref={ref}>
+      <div className="max-w-7xl mx-auto">
+
+        {/* Header */}
+        <div className="section-reveal text-center mb-14">
+          <h2 className="text-4xl sm:text-5xl font-bold text-foreground tracking-tight leading-[1.1] mb-4">
+            A plan for anyone.
+            <br />
+            <span className="text-indigo-600">Anytime.</span>
           </h2>
-          <p className="mt-4 text-zinc-400 text-lg">Start free. No card required.</p>
+          <p className="text-muted-foreground text-lg">Start free. No credit card required.</p>
         </div>
 
+        {/* Plans */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {plans.map((plan, i) => (
             <div
               key={plan.name}
-              className={`section-reveal relative flex flex-col rounded-2xl p-7 transition-all ${
-                plan.featured
-                  ? 'bg-[#111113] border border-indigo-500/30 shadow-2xl shadow-indigo-500/10'
-                  : 'bg-[#0e0e10] border border-white/[0.06] hover:border-white/[0.10]'
-              }`}
-              style={{ animationDelay: `${i * 100}ms` }}
+              className={`section-reveal flex flex-col rounded-2xl border p-6 transition-shadow duration-300 ease-out
+                ${plan.featured
+                  ? 'border-indigo-500/30 bg-background shadow-xl shadow-indigo-500/[0.06] relative'
+                  : 'border-border bg-background hover:shadow-md hover:shadow-black/[0.03]'
+                }`}
+              style={{ transitionDelay: `${i * 60}ms` }}
             >
               {plan.featured && (
-                <div className="absolute -top-px left-6 right-6 h-px bg-gradient-to-r from-transparent via-indigo-500/60 to-transparent" />
-              )}
-              {plan.featured && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-[10px] font-semibold uppercase tracking-widest bg-indigo-600 text-white px-3 py-1 rounded-full">
-                  Popular
-                </span>
+                <div className="absolute -top-px left-8 right-8 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
               )}
 
-              <div className="mb-6">
-                <p className="text-sm font-medium text-zinc-400 mb-3">{plan.name}</p>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-4xl font-bold text-white">{plan.price}</span>
-                  {plan.period && <span className="text-zinc-500 text-sm">{plan.period}</span>}
+              {/* Plan header */}
+              <div className="flex items-start justify-between mb-5">
+                <div>
+                  <h3 className="text-base font-semibold text-foreground mb-1">{plan.name}</h3>
+                  <p className="text-xs text-muted-foreground leading-snug">{plan.description}</p>
                 </div>
-                <p className="mt-2 text-sm text-zinc-600">{plan.description}</p>
+                <Link
+                  href={plan.href}
+                  aria-label={`Get started with ${plan.name}`}
+                  className={`shrink-0 flex items-center justify-center size-7 rounded-full border
+                    transition-colors duration-150 ease-out
+                    ${plan.featured
+                      ? 'border-indigo-500/40 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-500'
+                      : 'border-border hover:border-foreground/30 text-muted-foreground hover:text-foreground'
+                    }`}
+                >
+                  <ArrowRight className="size-3.5" />
+                </Link>
               </div>
 
-              <ul className="space-y-2.5 mb-8 flex-1">
+              {/* Price (Pro only) */}
+              {plan.price && (
+                <div className="mb-5 pb-5 border-b border-border">
+                  <span className="text-3xl font-bold text-foreground">{plan.price.split('/')[0]}</span>
+                  <span className="text-muted-foreground text-sm ml-1">/{plan.price.split('/')[1]}</span>
+                </div>
+              )}
+
+              {/* Features */}
+              <ul className="space-y-2.5 mb-6 flex-1">
                 {plan.features.map((f) => (
-                  <li key={f} className="flex items-center gap-3 text-sm">
-                    <Check className={`size-3.5 shrink-0 ${plan.featured ? 'text-indigo-400' : 'text-zinc-600'}`} strokeWidth={2.5} />
-                    <span className="text-zinc-400">{f}</span>
+                  <li key={f} className="flex items-start gap-2.5 text-sm">
+                    <Check
+                      className={`size-3.5 shrink-0 mt-0.5 ${plan.featured ? 'text-indigo-600' : 'text-muted-foreground/50'}`}
+                      strokeWidth={2.5}
+                    />
+                    <span className="text-muted-foreground">{f}</span>
                   </li>
                 ))}
               </ul>
 
+              {plan.footnote && (
+                <p className="text-xs text-muted-foreground mb-4 leading-relaxed">{plan.footnote}</p>
+              )}
+
               <Link
                 href={plan.href}
-                className={`w-full text-center py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                  plan.featured
+                className={`w-full text-center py-2.5 rounded-xl text-sm font-semibold
+                  transition-transform duration-[160ms] ease-out active:scale-[0.97]
+                  ${plan.featured
                     ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/20'
-                    : 'bg-white/[0.04] hover:bg-white/[0.07] text-zinc-300 border border-white/[0.08]'
-                }`}
+                    : 'bg-muted/50 hover:bg-muted text-foreground border border-border'
+                  }`}
               >
                 {plan.cta}
               </Link>
             </div>
           ))}
         </div>
+
       </div>
     </section>
   )

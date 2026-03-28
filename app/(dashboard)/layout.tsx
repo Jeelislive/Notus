@@ -1,17 +1,16 @@
 import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { getSession } from '@/lib/session'
 import { SidebarNav } from '@/components/dashboard/sidebar-nav'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  const session = await getSession()
+  if (!session) redirect('/login')
 
   return (
-    <div className="min-h-screen bg-[#0a0a0b] flex">
-      <SidebarNav user={{ email: user.email ?? '', name: user.user_metadata?.full_name ?? '' }} />
-      <main className="flex-1 min-w-0 pl-64">
-        <div className="max-w-5xl mx-auto px-8 py-8">
+    <div className="min-h-screen bg-background flex">
+      <SidebarNav user={{ email: session.user.email, name: session.user.name ?? '' }} />
+      <main className="flex-1 min-w-0 h-screen overflow-hidden flex flex-col" style={{ paddingLeft: 'var(--sidebar-width, 256px)', transition: 'padding-left 240ms cubic-bezier(0.23,1,0.32,1)' }}>
+        <div className="flex-1 overflow-hidden flex flex-col min-h-0 px-8 py-8">
           {children}
         </div>
       </main>

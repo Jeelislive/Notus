@@ -14,7 +14,7 @@ const DropdownMenuSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DropdownMenuPrimitive.Separator
     ref={ref}
-    className={cn('my-1 h-px bg-zinc-800', className)}
+    className={cn('my-1 h-px bg-border', className)}
     {...props}
   />
 ))
@@ -29,9 +29,10 @@ const DropdownMenuContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        'z-50 min-w-[160px] overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950 p-1 shadow-2xl shadow-black/40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
+        'z-50 min-w-[160px] overflow-hidden rounded-xl border border-border bg-background p-1 shadow-2xl shadow-black/40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=open]:slide-in-from-top-2 data-[state=closed]:slide-out-to-top-2 duration-150',
         className
       )}
+      style={{ transformOrigin: 'var(--radix-dropdown-menu-content-transform-origin)' }}
       {...props}
     />
   </DropdownMenuPrimitive.Portal>
@@ -47,8 +48,8 @@ const DropdownMenuItem = React.forwardRef<
     className={cn(
       'relative flex cursor-pointer select-none items-center gap-2 rounded-lg px-3 py-2 text-sm outline-none transition-colors data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
       destructive
-        ? 'text-red-400 focus:bg-red-500/10 focus:text-red-400'
-        : 'text-zinc-300 focus:bg-zinc-800 focus:text-zinc-100',
+        ? 'text-red-500 focus:bg-red-500/10 focus:text-red-500'
+        : 'text-foreground focus:bg-muted focus:text-foreground',
       className
     )}
     {...props}
@@ -62,7 +63,7 @@ const DropdownMenuLabel = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DropdownMenuPrimitive.Label
     ref={ref}
-    className={cn('px-3 py-1.5 text-xs font-medium text-zinc-500', className)}
+    className={cn('px-3 py-1.5 text-xs font-medium text-muted-foreground', className)}
     {...props}
   />
 ))

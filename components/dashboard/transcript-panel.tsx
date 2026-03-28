@@ -1,98 +1,208 @@
-import { Mic, Clock } from 'lucide-react'
-import type { TranscriptSegment } from '@/lib/db/schema'
+'use client'
 
-const SPEAKER_COLORS = [
-  'text-indigo-400',
-  'text-violet-400',
-  'text-emerald-400',
-  'text-sky-400',
-  'text-pink-400',
-  'text-amber-400',
+import { useEffect, useRef } from 'react'
+import { Mic } from 'lucide-react'
+import { ShiningText } from '@/components/ui/shining-text'
+import { TypewriterText } from '@/components/ui/typewriter-text'
+import type { TranscriptSegment } from '@/lib/db/schema'
+import type { LiveSegment } from '@/hooks/use-recording'
+
+const SPEAKER_PALETTE = [
+  { dot: 'bg-indigo-500', text: 'text-indigo-600 dark:text-indigo-400' },
+  { dot: 'bg-violet-500', text: 'text-violet-600 dark:text-violet-400' },
+  { dot: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400' },
+  { dot: 'bg-sky-500', text: 'text-sky-600 dark:text-sky-400' },
+  { dot: 'bg-pink-500', text: 'text-pink-600 dark:text-pink-400' },
+  { dot: 'bg-amber-500', text: 'text-amber-600 dark:text-amber-400' },
 ]
 
 function formatMs(ms: number): string {
-  const totalSeconds = Math.floor(ms / 1000)
-  const m = Math.floor(totalSeconds / 60)
-  const s = totalSeconds % 60
-  return `${m}:${String(s).padStart(2, '0')}`
+  const s = Math.floor(ms / 1000)
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+}
+
+type AnySegment = TranscriptSegment | LiveSegment
+
+function classifySegment(text: string): 'decision' | 'question' | 'action' | 'risk' | null {
+  const t = text.toLowerCase()
+  if (/(we decided|let's go with|agreed to|will use|going with)/.test(t)) return 'decision'
+  if (/(will you|can you|what about|how do we|when will|who is|clarify)/.test(t)) return 'question'
+  if (/(i'll|i will|we'll|will fix|will send|will schedule|action item)/.test(t)) return 'action'
+  if (/(blocked|at risk|concern|issue|problem|can't|cannot|delay)/.test(t)) return 'risk'
+  return null
+}
+
+const SEGMENT_CLASSIFY_CLASSES: Record<string, string> = {
+  decision: 'border-l-4 border-emerald-500/60 pl-3',
+  question: 'border-l-4 border-blue-500/60 pl-3',
+  action: 'border-l-4 border-orange-500/60 pl-3',
+  risk: 'border-l-4 border-amber-500/60 pl-3',
+}
+
+interface SpeakerGroup {
+  key: string
+  speaker: string
+  startMs: number
+  texts: string[]
+  isFinal: boolean
+}
+
+function groupBySpeaker(segments: AnySegment[]): SpeakerGroup[] {
+  const groups: SpeakerGroup[] = []
+  for (const seg of segments) {
+    const speaker = seg.speaker ?? 'Speaker'
+    const startMs = seg.startMs
+    const isFinal = 'isFinal' in seg ? (seg as LiveSegment).isFinal : true
+    const last = groups[groups.length - 1]
+    // Only merge consecutive FINAL segments from the same speaker.
+    // Non-final (interim) segments stay separate so TypewriterText on the
+    // final group never unmounts — preserving its typed position.
+    if (last && last.speaker === speaker && last.isFinal && isFinal) {
+      last.texts.push(seg.content)
+    } else {
+      groups.push({ key: seg.id, speaker, startMs, texts: [seg.content], isFinal })
+    }
+  }
+  return groups
 }
 
 interface TranscriptPanelProps {
   transcript: TranscriptSegment[]
+  liveSegments: LiveSegment[]
   status: string
+  isRecording: boolean
 }
 
-export function TranscriptPanel({ transcript, status }: TranscriptPanelProps) {
-  const speakerColors: Record<string, string> = {}
-  let colorIndex = 0
+export function TranscriptPanel({ transcript, liveSegments, status, isRecording }: TranscriptPanelProps) {
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const colorMapRef = useRef<Record<string, typeof SPEAKER_PALETTE[0]>>({})
+  const colorIndexRef = useRef(0)
 
-  transcript.forEach((seg) => {
-    const speaker = seg.speaker ?? 'Unknown'
-    if (!speakerColors[speaker]) {
-      speakerColors[speaker] = SPEAKER_COLORS[colorIndex % SPEAKER_COLORS.length]
-      colorIndex++
+  function getColor(speaker: string) {
+    if (!colorMapRef.current[speaker]) {
+      colorMapRef.current[speaker] = SPEAKER_PALETTE[colorIndexRef.current % SPEAKER_PALETTE.length]
+      colorIndexRef.current++
     }
-  })
+    return colorMapRef.current[speaker]
+  }
+
+  // Keep showing live segments until the DB transcript has caught up (after page refresh from revalidatePath).
+  // Without this, switching source immediately after stop causes a 2-3s blank/wipe.
+  const finalLiveCount = liveSegments.filter((s) => s.isFinal).length
+  const rawSegments: AnySegment[] =
+    isRecording || (finalLiveCount > 0 && transcript.length < finalLiveCount)
+      ? liveSegments
+      : transcript
+  const groups = groupBySpeaker(rawSegments)
+
+  useEffect(() => {
+    const el = scrollRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [groups.length])
 
   return (
-    <div className="flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/50 overflow-hidden">
+    <div className="flex flex-col rounded-2xl border border-border overflow-hidden h-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-zinc-800/60">
-        <div className="flex items-center gap-2">
-          <Mic className="size-4 text-zinc-500" strokeWidth={1.5} />
-          <span className="text-sm font-medium text-zinc-300">Transcript</span>
-        </div>
-        {status === 'recording' && (
-          <div className="flex items-center gap-1.5">
-            <span className="size-1.5 rounded-full bg-red-400" style={{ animation: 'pulseRec 1.4s ease-in-out infinite' }} />
-            <span className="text-xs text-red-400 font-medium">Live</span>
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-border shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className={`size-7 rounded-lg flex items-center justify-center ${isRecording ? 'bg-red-500/10' : 'bg-muted'}`}>
+            <Mic className={`size-3.5 ${isRecording ? 'text-red-500' : 'text-muted-foreground'}`} strokeWidth={1.75} />
           </div>
-        )}
-        {transcript.length > 0 && (
-          <span className="text-xs text-zinc-600">{transcript.length} segments</span>
-        )}
+          <span className="text-[14px] font-semibold text-foreground">Transcript</span>
+        </div>
+        <div className="flex items-center gap-2">
+          {isRecording && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10">
+              <span className="size-1.5 rounded-full bg-red-500 animate-rec shrink-0" />
+              <span className="text-[11px] font-semibold text-red-500">Live</span>
+            </div>
+          )}
+          {!isRecording && transcript.length > 0 && (
+            <span className="text-[12px] text-muted-foreground">{transcript.length} segments</span>
+          )}
+        </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-5 space-y-4 max-h-[600px]">
-        {transcript.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-48 text-center">
-            {status === 'pending' || status === 'completed' ? (
-              <>
-                <Mic className="size-8 text-zinc-700 mb-3" strokeWidth={1} />
-                <p className="text-sm text-zinc-600">No transcript yet</p>
-                <p className="text-xs text-zinc-700 mt-1">
-                  {status === 'pending'
-                    ? 'Start recording to generate a transcript'
-                    : 'Recording did not produce a transcript'}
-                </p>
-              </>
-            ) : status === 'processing' ? (
-              <>
-                <div className="size-8 rounded-full border-2 border-amber-500/30 border-t-amber-400 mb-3" style={{ animation: 'spin 1s linear infinite' }} />
-                <p className="text-sm text-zinc-500">Processing transcript...</p>
-              </>
-            ) : null}
-          </div>
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-5 space-y-7 min-h-0">
+        {groups.length === 0 ? (
+          <EmptyState status={status} isRecording={isRecording} />
         ) : (
-          transcript.map((segment) => {
-            const speaker = segment.speaker ?? 'Unknown'
-            const color = speakerColors[speaker]
+          groups.map((group) => {
+            const color = getColor(group.speaker)
+            const para = group.texts.join(' ')
+            const classification = classifySegment(para)
+            const classifyClass = classification ? SEGMENT_CLASSIFY_CLASSES[classification] : ''
             return (
-              <div key={segment.id} className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className={`text-xs font-semibold ${color}`}>{speaker}</span>
-                  <span className="text-xs text-zinc-700 flex items-center gap-0.5">
-                    <Clock className="size-2.5" />
-                    {formatMs(segment.startMs)}
+              <div
+                key={group.key}
+                className={`animate-segment ${group.isFinal ? '' : 'opacity-60'} ${classifyClass}`}
+                style={{ transition: 'opacity 200ms ease-out' }}
+              >
+                {/* Speaker + timestamp */}
+                <div className="flex items-center gap-2 mb-2.5">
+                  <span className={`size-2.5 rounded-full shrink-0 ${color.dot}`} />
+                  <span className={`text-[14px] font-semibold tracking-wide ${color.text}`}>
+                    {group.speaker}
                   </span>
+                  <span className="text-[12px] text-muted-foreground/50">{formatMs(group.startMs)}</span>
                 </div>
-                <p className="text-sm text-zinc-300 leading-relaxed">{segment.content}</p>
+
+                {/* Paragraph */}
+                <p
+                  className="text-[18px] font-medium text-foreground pl-5"
+                  style={{ fontFamily: 'var(--font-playfair), Georgia, serif', lineHeight: '1.85', letterSpacing: '0.01em' }}
+                >
+                  {!group.isFinal ? (
+                    /* Listening / sending — blinking cursor only */
+                    <span
+                      className="inline-block w-[2px] h-[1.1em] bg-foreground/40 rounded-full align-text-bottom animate-pulse"
+                    />
+                  ) : isRecording ? (
+                    /* Live final text — type it in character by character */
+                    <TypewriterText text={para} speed={8} />
+                  ) : (
+                    /* Static transcript (post-recording) — plain text */
+                    para
+                  )}
+                </p>
               </div>
             )
           })
         )}
       </div>
+    </div>
+  )
+}
+
+function EmptyState({ status, isRecording }: { status: string; isRecording: boolean }) {
+  if (isRecording) {
+    return (
+      <div className="flex flex-col items-center justify-center h-40 text-center">
+        <div className="size-10 rounded-2xl bg-red-500/10 flex items-center justify-center mb-3">
+          <Mic className="size-5 text-red-500" strokeWidth={1.5} />
+        </div>
+        <p className="text-[14px] font-medium text-foreground">Listening…</p>
+        <p className="text-[13px] text-muted-foreground mt-1">Transcript will appear as you speak</p>
+      </div>
+    )
+  }
+  if (status === 'processing') {
+    return (
+      <div className="flex flex-col items-center justify-center h-40 text-center">
+        <ShiningText text="Processing transcript…" className="text-[15px]" />
+      </div>
+    )
+  }
+  return (
+    <div className="flex flex-col items-center justify-center h-40 text-center">
+      <div className="size-12 rounded-2xl bg-muted/60 flex items-center justify-center mb-3">
+        <Mic className="size-6 text-muted-foreground/40" strokeWidth={1} />
+      </div>
+      <p className="text-[14px] font-medium text-foreground">No transcript yet</p>
+      <p className="text-[13px] text-muted-foreground mt-1">
+        {status === 'pending' ? 'Start recording to generate a transcript' : 'No transcript was recorded'}
+      </p>
     </div>
   )
 }

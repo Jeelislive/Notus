@@ -4,15 +4,15 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*="size-"])]:size-4 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*="size-"])]:size-4 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 active:scale-[0.97]',
   {
     variants: {
       variant: {
-        default: 'bg-indigo-600 text-white shadow hover:bg-indigo-500 active:bg-indigo-700',
+        default: 'bg-indigo-600 text-white shadow hover:bg-indigo-500',
         destructive: 'bg-red-600 text-white shadow hover:bg-red-500',
-        outline: 'border border-zinc-700 bg-transparent text-zinc-100 hover:bg-zinc-800 hover:border-zinc-600',
-        secondary: 'bg-zinc-800 text-zinc-100 shadow hover:bg-zinc-700',
-        ghost: 'text-zinc-300 hover:bg-zinc-800 hover:text-zinc-100',
+        outline: 'border border-zinc-700 bg-transparent text-foreground hover:bg-muted hover:border-zinc-600',
+        secondary: 'bg-zinc-800 text-foreground shadow hover:bg-zinc-700',
+        ghost: 'text-foreground hover:bg-muted hover:text-foreground',
         link: 'text-indigo-400 underline-offset-4 hover:underline',
       },
       size: {
@@ -42,6 +42,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
+        style={{ transition: 'transform 120ms cubic-bezier(0.23,1,0.32,1), background-color 150ms ease-out, border-color 150ms ease-out, opacity 150ms ease-out', ...props.style }}
         {...props}
       />
     )
