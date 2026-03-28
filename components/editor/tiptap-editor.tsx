@@ -235,7 +235,7 @@ export function TiptapEditor({ content, onChange, placeholder, editable = true }
 
           {/* Quote + Code */}
           <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive('blockquote')} title="Quote">
-            <span className="text-base leading-none">"</span>
+            <span className="text-base leading-none">&quot;</span>
           </ToolbarButton>
           <ToolbarButton onClick={() => editor.chain().focus().toggleCodeBlock().run()} active={editor.isActive('codeBlock')} title="Code Block">
             {'</>'}
