@@ -4,6 +4,26 @@ import { db } from '@/lib/db'
 import { profiles } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
 
+export async function GET(request: NextRequest) {
+  const session = await getSession()
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  try {
+    const profile = await db.query.profiles.findFirst({
+      where: eq(profiles.id, session.user.id),
+      columns: { preferredLanguage: true, transcriptionLanguage: true }
+    })
+
+    return NextResponse.json({
+      preferredLanguage: profile?.preferredLanguage || 'en',
+      transcriptionLanguage: profile?.transcriptionLanguage || 'auto'
+    })
+  } catch (error) {
+    console.error('Failed to get language preferences:', error)
+    return NextResponse.json({ error: 'Failed to get preferences' }, { status: 500 })
+  }
+}
+
 export async function POST(request: NextRequest) {
   const session = await getSession()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
