@@ -105,7 +105,7 @@ export function LiveAssistantPanel({
   const liveSegmentsRef = useRef(liveSegments)
   useEffect(() => { liveSegmentsRef.current = liveSegments }, [liveSegments])
 
-  // Poll every 15 s during recording — fires regardless of how fast new segments arrive
+  // Poll every 15 s during recording - fires regardless of how fast new segments arrive
   useEffect(() => {
     if (!isRecording) return
 

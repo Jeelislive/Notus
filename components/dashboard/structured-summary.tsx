@@ -259,7 +259,7 @@ export function StructuredSummary({ data }: StructuredSummaryProps) {
               </p>
               <div className="flex items-center gap-2">
                 {q.speaker && <SpeakerChip name={q.speaker} />}
-                {q.speaker && <span className="text-[11px] text-muted-foreground">— {q.speaker}</span>}
+                {q.speaker && <span className="text-[11px] text-muted-foreground">- {q.speaker}</span>}
                 <TimestampChip ts={q.timestamp} />
               </div>
             </li>

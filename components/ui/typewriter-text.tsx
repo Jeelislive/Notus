@@ -13,7 +13,7 @@ export function TypewriterText({ text, speed = 12, className }: TypewriterTextPr
   const prevTextRef = useRef('')
 
   useEffect(() => {
-    // If new text starts with what we've already shown, just extend — don't restart
+    // If new text starts with what we've already shown, just extend - don't restart
     const prev = prevTextRef.current
     if (text.startsWith(prev)) {
       // Animate only the new suffix
@@ -28,7 +28,7 @@ export function TypewriterText({ text, speed = 12, className }: TypewriterTextPr
       }, speed)
       return () => clearInterval(interval)
     } else {
-      // Text changed completely — restart
+      // Text changed completely - restart
       prevTextRef.current = ''
       setDisplayed('')
       let i = 0

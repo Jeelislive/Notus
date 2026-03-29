@@ -3,7 +3,7 @@ import { log } from '@/lib/logger'
 const logger = log('slack')
 
 export async function testSlackWebhook(webhookUrl: string): Promise<{ ok: boolean; error?: string }> {
-  // Mask the webhook URL in logs — only show the last 8 chars
+  // Mask the webhook URL in logs - only show the last 8 chars
   const maskedUrl = `hooks.slack.com/…${webhookUrl.slice(-8)}`
   logger.info('Testing webhook', { url: maskedUrl })
   try {

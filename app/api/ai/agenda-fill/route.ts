@@ -92,7 +92,7 @@ Each task object must have exactly these fields:
 - "priority": one of "high", "medium", "low", or null
 
 Rules:
-- Return ONLY the JSON object below — no markdown fences, no explanation, no extra keys
+- Return ONLY the JSON object below - no markdown fences, no explanation, no extra keys
 - Every section id must be present as a key, even if its array is empty []
 - Aim for 2-5 items per section, quality over quantity
 

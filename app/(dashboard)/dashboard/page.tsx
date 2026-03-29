@@ -31,7 +31,7 @@ export default async function DashboardPage({ searchParams }: Props) {
 
   return (
     <div className="-mx-4 md:-mx-8 -mt-16 md:-mt-8 flex flex-col h-full min-h-0">
-      {/* Stats container — fixed, does not scroll */}
+      {/* Stats container - fixed, does not scroll */}
       <div className="border-b border-border shrink-0">
         {/* Top bar */}
         <div className="flex items-center justify-between px-4 md:px-8 pt-6 md:pt-8 pb-4 md:pb-6">
@@ -112,7 +112,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         </div>
       </div>
 
-      {/* Table section — scrollable */}
+      {/* Table section - scrollable */}
       <div className="flex-1 overflow-y-auto min-h-0">
         <MeetingTable meetings={meetings} />
       </div>

@@ -159,7 +159,7 @@ export function SidebarNav({ user }: SidebarNavProps) {
                 <rect x="14"   y="4.5" width="2.5" height="5"  rx="1.25" fill="white" fillOpacity="0.5"/>
               </svg>
             </div>
-            {/* Text slides in — overflow-hidden is on the text wrapper only, not the icon */}
+            {/* Text slides in - overflow-hidden is on the text wrapper only, not the icon */}
             <div style={{ overflow: 'hidden', width: isCollapsed ? 0 : 'auto', transition: t('width') }}>
               <span
                 className="font-bold text-foreground text-[17px] tracking-tight whitespace-nowrap block"
@@ -199,7 +199,7 @@ export function SidebarNav({ user }: SidebarNavProps) {
           </div>
         </div>
 
-        {/* ── Nav items — labels stagger in on expand, all exit together ── */}
+        {/* ── Nav items - labels stagger in on expand, all exit together ── */}
         <nav className="flex-1 px-2 py-4 space-y-0.5">
           {navItems.map((item, index) => {
             const Icon   = item.icon
@@ -245,7 +245,7 @@ export function SidebarNav({ user }: SidebarNavProps) {
           })}
         </nav>
 
-        {/* ── Search bar — slides down + fades in after nav items ── */}
+        {/* ── Search bar - slides down + fades in after nav items ── */}
         <div
           className="px-4 pb-3"
           style={{

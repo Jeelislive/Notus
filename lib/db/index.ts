@@ -15,7 +15,7 @@ const client =
   globalThis.__pgClient ??
   postgres(connectionString, {
     prepare: false, // required for pgBouncer / Supabase transaction pooler
-    max: 3,         // hard cap — leave headroom for Better Auth + app queries
+    max: 3,         // hard cap - leave headroom for Better Auth + app queries
   })
 
 if (process.env.NODE_ENV !== 'production') {

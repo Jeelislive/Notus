@@ -30,7 +30,7 @@ Browser (Chrome/Edge)
 
 ## Component Boundaries
 
-### 1. Frontend — Next.js App Router
+### 1. Frontend - Next.js App Router
 - **Communicates with:** Supabase (auth + DB + realtime), internal API routes
 - **Responsibilities:** Recording UI, note editor, dashboard, sharing pages, settings, billing
 - **Key pages:** `/dashboard`, `/meeting/[id]`, `/meeting/[id]/record`, `/share/[token]`
@@ -40,7 +40,7 @@ Browser (Chrome/Edge)
 - **Responsibilities:** Request permissions, capture tab/mic audio, chunk into segments, stream to STT
 - **Key constraint:** Chrome/Edge only for tab audio
 
-### 3. STT Pipeline — Deepgram
+### 3. STT Pipeline - Deepgram
 - **Communicates with:** Audio capture module (WebSocket in), Supabase (transcript storage out)
 - **Responsibilities:** Real-time transcription, speaker diarization, confidence scores
 - **Output:** `transcript_segments` rows in Postgres
@@ -48,29 +48,29 @@ Browser (Chrome/Edge)
 ### 4. Note Editor (Tiptap)
 - **Communicates with:** Supabase Realtime (collaborative), auto-save API route
 - **Responsibilities:** Rich text editing, template rendering, AI-generated content insertion
-- **Key choice:** Tiptap (ProseMirror-based) — best for programmatic content insertion
+- **Key choice:** Tiptap (ProseMirror-based) - best for programmatic content insertion
 
-### 5. AI Enhancement Pipeline — Inngest + LLM
+### 5. AI Enhancement Pipeline - Inngest + LLM
 - **Communicates with:** Supabase (transcript in, structured notes out), Claude/OpenAI API
 - **Responsibilities:** Post-meeting note structuring, summary, action items, follow-up generation
 - **Trigger:** Meeting ends → webhook → Inngest job queued
 
-### 6. AI Chat — Route Handler + Vercel AI SDK
+### 6. AI Chat - Route Handler + Vercel AI SDK
 - **Communicates with:** Supabase (transcript fetch), LLM (streaming), browser (SSE)
 - **Responsibilities:** Answer natural-language questions about a meeting transcript
 - **Pattern:** `streamText()` → `toDataStreamResponse()` → `useChat()` on client
 
-### 7. API Routes — Next.js Route Handlers
+### 7. API Routes - Next.js Route Handlers
 - **Communicates with:** Supabase, Deepgram, Stripe, Inngest, external integrations
 - **Key routes:**
-  - `POST /api/meetings` — create meeting
-  - `POST /api/meetings/[id]/start` — begin recording session
-  - `POST /api/meetings/[id]/end` — trigger AI processing
-  - `POST /api/ai/chat` — AI chat stream
-  - `POST /api/webhooks/stripe` — billing events
-  - `GET /api/share/[token]` — public share
+  - `POST /api/meetings` - create meeting
+  - `POST /api/meetings/[id]/start` - begin recording session
+  - `POST /api/meetings/[id]/end` - trigger AI processing
+  - `POST /api/ai/chat` - AI chat stream
+  - `POST /api/webhooks/stripe` - billing events
+  - `GET /api/share/[token]` - public share
 
-### 8. Background Jobs — Inngest
+### 8. Background Jobs - Inngest
 - **Communicates with:** Supabase, LLM APIs, Resend, integration webhooks
 - **Jobs:** AI note enhancement, export to Slack/Notion, email delivery, integration sync
 
@@ -78,11 +78,11 @@ Browser (Chrome/Edge)
 - **Communicates with:** Slack API, Notion API, Google Calendar API, CRM APIs
 - **Pattern:** OAuth flow per integration, stored tokens in Supabase, triggered by Inngest
 
-### 10. Payments — Stripe
+### 10. Payments - Stripe
 - **Communicates with:** Stripe API, Supabase (subscription status), Inngest (webhook handler)
 - **Pattern:** Checkout Session → webhook → update user plan in DB → Customer Portal for self-service
 
-### 11. Storage — Supabase Storage
+### 11. Storage - Supabase Storage
 - **Communicates with:** Audio capture (upload), AI pipeline (download for processing)
 - **Buckets:** `audio` (private, user-scoped RLS), `exports` (temp)
 
@@ -215,32 +215,32 @@ app/
 
 ## Suggested Build Order
 
-1. **Auth + DB schema** — Supabase auth, Drizzle schema, migrations
-2. **Dashboard + meeting CRUD** — List, create, view meetings
-3. **Audio capture + STT** — Browser recording, Deepgram integration
-4. **Note editor** — Tiptap editor, auto-save, transcript display
-5. **AI enhancement** — Inngest jobs, LLM post-processing
-6. **AI chat** — Streaming chat on transcript
-7. **Templates + sharing** — Meeting templates, public share links
-8. **Integrations + billing** — Slack/Notion exports, Stripe subscriptions
+1. **Auth + DB schema** - Supabase auth, Drizzle schema, migrations
+2. **Dashboard + meeting CRUD** - List, create, view meetings
+3. **Audio capture + STT** - Browser recording, Deepgram integration
+4. **Note editor** - Tiptap editor, auto-save, transcript display
+5. **AI enhancement** - Inngest jobs, LLM post-processing
+6. **AI chat** - Streaming chat on transcript
+7. **Templates + sharing** - Meeting templates, public share links
+8. **Integrations + billing** - Slack/Notion exports, Stripe subscriptions
 
 ---
 
 ## Patterns to Follow
 
 - Use Supabase RLS for all data access (never trust client-side user_id)
-- Stream AI responses via Vercel AI SDK — never wait for full completion
-- Queue heavy work (AI processing, exports) via Inngest — never block request
-- Store audio in Supabase Storage with signed URLs — never expose direct paths
+- Stream AI responses via Vercel AI SDK - never wait for full completion
+- Queue heavy work (AI processing, exports) via Inngest - never block request
+- Store audio in Supabase Storage with signed URLs - never expose direct paths
 - Use Drizzle transactions for multi-table writes (meeting + notes + audio)
 
 ## Anti-Patterns to Avoid
 
-- Don't process AI in the API route directly — always queue via Inngest
+- Don't process AI in the API route directly - always queue via Inngest
 - Don't store API keys in client-side code or localStorage
 - Don't load full transcript in AI chat context without chunking/RAG for long meetings
-- Don't trust browser to enforce plan limits — always check server-side
-- Don't use `useEffect` for real-time — use Supabase Realtime subscription hooks
+- Don't trust browser to enforce plan limits - always check server-side
+- Don't use `useEffect` for real-time - use Supabase Realtime subscription hooks
 
 ---
 
@@ -250,7 +250,7 @@ app/
 |-------|---------|---------|
 | 100 users | Cold starts | Vercel free tier fine |
 | 1K users | Audio storage | Supabase Storage + lifecycle policy |
-| 10K users | STT costs | Deepgram cost ~$0.0043/min — budget for it |
+| 10K users | STT costs | Deepgram cost ~$0.0043/min - budget for it |
 | 100K users | DB connections | Supabase connection pooling (PgBouncer) |
 | 1M users | AI costs | Haiku for summaries, Sonnet only for chat |
 

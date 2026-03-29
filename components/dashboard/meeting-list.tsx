@@ -132,7 +132,7 @@ function StatusDot({ status }: { status: Meeting['status'] }) {
 }
 
 // ─────────────────────────────────────────────────────────
-// Mobile card — tap to open detail popup
+// Mobile card - tap to open detail popup
 // ─────────────────────────────────────────────────────────
 
 function MobileMeetingCard({ meeting, index }: { meeting: Meeting; index: number }) {
@@ -159,7 +159,7 @@ function MobileMeetingCard({ meeting, index }: { meeting: Meeting; index: number
 
   return (
     <>
-      {/* List row — name only */}
+      {/* List row - name only */}
       <button
         onClick={() => setOpen(true)}
         disabled={deleting}
@@ -393,7 +393,7 @@ function MeetingRow({ meeting, index }: { meeting: Meeting; index: number }) {
           <span className="text-[13px] text-muted-foreground font-mono tabular-nums">
             {(meeting.durationSeconds ?? 0) > 0
               ? formatDuration(meeting.durationSeconds ?? 0)
-              : '—'}
+              : '-'}
           </span>
         </td>
 
@@ -519,7 +519,7 @@ export function MeetingTable({ meetings }: MeetingListProps) {
 
   return (
     <div>
-      {/* Filter / search bar — sticky so it stays visible while table scrolls */}
+      {/* Filter / search bar - sticky so it stays visible while table scrolls */}
       <div className="sticky top-0 z-10 bg-background flex flex-col sm:flex-row sm:items-center gap-0 px-3 sm:px-5 border-b border-border">
         {/* Tabs */}
         <div className="flex items-center gap-0">
@@ -645,7 +645,7 @@ export function MeetingTable({ meetings }: MeetingListProps) {
                 onSort={handleSort}
                 className="w-44"
               />
-              {/* Actions — no header label */}
+              {/* Actions - no header label */}
               <th className="w-12" />
             </tr>
           </thead>

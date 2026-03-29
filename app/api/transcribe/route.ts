@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
 
   logger.info('Transcribing chunk', { userId: session.user.id, sizeBytes: audio.size })
 
-  // Wrap in File with explicit name+type — Groq requires a filename with a recognized extension
+  // Wrap in File with explicit name+type - Groq requires a filename with a recognized extension
   const file = new File([audio], 'chunk.webm', { type: audio.type || 'audio/webm' })
 
   const groqForm = new FormData()

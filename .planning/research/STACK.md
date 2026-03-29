@@ -19,7 +19,7 @@
 **Rationale:** Next.js 15 App Router is the standard for SaaS in 2025. React 19 concurrent features help with streaming AI responses. Tailwind + shadcn/ui gives production-quality UI with minimal effort.
 
 **Next.js 15 breaking changes to know:**
-- Async Request APIs — `cookies()`, `headers()`, `params` are now async
+- Async Request APIs - `cookies()`, `headers()`, `params` are now async
 - GET Route Handlers no longer cached by default
 - These affect SST streaming routes and auth middleware
 
@@ -33,7 +33,7 @@
 | AssemblyAI | ✗ Higher latency, more expensive |
 | Rev.ai | ✗ Less developer-friendly |
 
-**Rationale:** Deepgram Nova-2 supports WebSocket-based real-time streaming — critical for live transcription during meetings. Highest accuracy in 2025 benchmarks. SDK: `@deepgram/sdk`.
+**Rationale:** Deepgram Nova-2 supports WebSocket-based real-time streaming - critical for live transcription during meetings. Highest accuracy in 2025 benchmarks. SDK: `@deepgram/sdk`.
 
 **Confidence: High**
 
@@ -42,8 +42,8 @@
 ### Audio Capture (Browser)
 | API | Notes |
 |-----|-------|
-| `getDisplayMedia()` | Tab audio — Chrome/Edge only ⚠️ |
-| `getUserMedia()` | Mic audio — all browsers |
+| `getDisplayMedia()` | Tab audio - Chrome/Edge only ⚠️ |
+| `getUserMedia()` | Mic audio - all browsers |
 | `recordrtc` | Cross-browser MediaRecorder normalization |
 | `MediaRecorder` | Native API, inconsistent browser support |
 
@@ -74,7 +74,7 @@
 | Choice | Verdict |
 |--------|---------|
 | **Supabase (Postgres)** | ✅ Recommended |
-| Neon | ✗ DB only — need separate auth, storage, realtime |
+| Neon | ✗ DB only - need separate auth, storage, realtime |
 | PlanetScale | ✗ MySQL, deprecated free tier |
 | Railway Postgres | ✗ DB only |
 
@@ -142,7 +142,7 @@
 | Railway | ✗ Good but less Next.js optimized |
 | Fly.io | ✗ More DevOps overhead |
 
-**Rationale:** Vercel is the natural fit for Next.js — zero-config deployments, edge functions, preview deployments.
+**Rationale:** Vercel is the natural fit for Next.js - zero-config deployments, edge functions, preview deployments.
 
 ---
 
@@ -158,8 +158,8 @@
 ---
 
 ### Real-time
-- **Supabase Realtime** — for collaborative note editing, live transcript updates
-- **Server-Sent Events (SSE)** — for AI streaming responses via Vercel AI SDK
+- **Supabase Realtime** - for collaborative note editing, live transcript updates
+- **Server-Sent Events (SSE)** - for AI streaming responses via Vercel AI SDK
 
 ---
 

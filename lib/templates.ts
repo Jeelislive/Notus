@@ -77,7 +77,7 @@ export const BUILT_IN_TEMPLATES: BuiltInTemplate[] = [
   {
     id: 'daily-standup',
     name: 'Daily Standup',
-    description: 'Quick daily sync — yesterday, today, blockers',
+    description: 'Quick daily sync - yesterday, today, blockers',
     content: `<h2>Daily Standup</h2>
 <h3>Yesterday</h3>
 <ul><li></li></ul>

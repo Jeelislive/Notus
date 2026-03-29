@@ -238,7 +238,7 @@ export function SearchPageClient() {
           <p className="text-[13px] text-muted-foreground">
             {results.length} result{results.length !== 1 ? 's' : ''}
             {aiMode && usedKeyword && usedKeyword !== query ? (
-              <> — AI searched for &ldquo;<span className="font-medium text-foreground">{usedKeyword}</span>&rdquo;</>
+              <> - AI searched for &ldquo;<span className="font-medium text-foreground">{usedKeyword}</span>&rdquo;</>
             ) : null}
           </p>
           {results.map((r) => (

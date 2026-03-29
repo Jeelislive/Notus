@@ -1,6 +1,6 @@
 /**
  * Structured logger for Vercel Function Logs.
- * All output goes to stdout/stderr — visible in Vercel → Project → Logs tab.
+ * All output goes to stdout/stderr - visible in Vercel → Project → Logs tab.
  *
  * Usage:
  *   import { log } from '@/lib/logger'

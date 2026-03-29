@@ -211,7 +211,7 @@ export function ActionItemsPopup({
         {panel === 'jira' && (
           <div className="flex-1 overflow-y-auto px-6 pb-4 space-y-5 min-h-0">
             {!jiraConfig ? (
-              /* Not connected — direct to settings */
+              /* Not connected - direct to settings */
               <div className="flex flex-col items-center justify-center py-8 text-center gap-4">
                 <div className="size-12 rounded-2xl bg-[#0052CC]/10 flex items-center justify-center">
                   <svg viewBox="0 0 24 24" className="size-6" style={{ fill: '#0052CC' }} aria-hidden="true">
@@ -234,7 +234,7 @@ export function ActionItemsPopup({
                 </Link>
               </div>
             ) : (
-              /* Connected — show tasks */
+              /* Connected - show tasks */
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>

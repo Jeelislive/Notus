@@ -1,6 +1,6 @@
 # Features Backlog
 
-## Feature 1 — Intelligent AI Summary (Structured, Speaker-Aware)
+## Feature 1 - Intelligent AI Summary (Structured, Speaker-Aware)
 
 ### Overview
 Replace generic AI summaries with structured, context-rich output that understands *who said what* and automatically highlights key moments.
@@ -8,7 +8,7 @@ Replace generic AI summaries with structured, context-rich output that understan
 ### Sub-features
 
 #### 1.1 Speaker Detection & Attribution
-- Transcript segments already have `speaker` field — wire it into the AI prompt
+- Transcript segments already have `speaker` field - wire it into the AI prompt
 - AI summary should attribute statements: *"Jeel said: 'We need to ship by Friday'"*
 - Show speaker avatars/initials beside attributed quotes in the Summary tab
 - Detect speaker roles: identify who is manager vs. direct report in a 1-on-1
@@ -35,24 +35,24 @@ Replace free-text summary with structured sections:
   Type: 1-on-1 | Duration: 32 min | Participants: Jeel, Manager
 
 🎯 Decisions Made
-  • [Decision] Decided to move API deadline to next sprint — Jeel, 12:04
-  • [Decision] Will use Stripe for billing — Manager, 18:22
+  • [Decision] Decided to move API deadline to next sprint - Jeel, 12:04
+  • [Decision] Will use Stripe for billing - Manager, 18:22
 
 ❓ Open Questions
   • Who owns the QA process after handoff? (unanswered)
-  • Budget approval — waiting on Manager
+  • Budget approval - waiting on Manager
 
 ⚡ Action Items
   → Jeel: Fix API bug  |  Due: Friday
   → Manager: Send contract  |  Due: EOD
 
 ⚠️ Risks & Blockers
-  • API dependency on third-party — flagged by Jeel at 08:14
+  • API dependency on third-party - flagged by Jeel at 08:14
   • Timeline at risk if design not finalized by Wednesday
 
 💬 Key Quotes
-  "We can't ship without testing" — Jeel, 14:33
-  "I'll escalate this to leadership" — Manager, 22:10
+  "We can't ship without testing" - Jeel, 14:33
+  "I'll escalate this to leadership" - Manager, 22:10
 ```
 
 #### 1.4 Implementation Notes
@@ -64,7 +64,7 @@ Replace free-text summary with structured sections:
 
 ---
 
-## Feature 2 — Action Items Auto-Tracking + Jira Integration
+## Feature 2 - Action Items Auto-Tracking + Jira Integration
 
 ### Overview
 Automatically detect commitments in transcript/notes and convert them to trackable tasks. One-click Jira integration to assign and create tickets without leaving Notus.
@@ -107,14 +107,14 @@ Popup appears after AI processing with detected action items:
   2. Popup shows: Task name, Assignee (mapped to Jira user), Due date, Priority, Project selector, Issue type
   3. User clicks **Apply** → creates Jira issue via Jira REST API
   4. Auto-assigns to correct team member
-  5. Returns Jira issue link — show as badge on the action item
+  5. Returns Jira issue link - show as badge on the action item
 - **Jira issue fields**: Summary, Description (with meeting context), Assignee, Due date, Priority, Labels (meeting-id, notus-generated)
 - **Schema**: add `jiraIntegration: jsonb` to profiles (stores domain, token, project defaults)
 - **API route**: `POST /api/integrations/jira/create-issue`
 
 ---
 
-## Feature 3 — Search Across All Meetings (AI-Powered)
+## Feature 3 - Search Across All Meetings (AI-Powered)
 
 ### Overview
 Google-like search bar that works across all meeting transcripts, notes, and summaries. Supports natural language queries powered by AI.
@@ -142,11 +142,11 @@ Google-like search bar that works across all meeting transcripts, notes, and sum
 Found 4 meetings
 
 ┌────────────────────────────────────────────────┐
-│  📅 Mar 15 — Q2 Planning                       │
+│  📅 Mar 15 - Q2 Planning                       │
 │  "...we agreed the pricing tier should start   │
 │   at $49..." [jump to transcript →]            │
 ├────────────────────────────────────────────────┤
-│  📅 Mar 10 — Client Call: Acme Corp            │
+│  📅 Mar 10 - Client Call: Acme Corp            │
 │  "...client pushed back on pricing, said it's  │
 │   too high for SMBs..." [jump to transcript →] │
 └────────────────────────────────────────────────┘
@@ -165,20 +165,20 @@ Found 4 meetings
 
 ---
 
-## Feature 4 — Live Meeting Assistant
+## Feature 4 - Live Meeting Assistant
 
 ### Overview
-Real-time AI co-pilot that activates during active recordings. Shows contextual suggestions, past meeting references, and contradiction detection — all in a live side panel.
+Real-time AI co-pilot that activates during active recordings. Shows contextual suggestions, past meeting references, and contradiction detection - all in a live side panel.
 
 ### Sub-features
 
 #### 4.1 Live Suggestions During Recording
 - As speech is transcribed in real-time, AI analyses the last 30 seconds
 - Shows suggestions in a live panel beside the transcript:
-  - *"You discussed this with the same client on Mar 10 — they mentioned X"*
+  - *"You discussed this with the same client on Mar 10 - they mentioned X"*
   - *"This contradicts the decision made on Feb 28"*
   - *"Consider asking: What's the timeline for this?"*
-- Debounced — updates every 10-15 seconds to avoid noise
+- Debounced - updates every 10-15 seconds to avoid noise
 
 #### 4.2 Context from Past Meetings
 - When a topic is detected (e.g., "pricing", "API"), automatically surface:
@@ -210,7 +210,7 @@ Live transcript uses colored highlights:
 - Past meeting context: fetch user's last 20 meeting summaries, send condensed version in prompt
 - API route: `POST /api/ai/live-assist` (SSE or polling every 10s during recording)
 - Contradiction store: embeddings of all past decisions (or keyword matching to start)
-- UI: side panel with tabs — Suggestions / Past Context / Contradictions
+- UI: side panel with tabs - Suggestions / Past Context / Contradictions
 
 ---
 

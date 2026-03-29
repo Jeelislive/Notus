@@ -25,7 +25,7 @@ export async function testLinearConnection(
       logger.info('Connection OK', { viewer: data.data.viewer.name, teamName })
       return { ok: true, teamName }
     }
-    logger.error('Invalid API key — no viewer in response')
+    logger.error('Invalid API key - no viewer in response')
     return { ok: false, error: 'Invalid API key' }
   } catch (e) {
     const msg = e instanceof Error ? e.message : 'Network error'

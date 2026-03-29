@@ -172,7 +172,7 @@ export function NotesPageClient({ meetings, notesByMeeting, selectedNoteId, curr
 
             return (
               <div key={meeting.id}>
-                {/* Meeting row — accordion header */}
+                {/* Meeting row - accordion header */}
                 <button
                   onClick={() => toggleExpand(meeting.id)}
                   className="w-full flex items-center gap-2 px-4 py-2.5 hover:bg-muted/40 text-left group active:scale-[0.98]"
@@ -378,7 +378,7 @@ function NoteEditor({ meeting, note, currentUser, meetingType, jiraConfig }: { m
       })
       const json = await res.json()
       if (!res.ok) return
-      // Set content — TipTap picks it up via its useEffect
+      // Set content - TipTap picks it up via its useEffect
       setContent(json.html)
       setSaveStatus('unsaved')
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)

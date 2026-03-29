@@ -43,7 +43,7 @@ function generateWav(durationSeconds = 5, hz = 440, sampleRate = 16000) {
 }
 
 async function testDirectGroq() {
-  console.log('\n═══ TEST 1: Direct Groq API (JFK sample — confirmed working) ═══')
+  console.log('\n═══ TEST 1: Direct Groq API (JFK sample - confirmed working) ═══')
   const audio = readFileSync('/tmp/test-speech.flac')
   const file = new File([audio], 'test.flac', { type: 'audio/flac' })
   const form = new FormData()
@@ -93,7 +93,7 @@ async function testWavBlob() {
 }
 
 async function testBlobSizeCheck() {
-  console.log('\n═══ TEST 3: Blob size gate — what does a 5-sec MediaRecorder chunk look like? ═══')
+  console.log('\n═══ TEST 3: Blob size gate - what does a 5-sec MediaRecorder chunk look like? ═══')
   // MediaRecorder at default bitrate (~128kbps) for 5 seconds = ~80,000 bytes
   // But the FIRST chunk might be smaller because it includes codec init overhead
   // Minimum useful size: anything > 1000 bytes should have real audio
@@ -111,7 +111,7 @@ async function testFileObjectDoubleWrap() {
   const original = readFileSync('/tmp/test-speech.flac')
   const blob1 = new Blob([original], { type: 'audio/flac' })
   const file1 = new File([blob1], 'test.flac', { type: 'audio/flac' })
-  // Double wrap — same as our route
+  // Double wrap - same as our route
   const file2 = new File([file1], 'chunk.webm', { type: file1.type || 'audio/flac' })
 
   console.log('Original size:', original.length)
@@ -139,7 +139,7 @@ async function testFileObjectDoubleWrap() {
 async function testMimeTypeMatters() {
   console.log('\n═══ TEST 5: Does Groq care about mimeType vs actual format? ═══')
   // Our route sends audio/webm even though the content IS webm from MediaRecorder
-  // Test: send FLAC but labeled as webm — does Groq sniff the format?
+  // Test: send FLAC but labeled as webm - does Groq sniff the format?
   const original = readFileSync('/tmp/test-speech.flac')
   const file = new File([original], 'chunk.webm', { type: 'audio/webm' })
 

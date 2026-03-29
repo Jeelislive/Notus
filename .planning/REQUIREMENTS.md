@@ -1,7 +1,7 @@
-# Requirements: Granola Clone — AI Meeting Notes SaaS
+# Requirements: Granola Clone - AI Meeting Notes SaaS
 
 **Defined:** 2026-03-21
-**Core Value:** Meeting notes that write themselves — users focus on the conversation, AI handles the rest.
+**Core Value:** Meeting notes that write themselves - users focus on the conversation, AI handles the rest.
 
 ---
 
@@ -103,14 +103,14 @@
 
 ### Advanced AI
 - **AIV2-01**: Semantic search across meetings (search by meaning, not just keywords)
-- **AIV2-02**: Topic tagging — auto-tag meetings by subject
-- **AIV2-03**: People tagging — track conversations by contact across meetings
-- **AIV2-04**: Recurring meeting memory — AI remembers context from prior meetings with same attendees
+- **AIV2-02**: Topic tagging - auto-tag meetings by subject
+- **AIV2-03**: People tagging - track conversations by contact across meetings
+- **AIV2-04**: Recurring meeting memory - AI remembers context from prior meetings with same attendees
 
 ### Integrations
-- **INTV2-01**: CRM integration — push notes to HubSpot or Salesforce
-- **INTV2-02**: ATS integration — push interview notes to Greenhouse or Lever
-- **INTV2-03**: Zapier/webhook support — connect to any tool
+- **INTV2-01**: CRM integration - push notes to HubSpot or Salesforce
+- **INTV2-02**: ATS integration - push interview notes to Greenhouse or Lever
+- **INTV2-03**: Zapier/webhook support - connect to any tool
 
 ### Collaboration
 - **COLLV2-01**: Real-time collaborative note editing (multiple users simultaneously)
@@ -120,7 +120,7 @@
 - **MOBV2-02**: Phone call recording via mobile app
 
 ### Analytics
-- **ANAV2-01**: Meeting analytics — talk time, meeting frequency, topic trends
+- **ANAV2-01**: Meeting analytics - talk time, meeting frequency, topic trends
 
 ---
 

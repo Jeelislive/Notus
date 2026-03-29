@@ -80,7 +80,7 @@ const featureCards = [
   {
     Icon: Sparkles,
     title: 'AI-powered notes',
-    description: 'Structured summaries, decisions, and action items — generated the moment your meeting ends.',
+    description: 'Structured summaries, decisions, and action items - generated the moment your meeting ends.',
     Preview: NotesPreview,
   },
   {
@@ -99,7 +99,7 @@ const splitFeature1 = [
 ]
 
 const splitFeature2 = [
-  { Icon: Sparkles, title: 'Human-like summaries', desc: 'Notes that read like a human wrote them — not robotic bullet dumps.' },
+  { Icon: Sparkles, title: 'Human-like summaries', desc: 'Notes that read like a human wrote them - not robotic bullet dumps.' },
   { Icon: Share2, title: 'Instant follow-ups', desc: 'Follow-up emails drafted and ready before you close your laptop.' },
   { Icon: Lock, title: 'Private by design', desc: 'Encrypted at rest and in transit. We never train on your meetings.' },
   { Icon: MessageSquare, title: 'AI that knows context', desc: 'Chat taps your entire meeting history, not just the current call.' },
@@ -111,7 +111,7 @@ function DashboardPreview() {
     { title: 'Product Roadmap Review', date: 'Mar 27', duration: '32:05', type: 'Team Meeting', status: 'Done',       statusColor: 'text-emerald-600 dark:text-emerald-400', dot: 'bg-emerald-500' },
     { title: 'Customer Discovery',     date: 'Mar 27', duration: '28:41', type: 'Interview',    status: 'Done',       statusColor: 'text-emerald-600 dark:text-emerald-400', dot: 'bg-emerald-500' },
     { title: 'Engineering Standup',    date: 'Mar 26', duration: '12:30', type: 'Standup',      status: 'Processing', statusColor: 'text-amber-500',                         dot: 'bg-amber-400' },
-    { title: 'Sales Call — Acme Corp', date: 'Mar 26', duration: '1:02:18', type: 'Client',    status: 'Done',       statusColor: 'text-emerald-600 dark:text-emerald-400', dot: 'bg-emerald-500' },
+    { title: 'Sales Call - Acme Corp', date: 'Mar 26', duration: '1:02:18', type: 'Client',    status: 'Done',       statusColor: 'text-emerald-600 dark:text-emerald-400', dot: 'bg-emerald-500' },
   ]
 
   return (

@@ -712,7 +712,7 @@ function TaskRow({ task, rowNum, editable, currentUser, onToggleComplete, onUpda
             className={`text-[12px] font-medium ${task.minutes ? 'text-foreground' : `text-muted-foreground/40 hover:text-muted-foreground ${hovered ? 'opacity-100' : 'opacity-0'}`}`}
             style={{ transition: 'opacity 120ms ease-out, color 120ms ease-out' }}
           >
-            {task.minutes ?? (hovered ? '—' : '')}
+            {task.minutes ?? (hovered ? '-' : '')}
           </button>
         )}
       </div>

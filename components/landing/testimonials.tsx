@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react'
 
 const testimonials = [
   {
-    quote: "Notus has become indispensable — feels like I'm living in the future.",
+    quote: "Notus has become indispensable - feels like I'm living in the future.",
     name: 'John Borthwick',
     title: 'Investor, Betaworks',
     bg: 'bg-indigo-100 dark:bg-indigo-950/30',
@@ -12,7 +12,7 @@ const testimonials = [
     color: 'bg-indigo-500',
   },
   {
-    quote: "The addiction is real — at this point I can't imagine life without it. Effortlessly powerful.",
+    quote: "The addiction is real - at this point I can't imagine life without it. Effortlessly powerful.",
     name: 'Adriana Vitagliano',
     title: 'VC, Firstminute Capital',
     bg: 'bg-violet-100 dark:bg-violet-950/30',

@@ -72,7 +72,7 @@ export function MeetingClient({ meeting, transcript, speakerMappings: initialMap
       />
 
       <div className="relative flex gap-3" style={{ height: 'calc(100vh - 240px)' }}>
-        {/* Transcript panel — fills remaining width */}
+        {/* Transcript panel - fills remaining width */}
         <div className="flex-1 min-w-0">
           <TranscriptPanel
             transcript={transcript}

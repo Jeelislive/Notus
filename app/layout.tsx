@@ -19,17 +19,26 @@ const bitter = Bitter({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Notus — AI Meeting Notes',
+    default: 'Notus',
     template: '%s | Notus',
   },
   description:
-    'Notus records, transcribes, and turns your meetings into structured notes with summaries, action items, and follow-up emails — automatically.',
+    'Notus records, transcribes, and turns your meetings into structured notes with summaries, action items, and follow-up emails - automatically.',
   keywords: ['meeting notes', 'AI transcription', 'meeting recorder', 'meeting summary'],
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/logo-icon.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/favicon.svg',
+    apple: '/logo-icon.svg',
+  },
   openGraph: {
-    title: 'Notus — AI Meeting Notes',
+    title: 'Notus - AI Meeting Notes',
     description: 'Stop taking notes. Start having better meetings.',
     type: 'website',
   },
+  manifest: '/manifest.json',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

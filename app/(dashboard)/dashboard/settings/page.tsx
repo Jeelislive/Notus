@@ -36,7 +36,7 @@ export default async function SettingsPage() {
         </div>
       </div>
 
-      {/* Integrations card — links to dedicated hub */}
+      {/* Integrations card - links to dedicated hub */}
       <Link
         href="/dashboard/integrations"
         className="flex items-center justify-between px-5 py-4 rounded-2xl border border-border bg-background hover:border-border/80 hover:shadow-sm active:scale-[0.99] transition-all duration-150 group"

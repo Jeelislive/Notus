@@ -16,7 +16,7 @@ export function Hero() {
       </div>
 
 
-      {/* Illustration — left side at CTA level, light mode only */}
+      {/* Illustration - left side at CTA level, light mode only */}
       <div
         aria-hidden
         className="pointer-events-none absolute left-[260px] top-[450px] hidden xl:block dark:hidden animate-fade-in"
@@ -52,7 +52,7 @@ export function Hero() {
         {/* Subheadline */}
         <p className="animate-fade-up delay-200 text-xl sm:text-2xl text-muted-foreground leading-relaxed mb-10 max-w-2xl mx-auto">
           Notus transcribes your meetings and turns raw notes into structured
-          summaries, action items, and follow-up emails — automatically.
+          summaries, action items, and follow-up emails - automatically.
         </p>
 
         {/* CTAs */}
@@ -113,7 +113,7 @@ export function Hero() {
                 </div>
 
                 {[
-                  { s: 'Alex M.', c: 'text-indigo-600', t: '23:04', msg: "The caching layer is top priority — we need it before Q3, non-negotiable." },
+                  { s: 'Alex M.', c: 'text-indigo-600', t: '23:04', msg: "The caching layer is top priority - we need it before Q3, non-negotiable." },
                   { s: 'Sarah K.', c: 'text-violet-500', t: '23:22', msg: "Redis at the edge cuts p99 from 2.3s to under 200ms. I can have a POC Thursday." },
                   { s: 'Mike R.', c: 'text-emerald-500', t: '23:48', msg: "Agreed. We should also update the API SLA docs while we're at it." },
                   { s: 'Alex M.', c: 'text-indigo-600', t: '24:10', msg: "Good call. Sarah, can you own that? Aim for Friday?" },
@@ -202,7 +202,7 @@ export function Hero() {
 
                 {[
                   { role: 'user', text: 'Write a follow-up email for this meeting' },
-                  { role: 'ai', text: 'Hi team,\n\nKey outcomes from today:\n• Redis POC — Mike by Thu\n• SLA docs — Sarah by Fri\n• Mobile moved to Q3\n\nBest,\nAlex' },
+                  { role: 'ai', text: 'Hi team,\n\nKey outcomes from today:\n• Redis POC - Mike by Thu\n• SLA docs - Sarah by Fri\n• Mobile moved to Q3\n\nBest,\nAlex' },
                   { role: 'user', text: 'What did we decide about mobile?' },
                   { role: 'ai', text: 'Mobile was pushed to Q3 to prioritize the caching layer before June 1.' },
                 ].map((m, i) => (

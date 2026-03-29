@@ -139,7 +139,7 @@ export function MeetingDetailHeader({ meeting, connectedIntegrations = [] }: Mee
         </div>
 
         <div className="flex items-center gap-2 flex-wrap sm:shrink-0 sm:justify-end">
-          {/* Integration quick-actions — only shown when meeting is completed */}
+          {/* Integration quick-actions - only shown when meeting is completed */}
           {meeting.status === 'completed' && connectedIntegrations.includes('slack') && (
             <button
               onClick={handleShareToSlack}

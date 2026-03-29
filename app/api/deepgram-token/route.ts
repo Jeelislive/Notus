@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/session'
 
 // Returns the Deepgram API key for authenticated users so the browser can
-// open a WebSocket directly. The key never appears in client-side source —
+// open a WebSocket directly. The key never appears in client-side source -
 // it only arrives after a successful session check on our server.
 export async function GET() {
   const session = await getSession()

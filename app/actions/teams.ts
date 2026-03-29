@@ -139,7 +139,7 @@ export async function leaveTeam(teamId: string) {
 
   const team = await db.select().from(teams).where(eq(teams.id, teamId)).limit(1).then((r) => r[0])
   if (!team) throw new Error('Team not found')
-  if (team.ownerId === session.user.id) throw new Error('Owner cannot leave — transfer ownership or delete the team first')
+  if (team.ownerId === session.user.id) throw new Error('Owner cannot leave - transfer ownership or delete the team first')
 
   await db
     .delete(teamMembers)

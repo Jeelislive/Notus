@@ -69,7 +69,7 @@ export async function createJiraIssues(
   const errors: string[] = []
 
   for (const issue of issues) {
-    // Omit priority — causes 400 on Jira instances with custom priority schemes
+    // Omit priority - causes 400 on Jira instances with custom priority schemes
     const fields: Record<string, unknown> = {
       project: { key: projectKey },
       summary: issue.summary,

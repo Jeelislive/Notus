@@ -93,7 +93,7 @@ export function RecordingControls({ status, error, elapsedSeconds, audioLevel, i
           <p className="text-[15px] font-semibold text-foreground">Start recording</p>
           <p className="text-[13px] text-muted-foreground">
             {tabAudioAvailable
-              ? 'Capture tab or mic audio — transcript appears in real time'
+              ? 'Capture tab or mic audio - transcript appears in real time'
               : 'Capture microphone audio with live transcription'}
           </p>
         </div>

@@ -8,14 +8,14 @@
 ## Critical Pitfalls
 
 ### 1. `getDisplayMedia` Cross-Browser Audio Failure
-**What goes wrong:** Tab audio capture (`getDisplayMedia` with `audio: true`) only works in Chrome and Edge. Safari doesn't support it at all. Firefox requires video alongside audio. Users on Safari silently get no audio — recording appears to work but produces empty transcripts.
+**What goes wrong:** Tab audio capture (`getDisplayMedia` with `audio: true`) only works in Chrome and Edge. Safari doesn't support it at all. Firefox requires video alongside audio. Users on Safari silently get no audio - recording appears to work but produces empty transcripts.
 
 **Why it happens:** The Web Audio API spec for tab audio capture is not uniformly implemented.
 
 **Consequences:** Silent recordings, user data loss, negative first impressions, support tickets.
 
 **Prevention:**
-- Detect browser on recording start — block/warn Safari users for tab audio
+- Detect browser on recording start - block/warn Safari users for tab audio
 - Fall back to mic-only (`getUserMedia`) on unsupported browsers
 - Display clear browser requirement banner ("Chrome or Edge required for tab audio")
 - Phase 1: Browser detection + graceful degradation
@@ -29,10 +29,10 @@
 
 **Why it happens:** Vercel's edge/serverless architecture limits payload size.
 
-**Consequences:** All long meetings fail to upload audio — the core feature breaks.
+**Consequences:** All long meetings fail to upload audio - the core feature breaks.
 
 **Prevention:**
-- Never upload audio through a Next.js API route — upload directly to Supabase Storage from the browser using signed upload URLs
+- Never upload audio through a Next.js API route - upload directly to Supabase Storage from the browser using signed upload URLs
 - Chunk audio into ≤60-second segments and upload each chunk independently
 - Phase 3 (audio pipeline): implement chunked direct-to-storage upload pattern
 
@@ -49,7 +49,7 @@
 
 **Prevention:**
 - Use Deepgram WebSocket streaming during recording (real-time, not batch)
-- For any post-processing, use Inngest background jobs — never Route Handler timeouts
+- For any post-processing, use Inngest background jobs - never Route Handler timeouts
 - Phase 3: all STT processing must be async
 
 ---
@@ -105,7 +105,7 @@
 ## Moderate Pitfalls
 
 ### 7. Building Real-Time Collaboration Too Early
-**What goes wrong:** Collaborative note editing (multiple users editing simultaneously) is architecturally complex — requires OT or CRDT (Yjs), WebSocket server, conflict resolution. Building it early slows down the entire project.
+**What goes wrong:** Collaborative note editing (multiple users editing simultaneously) is architecturally complex - requires OT or CRDT (Yjs), WebSocket server, conflict resolution. Building it early slows down the entire project.
 
 **Prevention:** Ship single-user note editing first. Add collaboration in v2. Tiptap has Yjs integration when ready.
 
@@ -118,7 +118,7 @@
 
 **Prevention:**
 - Never mutate editor content while user is typing
-- Show AI content in a separate "AI suggestions" panel — user explicitly accepts/merges
+- Show AI content in a separate "AI suggestions" panel - user explicitly accepts/merges
 - Or replace content only on explicit user action ("Apply AI notes")
 - Phase 5 (AI enhancement): design merge UX carefully
 
@@ -129,7 +129,7 @@
 
 **Prevention:**
 - Delete raw audio chunks after transcript is confirmed complete
-- Keep transcripts (text) — storage is negligible
+- Keep transcripts (text) - storage is negligible
 - Offer audio retention as a paid feature only
 - Phase 3: auto-delete audio after processing
 
@@ -142,7 +142,7 @@
 - Add consent disclaimer in onboarding and recording UI
 - Provide a "meeting notice" template users can share with participants
 - Add privacy policy section on recording consent
-- This is a legal risk, not just UX — address in Phase 1 onboarding
+- This is a legal risk, not just UX - address in Phase 1 onboarding
 - Phase 1: consent UI + terms of service
 
 ---
@@ -151,7 +151,7 @@
 **What goes wrong:** Stripe webhooks arrive out of order. `customer.subscription.updated` can arrive before `checkout.session.completed`. If you update subscription state naively, users get incorrect plan access.
 
 **Prevention:**
-- Use Stripe's event timestamp to order updates — only apply if event is newer than DB state
+- Use Stripe's event timestamp to order updates - only apply if event is newer than DB state
 - Handle all relevant events: `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.payment_failed`
 - Use idempotency keys on all Stripe API calls
 - Phase 7 (billing): follow Stripe's recommended webhook handling pattern
@@ -174,7 +174,7 @@
 
 **Prevention:**
 - Show progress: "Processing transcript... Generating notes... Done"
-- Use optimistic UI — show transcript immediately, notes "coming soon"
+- Use optimistic UI - show transcript immediately, notes "coming soon"
 - Send email/notification when notes are ready (user can leave)
 - Phase 5 (AI): progress streaming + notification on completion
 
@@ -184,8 +184,8 @@
 **What goes wrong:** Google requires verification for apps requesting sensitive Calendar scopes. The verification process takes 4-6 weeks. Launching with calendar integration requiring verification blocks the feature.
 
 **Prevention:**
-- Request only read-only calendar scope (`calendar.readonly`) — less sensitive
-- Display "unverified app" warning to users in dev — expected in testing
+- Request only read-only calendar scope (`calendar.readonly`) - less sensitive
+- Display "unverified app" warning to users in dev - expected in testing
 - Submit for verification early (Phase 4 when calendar integration is built)
 - Consider using calendar data only from email (parse meeting invites) as a fallback
 
@@ -204,14 +204,14 @@
 ## Minor Pitfalls
 
 ### 16. ScriptProcessorNode Deprecation (Main Thread Jank)
-**What goes wrong:** `ScriptProcessorNode` is deprecated and runs on the main thread — causes audio dropouts and UI freezing.
+**What goes wrong:** `ScriptProcessorNode` is deprecated and runs on the main thread - causes audio dropouts and UI freezing.
 
 **Prevention:** Use `AudioWorkletNode` for all audio processing. Phase 3.
 
 ---
 
 ### 17. Speaker Diarization Mismatch with Tab Audio
-**What goes wrong:** Deepgram's speaker diarization expects distinct audio channels per speaker. Tab audio mixes all participants into one stream — diarization is less accurate than expected.
+**What goes wrong:** Deepgram's speaker diarization expects distinct audio channels per speaker. Tab audio mixes all participants into one stream - diarization is less accurate than expected.
 
 **Prevention:** Set accurate expectations in UI ("approximate speaker labels"). Don't promise perfect attribution. Phase 3: document limitation.
 
@@ -222,7 +222,7 @@
 
 **Prevention:**
 - Implement token refresh logic for each integration
-- Surface integration errors to users ("Notion disconnected — reconnect")
+- Surface integration errors to users ("Notion disconnected - reconnect")
 - Store token expiry timestamp and proactively refresh
 - Phase 6 (integrations)
 

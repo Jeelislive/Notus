@@ -1,6 +1,6 @@
-# Roadmap: Granola — AI Meeting Notes SaaS
+# Roadmap: Granola - AI Meeting Notes SaaS
 
-**Milestone:** v1 — Core Product
+**Milestone:** v1 - Core Product
 **Goal:** Ship a browser-based AI meeting notes product with audio capture, real-time transcription, AI-enhanced notes, sharing, calendar integration, billing, and team workspaces.
 
 ---
@@ -11,7 +11,7 @@
 
 **Requirements:** AUTH-01, AUTH-02, AUTH-03, AUTH-04, AUTH-05, AUTH-06
 
-**Rationale:** Everything else depends on auth. The consent/GDPR issue must be resolved before any recording can happen — it's a legal risk. DB schema + FTS indexes must be set from the start; retrofitting is painful.
+**Rationale:** Everything else depends on auth. The consent/GDPR issue must be resolved before any recording can happen - it's a legal risk. DB schema + FTS indexes must be set from the start; retrofitting is painful.
 
 **Delivers:**
 - Next.js 15 App Router project scaffold (TypeScript, Tailwind CSS 4, shadcn/ui)
@@ -50,7 +50,7 @@
 
 ## Phase 3: Recording Pipeline + STT
 
-**Goal:** Users can record tab audio (Chrome/Edge) or microphone audio, with a real-time transcript appearing during the meeting. Audio chunked directly to Supabase Storage — never through a Route Handler.
+**Goal:** Users can record tab audio (Chrome/Edge) or microphone audio, with a real-time transcript appearing during the meeting. Audio chunked directly to Supabase Storage - never through a Route Handler.
 
 **Requirements:** REC-01, REC-02, REC-03, REC-04, REC-05, REC-06, REC-07, STT-01, STT-02, STT-03, STT-04, STT-05
 
@@ -99,14 +99,14 @@
 
 **Requirements:** NOTE-03, NOTE-04, NOTE-05, AI-01, AI-02, AI-06, AI-07, AI-08
 
-**Rationale:** Layered on top of transcription. Inngest job pattern used — never synchronous. Post-meeting UX moment is highest-stakes; latency managed with progress feedback and async notifications.
+**Rationale:** Layered on top of transcription. Inngest job pattern used - never synchronous. Post-meeting UX moment is highest-stakes; latency managed with progress feedback and async notifications.
 
 **Delivers:**
 - Inngest background job triggered on recording stop: fetches transcript → sends to Claude via Vercel AI SDK v4 → persists structured notes
 - AI note structuring (summary, key points, decisions, action items) injected into Tiptap document
 - AI-generated action items list with assignees extracted from transcript
 - Follow-up email draft generated post-meeting
-- AI processing progress UI (not blank spinner — step-by-step status)
+- AI processing progress UI (not blank spinner - step-by-step status)
 - Email notification (Resend) when AI notes are ready
 - AI chat panel on meeting transcript: streaming responses via `streamText()` → SSE
 - Custom AI prompts that run automatically after every meeting (user-defined)
@@ -121,7 +121,7 @@
 
 **Requirements:** SHARE-01, SHARE-02, SHARE-03, SHARE-04, SHARE-05, SHARE-06, CAL-01, CAL-02, CAL-03, CAL-04
 
-**Rationale:** Retention features. Sharing turns meetings into artifacts users share outside the product — viral loop. Calendar integration improves meeting naming/discovery. Google Calendar OAuth verification must be submitted early.
+**Rationale:** Retention features. Sharing turns meetings into artifacts users share outside the product - viral loop. Calendar integration improves meeting naming/discovery. Google Calendar OAuth verification must be submitted early.
 
 **Delivers:**
 - Public shareable link generation per meeting (read-only, no auth required)
@@ -140,7 +140,7 @@
 
 ## Phase 7: Billing + Usage Metering
 
-**Goal:** Freemium model enforced — free tier capped at 300 min/month, paid tier via Stripe Checkout. Usage caps server-enforced before any public launch.
+**Goal:** Freemium model enforced - free tier capped at 300 min/month, paid tier via Stripe Checkout. Usage caps server-enforced before any public launch.
 
 **Requirements:** BILL-01, BILL-02, BILL-03, BILL-04, BILL-05, BILL-06
 
@@ -166,7 +166,7 @@
 
 **Requirements:** TEAM-01, TEAM-02, TEAM-03, TEAM-04, TEAM-05, TEAM-06, TEAM-07
 
-**Rationale:** Additive — built non-destructively on top of existing individual-user data model. Teams and team_members tables already in schema from Phase 1.
+**Rationale:** Additive - built non-destructively on top of existing individual-user data model. Teams and team_members tables already in schema from Phase 1.
 
 **Delivers:**
 - Team workspace creation

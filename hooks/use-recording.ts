@@ -140,7 +140,7 @@ export function useRecording({ meetingId }: { meetingId: string }) {
     const chunkStartMs = Math.round(result.start * 1000)
 
     if (!result.is_final) {
-      // Show interim — one segment with the current speaker
+      // Show interim - one segment with the current speaker
       const speaker = alt.words?.[0]?.speaker ?? 0
       const interimId = interimIdRef.current ?? `interim-${chunkStartMs}`
       interimIdRef.current = interimId
@@ -157,7 +157,7 @@ export function useRecording({ meetingId }: { meetingId: string }) {
       return
     }
 
-    // Final — clear interim, split into per-speaker segments
+    // Final - clear interim, split into per-speaker segments
     const currentInterimId = interimIdRef.current
     interimIdRef.current = null
     setLiveSegments((prev) => prev.filter((s) => s.id !== currentInterimId))
@@ -259,12 +259,12 @@ export function useRecording({ meetingId }: { meetingId: string }) {
       }
       streamRef.current = stream
 
-      // 3. Detect actual channel count — screen share audio is often stereo
+      // 3. Detect actual channel count - screen share audio is often stereo
       const nChannels = Math.min(stream.getAudioTracks()[0]?.getSettings()?.channelCount ?? 1, 2)
       nChannelsRef.current = nChannels
       console.log('[Audio] channel count:', nChannels)
 
-      // Audio context at 16kHz — matches linear16 format sent to Deepgram
+      // Audio context at 16kHz - matches linear16 format sent to Deepgram
       const audioCtx = new AudioContext({ sampleRate: 16000 })
       audioCtxRef.current = audioCtx
       const source = audioCtx.createMediaStreamSource(stream)
@@ -273,10 +273,10 @@ export function useRecording({ meetingId }: { meetingId: string }) {
       source.connect(analyser)
       analyserRef.current = analyser
 
-      // 4. Open Deepgram WebSocket — nova-3 has best real-time diarization accuracy
+      // 4. Open Deepgram WebSocket - nova-3 has best real-time diarization accuracy
       const ws = new WebSocket(
         'wss://api.deepgram.com/v1/listen' +
-        '?model=nova-3' +            // latest model — best diarization
+        '?model=nova-3' +            // latest model - best diarization
         '&diarize=true' +
         '&language=en' +
         '&punctuate=true' +
@@ -314,11 +314,11 @@ export function useRecording({ meetingId }: { meetingId: string }) {
       ws.onerror = (e) => console.error('[Deepgram] WebSocket error', e)
       ws.onclose = (e) => console.log('[Deepgram] WebSocket closed', e.code, e.reason)
 
-      // 5. Stream raw linear16 PCM to Deepgram — 4096 frames at 16kHz ≈ 256ms per chunk
+      // 5. Stream raw linear16 PCM to Deepgram - 4096 frames at 16kHz ≈ 256ms per chunk
       // eslint-disable-next-line deprecation/deprecation
       const processor = audioCtx.createScriptProcessor(4096, nChannels, nChannels)
       source.connect(processor)
-      processor.connect(audioCtx.destination) // required — processor won't fire without output
+      processor.connect(audioCtx.destination) // required - processor won't fire without output
 
       processor.onaudioprocess = (e) => {
         if (!isActiveRef.current || ws.readyState !== WebSocket.OPEN) return
@@ -419,7 +419,7 @@ export function useRecording({ meetingId }: { meetingId: string }) {
       body: JSON.stringify({ meetingId }),
     }).catch((e) => console.error('[AI enhance]', e))
 
-    // Batch re-diarization — runs in background after recording stops
+    // Batch re-diarization - runs in background after recording stops
     // Produces accurate speaker labels (especially for 4+ speakers) then updates DB
     const chunks = audioChunksRef.current
     const savedToken = tokenRef.current

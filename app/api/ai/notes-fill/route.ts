@@ -53,15 +53,15 @@ export async function POST(request: NextRequest) {
 
 Rules:
 - Use <h2> for section headings
-- Use <ul><li> bullet points for all content — no prose paragraphs
+- Use <ul><li> bullet points for all content - no prose paragraphs
 - Be concise: each bullet is 1 short sentence
 - Sections to include (only include a section if the meeting has relevant content):
   1. Key Discussion Points
   2. Decisions Made
-  3. Action Items (format: "Task description — Person responsible" if clear from context)
+  3. Action Items (format: "Task description - Person responsible" if clear from context)
   4. Open Questions / Blockers
   5. Next Steps
-- Return ONLY the HTML — no markdown fences, no explanation, no wrapping tags like <html> or <body>
+- Return ONLY the HTML - no markdown fences, no explanation, no wrapping tags like <html> or <body>
 - Start directly with the first <h2>
 
 Example output format:
@@ -72,8 +72,8 @@ Example output format:
 </ul>
 <h2>Action Items</h2>
 <ul>
-<li>Fix authentication bug — Alex</li>
-<li>Update API documentation — Sam</li>
+<li>Fix authentication bug - Alex</li>
+<li>Update API documentation - Sam</li>
 </ul>
 
 Transcript:

@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     .orderBy(asc(transcriptSegments.startMs))
 
   if (!segments.length) {
-    // No transcript — just mark completed
+    // No transcript - just mark completed
     await db.update(meetings).set({ status: 'completed', updatedAt: new Date() }).where(eq(meetings.id, meetingId))
     return NextResponse.json({ success: true })
   }

@@ -57,7 +57,7 @@ function groupBySpeaker(segments: AnySegment[]): SpeakerGroup[] {
     const last = groups[groups.length - 1]
     // Only merge consecutive FINAL segments from the same speaker.
     // Non-final (interim) segments stay separate so TypewriterText on the
-    // final group never unmounts — preserving its typed position.
+    // final group never unmounts - preserving its typed position.
     if (last && last.speaker === speaker && last.isFinal && isFinal) {
       last.texts.push(seg.content)
     } else {
@@ -159,15 +159,15 @@ export function TranscriptPanel({ transcript, liveSegments, status, isRecording,
                   style={{ fontFamily: 'var(--font-playfair), Georgia, serif', lineHeight: '1.85', letterSpacing: '0.01em' }}
                 >
                   {!group.isFinal ? (
-                    /* Listening / sending — blinking cursor only */
+                    /* Listening / sending - blinking cursor only */
                     <span
                       className="inline-block w-[2px] h-[1.1em] bg-foreground/40 rounded-full align-text-bottom animate-pulse"
                     />
                   ) : isRecording ? (
-                    /* Live final text — type it in character by character */
+                    /* Live final text - type it in character by character */
                     <TypewriterText text={para} speed={8} />
                   ) : (
-                    /* Static transcript (post-recording) — plain text */
+                    /* Static transcript (post-recording) - plain text */
                     para
                   )}
                 </p>

@@ -78,7 +78,7 @@ export async function exportToNotion(
   const body = {
     parent: { page_id: pageId },
     properties: {
-      title: { title: [{ text: { content: `${meeting.title} — ${meeting.date}` } }] },
+      title: { title: [{ text: { content: `${meeting.title} - ${meeting.date}` } }] },
     },
     children,
   }

@@ -25,11 +25,11 @@
 
 Phase 1 establishes the complete technical foundation for the Granola clone: working authentication, a production-ready Postgres schema with migrations, GDPR recording consent, and an email verification gate. The stack is Supabase Auth with `@supabase/ssr` for Next.js 15 App Router, Drizzle ORM for type-safe schema definition and migrations, Tailwind CSS 4 with shadcn/ui for components, and Resend + React Email for transactional emails.
 
-The most critical Next.js 15 breaking change affecting this phase is that `cookies()`, `headers()`, and `params` are now async — every server-side Supabase client creation must `await cookies()` before passing to `createServerClient`. The middleware pattern must also call `await supabase.auth.getUser()` (not `getSession()`) to refresh tokens. Using `getSession()` in server code is a security vulnerability because it reads unvalidated JWT data from cookies without verifying against Supabase's public keys.
+The most critical Next.js 15 breaking change affecting this phase is that `cookies()`, `headers()`, and `params` are now async - every server-side Supabase client creation must `await cookies()` before passing to `createServerClient`. The middleware pattern must also call `await supabase.auth.getUser()` (not `getSession()`) to refresh tokens. Using `getSession()` in server code is a security vulnerability because it reads unvalidated JWT data from cookies without verifying against Supabase's public keys.
 
-Drizzle ORM integrates with Supabase by connecting directly to Supabase's Postgres via the connection string. Since Supabase manages auth (not Drizzle), the schema for `auth.users` is Supabase-owned — the application schema references it via foreign keys. RLS policies are defined in SQL migrations (via `drizzle-kit`) and Drizzle queries run through the Supabase anon/service role clients. For Phase 1, the full 8-table schema must be defined upfront including FTS indexes, because retrofitting schema across phases is painful.
+Drizzle ORM integrates with Supabase by connecting directly to Supabase's Postgres via the connection string. Since Supabase manages auth (not Drizzle), the schema for `auth.users` is Supabase-owned - the application schema references it via foreign keys. RLS policies are defined in SQL migrations (via `drizzle-kit`) and Drizzle queries run through the Supabase anon/service role clients. For Phase 1, the full 8-table schema must be defined upfront including FTS indexes, because retrofitting schema across phases is painful.
 
-**Primary recommendation:** Use `@supabase/ssr` `createServerClient` in middleware with `await cookies()` pattern, define Drizzle schema for all Phase 1–8 tables now with FTS indexes, implement GDPR recording consent in the signup onboarding step (not a cookie banner — it's a terms acceptance for recording third parties), and gate all recording routes by `email_confirmed_at`.
+**Primary recommendation:** Use `@supabase/ssr` `createServerClient` in middleware with `await cookies()` pattern, define Drizzle schema for all Phase 1–8 tables now with FTS indexes, implement GDPR recording consent in the signup onboarding step (not a cookie banner - it's a terms acceptance for recording third parties), and gate all recording routes by `email_confirmed_at`.
 
 ---
 
@@ -39,7 +39,7 @@ Drizzle ORM integrates with Supabase by connecting directly to Supabase's Postgr
 | Library | Version | Purpose | Why Standard |
 |---------|---------|---------|--------------|
 | `@supabase/supabase-js` | ^2.x | Supabase client for auth + DB queries | Official Supabase client library |
-| `@supabase/ssr` | ^0.5.x | SSR-compatible cookie-based auth for Next.js | Required for App Router — replaces deprecated `auth-helpers-nextjs` |
+| `@supabase/ssr` | ^0.5.x | SSR-compatible cookie-based auth for Next.js | Required for App Router - replaces deprecated `auth-helpers-nextjs` |
 | `drizzle-orm` | ^0.36.x | Type-safe ORM for Postgres schema + queries | TypeScript-native, lightweight, works with Supabase Postgres |
 | `drizzle-kit` | ^0.27.x | Schema migration tooling | Generates SQL migrations from Drizzle schema definitions |
 | `postgres` | ^3.4.x | Postgres driver for Drizzle | Recommended driver for Drizzle + Supabase |
@@ -64,7 +64,7 @@ Drizzle ORM integrates with Supabase by connecting directly to Supabase's Postgr
 ### Alternatives Considered
 | Instead of | Could Use | Tradeoff |
 |------------|-----------|----------|
-| `@supabase/ssr` | NextAuth v5 | NextAuth adds config complexity; Supabase Auth is already bundled with the DB — no reason to add another auth provider |
+| `@supabase/ssr` | NextAuth v5 | NextAuth adds config complexity; Supabase Auth is already bundled with the DB - no reason to add another auth provider |
 | Drizzle ORM | Prisma | Prisma is heavier, slower cold starts, less TypeScript-native; Drizzle is the right choice for this stack |
 | Resend | Supabase built-in email | Supabase's SMTP can handle verification emails, but Resend is required for custom transactional emails (password reset templates, AI-ready notifications) |
 
@@ -163,7 +163,7 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // CRITICAL: Use getUser() not getSession() — validates JWT signature
+  // CRITICAL: Use getUser() not getSession() - validates JWT signature
   const { data: { user } } = await supabase.auth.getUser()
 
   // Protect app routes
@@ -197,7 +197,7 @@ export const config = {
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-// CRITICAL: cookies() is async in Next.js 15 — must await
+// CRITICAL: cookies() is async in Next.js 15 - must await
 export async function createClient() {
   const cookieStore = await cookies()
 
@@ -215,7 +215,7 @@ export async function createClient() {
               cookieStore.set(name, value, options)
             )
           } catch {
-            // Server Component — cookie setting is handled by middleware
+            // Server Component - cookie setting is handled by middleware
           }
         },
       },
@@ -475,12 +475,12 @@ await supabase.auth.signInWithOAuth({
 
 ### Anti-Patterns to Avoid
 
-- **Using `getSession()` on the server:** `supabase.auth.getSession()` in Server Components or middleware reads JWT from cookies without verifying the signature — use `getClaims()` or `getUser()` instead. This is a critical security flaw.
+- **Using `getSession()` on the server:** `supabase.auth.getSession()` in Server Components or middleware reads JWT from cookies without verifying the signature - use `getClaims()` or `getUser()` instead. This is a critical security flaw.
 - **Synchronously accessing `cookies()`:** In Next.js 15, `cookies()` returns a Promise. Accessing it synchronously will log warnings and break in Next.js 16. Always `await cookies()`.
-- **Defining `params` as a plain object:** In Next.js 15, `params` in pages/layouts is `Promise<{ id: string }>` — always `await params` or use `React.use(params)` in Client Components.
-- **Uploading audio through Route Handlers:** Not relevant to Phase 1, but the schema and storage bucket setup must account for direct-to-storage uploads (no Route Handler middleman) — design storage RLS accordingly.
+- **Defining `params` as a plain object:** In Next.js 15, `params` in pages/layouts is `Promise<{ id: string }>` - always `await params` or use `React.use(params)` in Client Components.
+- **Uploading audio through Route Handlers:** Not relevant to Phase 1, but the schema and storage bucket setup must account for direct-to-storage uploads (no Route Handler middleman) - design storage RLS accordingly.
 - **Storing API keys in client components:** Supabase service key must NEVER be exposed. Use `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (anon key) for browser clients; use service key only in Server Actions/Routes with `service_role` when RLS bypass is needed.
-- **Putting consent checkbox in a cookie banner:** The GDPR requirement here is consent for *recording other people*, not cookie consent. This belongs in onboarding after signup — a mandatory acceptance step before accessing recording features.
+- **Putting consent checkbox in a cookie banner:** The GDPR requirement here is consent for *recording other people*, not cookie consent. This belongs in onboarding after signup - a mandatory acceptance step before accessing recording features.
 
 ---
 
@@ -496,7 +496,7 @@ await supabase.auth.signInWithOAuth({
 | Form validation | Custom regex validators | `zod` + `react-hook-form` | Handles edge cases, type inference, and error messages |
 | Toast notifications | Custom notification component | `sonner` (shadcn recommended) | Accessible, animatable, production-quality |
 
-**Key insight:** Supabase Auth handles the entire authentication lifecycle — token issuance, refresh, expiry, and revocation. Building any part of this manually introduces security vulnerabilities that Supabase's team has already addressed.
+**Key insight:** Supabase Auth handles the entire authentication lifecycle - token issuance, refresh, expiry, and revocation. Building any part of this manually introduces security vulnerabilities that Supabase's team has already addressed.
 
 ---
 
@@ -504,7 +504,7 @@ await supabase.auth.signInWithOAuth({
 
 ### Pitfall 1: `getSession()` vs `getUser()` / `getClaims()` in Server Code
 **What goes wrong:** Using `supabase.auth.getSession()` in middleware or Server Components reads the JWT from cookies without cryptographic verification. An attacker can forge a session cookie and bypass auth checks.
-**Why it happens:** `getSession()` is the intuitive API name — developers assume it's safe.
+**Why it happens:** `getSession()` is the intuitive API name - developers assume it's safe.
 **How to avoid:** Always use `supabase.auth.getUser()` in middleware and `getClaims()` for Server Components when auth state is security-critical. The official Supabase docs (2025) explicitly state: "Never trust `supabase.auth.getSession()` inside server code."
 **Warning signs:** Code like `const { data: { session } } = await supabase.auth.getSession()` used to check auth in middleware.
 
@@ -523,17 +523,17 @@ await supabase.auth.signInWithOAuth({
 ### Pitfall 4: Schema Created Without FTS Indexes
 **What goes wrong:** Building the full meeting/transcript system in Phase 2+ without having added `tsvector` columns and GIN indexes from the start requires a table migration with data backfill on potentially large tables.
 **Why it happens:** FTS feels like Phase 3-4 concern, not Phase 1.
-**How to avoid:** Add FTS SQL to the Phase 1 migration: `ALTER TABLE transcript_segments ADD COLUMN ts tsvector GENERATED ALWAYS AS (to_tsvector('english', text)) STORED; CREATE INDEX transcript_segments_ts_idx ON transcript_segments USING gin(ts);` — same for meetings title column.
+**How to avoid:** Add FTS SQL to the Phase 1 migration: `ALTER TABLE transcript_segments ADD COLUMN ts tsvector GENERATED ALWAYS AS (to_tsvector('english', text)) STORED; CREATE INDEX transcript_segments_ts_idx ON transcript_segments USING gin(ts);` - same for meetings title column.
 **Warning signs:** Adding FTS later requires `VACUUM` and index build on live table.
 
 ### Pitfall 5: Recording Consent as Cookie Banner
-**What goes wrong:** Treating GDPR recording consent as a cookie consent banner (shown to all visitors) rather than as an onboarding step for authenticated users. Cookie banners don't capture consent for *recording third parties* — they cover analytics cookies.
+**What goes wrong:** Treating GDPR recording consent as a cookie consent banner (shown to all visitors) rather than as an onboarding step for authenticated users. Cookie banners don't capture consent for *recording third parties* - they cover analytics cookies.
 **Why it happens:** "GDPR consent" pattern conflated with cookie consent.
 **How to avoid:** Build a dedicated onboarding step (shown once after email verification) where the user reads and accepts a "Recording Consent" agreement. Store `recording_consent_at` timestamp in the `profiles` table. Gate recording features by checking this timestamp.
 **Warning signs:** Recording available without any consent acceptance; only a cookie banner shown.
 
 ### Pitfall 6: Email Verification Gate Not Enforced Server-Side
-**What goes wrong:** Checking email verification only in the UI allows a savvy user to navigate directly to `/meeting/new/record` after signup without verifying their email — the AUTH-06 requirement is bypassed.
+**What goes wrong:** Checking email verification only in the UI allows a savvy user to navigate directly to `/meeting/new/record` after signup without verifying their email - the AUTH-06 requirement is bypassed.
 **Why it happens:** Email verification check added to UI but not to middleware.
 **How to avoid:** Add explicit middleware check: if `user.email_confirmed_at` is null and path starts with `/meeting` (or any recording path), redirect to `/verify-email`. This is enforced before the page renders.
 **Warning signs:** Users can access recording routes without verifying email by typing the URL directly.
@@ -545,7 +545,7 @@ await supabase.auth.signInWithOAuth({
 **Warning signs:** "Invalid redirect URL" error after OAuth login attempt.
 
 ### Pitfall 8: Tailwind 4 `tailwind.config.ts` Habit
-**What goes wrong:** Creating a `tailwind.config.ts` file out of habit from Tailwind 3. In Tailwind 4, configuration is done via `@theme` in CSS — the config file is not used.
+**What goes wrong:** Creating a `tailwind.config.ts` file out of habit from Tailwind 3. In Tailwind 4, configuration is done via `@theme` in CSS - the config file is not used.
 **Why it happens:** Muscle memory from Tailwind 3 projects.
 **How to avoid:** No `tailwind.config.ts` needed. Use `@theme inline { --color-brand: oklch(…); }` in `globals.css` for custom values. Use `@tailwindcss/postcss` plugin in `postcss.config.mjs`.
 **Warning signs:** Custom colors/fonts defined in `tailwind.config.ts` not applied at runtime.
@@ -553,7 +553,7 @@ await supabase.auth.signInWithOAuth({
 ### Pitfall 9: Profiles Table Not Auto-Created on Signup
 **What goes wrong:** Supabase creates a user in `auth.users` on signup, but does NOT automatically create a corresponding row in your `profiles` table. Pages that join on `profiles` will get null or throw.
 **Why it happens:** Developers assume Supabase manages the application profile automatically.
-**How to avoid:** Create a Postgres function + trigger: `CREATE OR REPLACE FUNCTION public.handle_new_user() RETURNS trigger AS $$ BEGIN INSERT INTO public.profiles (id, email) VALUES (NEW.id, NEW.email); RETURN NEW; END; $$ LANGUAGE plpgsql SECURITY DEFINER; CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();` — add this to the Phase 1 migration.
+**How to avoid:** Create a Postgres function + trigger: `CREATE OR REPLACE FUNCTION public.handle_new_user() RETURNS trigger AS $$ BEGIN INSERT INTO public.profiles (id, email) VALUES (NEW.id, NEW.email); RETURN NEW; END; $$ LANGUAGE plpgsql SECURITY DEFINER; CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();` - add this to the Phase 1 migration.
 **Warning signs:** `null` returned for user profile lookups immediately after signup.
 
 ---
@@ -707,15 +707,15 @@ export async function sendVerificationEmail(to: string, verificationUrl: string)
 | `cookies()` synchronous | `await cookies()` | Next.js 15 (Oct 2024) | Must await all request APIs; sync access warns in v15, breaks in v16 |
 | `tailwind.config.ts` | `@import "tailwindcss"` in CSS | Tailwind 4 (Jan 2025) | No config file needed; auto-scanning; PostCSS plugin required |
 | `tailwindcss-animate` | `tw-animate-css` | Mar 2025 | `tailwindcss-animate` deprecated with Tailwind 4 |
-| `supabase.auth.getSession()` | `supabase.auth.getUser()` / `getClaims()` | 2024 Supabase security update | `getSession()` unsafe in server code — does not verify JWT signature |
+| `supabase.auth.getSession()` | `supabase.auth.getUser()` / `getClaims()` | 2024 Supabase security update | `getSession()` unsafe in server code - does not verify JWT signature |
 | `params.slug` direct access | `await params` then `.slug` | Next.js 15 | params is now `Promise<{slug: string}>` in all file conventions |
 | shadcn `toast` component | `sonner` | 2025 | shadcn deprecated `toast` in favor of Sonner integration |
 | GET Route Handlers cached by default | Not cached by default | Next.js 15 | Add `export const dynamic = 'force-static'` to opt into caching |
 
 **Deprecated/outdated:**
-- `@supabase/auth-helpers-nextjs`: Fully deprecated — do not use. Use `@supabase/ssr`.
-- `tailwindcss-animate`: Deprecated as of Tailwind 4 — use `tw-animate-css`.
-- `supabase.auth.getSession()` in server code: Security antipattern — use `getUser()`.
+- `@supabase/auth-helpers-nextjs`: Fully deprecated - do not use. Use `@supabase/ssr`.
+- `tailwindcss-animate`: Deprecated as of Tailwind 4 - use `tw-animate-css`.
+- `supabase.auth.getSession()` in server code: Security antipattern - use `getUser()`.
 - Synchronous `cookies()`: Works with warning in Next.js 15, breaks in Next.js 16.
 
 ---
@@ -725,12 +725,12 @@ export async function sendVerificationEmail(to: string, verificationUrl: string)
 1. **Supabase `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` vs `NEXT_PUBLIC_SUPABASE_ANON_KEY`**
    - What we know: The Supabase docs reference `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in newer docs but `NEXT_PUBLIC_SUPABASE_ANON_KEY` in older docs
    - What's unclear: Whether these are the same key with a renamed env var, or a new distinct key type
-   - Recommendation: Check the actual Supabase project dashboard. Use whatever key name the Supabase dashboard shows — they are functionally the same anon/publishable key, likely just renamed in docs.
+   - Recommendation: Check the actual Supabase project dashboard. Use whatever key name the Supabase dashboard shows - they are functionally the same anon/publishable key, likely just renamed in docs.
 
 2. **Drizzle + RLS: Use Drizzle's built-in `pgPolicy()` or raw SQL migrations**
    - What we know: Drizzle 0.36+ has `pgPolicy()` and `pgRole()` in its schema DSL for defining RLS. Alternatively, RLS policies can be in raw SQL added to migration files.
    - What's unclear: Whether Drizzle's `pgPolicy()` is stable enough for production use vs. raw SQL migrations
-   - Recommendation: Use raw SQL in migration files for RLS policies — more explicit, easier to audit, not dependent on Drizzle's RLS DSL stability.
+   - Recommendation: Use raw SQL in migration files for RLS policies - more explicit, easier to audit, not dependent on Drizzle's RLS DSL stability.
 
 3. **Custom email templates for Supabase verification emails**
    - What we know: Supabase sends verification/reset emails by default from its own SMTP. Custom templates can be configured in the Supabase dashboard (HTML only, no React). Resend can be used for custom transactional emails but cannot replace Supabase's internal OTP emails without custom SMTP config.
@@ -742,31 +742,31 @@ export async function sendVerificationEmail(to: string, verificationUrl: string)
 ## Sources
 
 ### Primary (HIGH confidence)
-- [Supabase SSR Next.js Setup](https://supabase.com/docs/guides/auth/server-side/nextjs) — middleware pattern, server client creation, getClaims vs getSession security note
-- [Supabase Google OAuth](https://supabase.com/docs/guides/auth/social-login/auth-google) — callback URL setup, signInWithOAuth, redirect allow list
-- [Next.js 15 Upgrade Guide](https://nextjs.org/docs/app/guides/upgrading/version-15) — async Request APIs breaking changes, params/cookies/headers patterns
-- [Drizzle ORM Supabase Guide](https://orm.drizzle.team/docs/get-started/supabase-new) — connection string, `prepare: false`, drizzle.config.ts
-- [Drizzle ORM RLS Guide](https://orm.drizzle.team/docs/rls) — pgPolicy DSL and JWT transaction pattern
-- [shadcn/ui Tailwind v4 Guide](https://ui.shadcn.com/docs/tailwind-v4) — CSS import changes, OKLCH colors, tw-animate-css, deprecated toast → sonner
+- [Supabase SSR Next.js Setup](https://supabase.com/docs/guides/auth/server-side/nextjs) - middleware pattern, server client creation, getClaims vs getSession security note
+- [Supabase Google OAuth](https://supabase.com/docs/guides/auth/social-login/auth-google) - callback URL setup, signInWithOAuth, redirect allow list
+- [Next.js 15 Upgrade Guide](https://nextjs.org/docs/app/guides/upgrading/version-15) - async Request APIs breaking changes, params/cookies/headers patterns
+- [Drizzle ORM Supabase Guide](https://orm.drizzle.team/docs/get-started/supabase-new) - connection string, `prepare: false`, drizzle.config.ts
+- [Drizzle ORM RLS Guide](https://orm.drizzle.team/docs/rls) - pgPolicy DSL and JWT transaction pattern
+- [shadcn/ui Tailwind v4 Guide](https://ui.shadcn.com/docs/tailwind-v4) - CSS import changes, OKLCH colors, tw-animate-css, deprecated toast → sonner
 
 ### Secondary (MEDIUM confidence)
-- [Supabase Drizzle Integration](https://supabase.com/docs/guides/database/drizzle) — verified connection pooler + `prepare: false` requirement
-- [Tailwind CSS v4 Blog](https://tailwindcss.com/blog/tailwindcss-v4) — confirmed no config file, @import syntax, auto-scanning
-- Makerkit Drizzle + Supabase guide — dual-client (admin/RLS) architecture pattern
+- [Supabase Drizzle Integration](https://supabase.com/docs/guides/database/drizzle) - verified connection pooler + `prepare: false` requirement
+- [Tailwind CSS v4 Blog](https://tailwindcss.com/blog/tailwindcss-v4) - confirmed no config file, @import syntax, auto-scanning
+- Makerkit Drizzle + Supabase guide - dual-client (admin/RLS) architecture pattern
 
-### Tertiary (LOW confidence — validate during execution)
-- RLS with Drizzle in production — the `pgPolicy()` DSL stability is not fully verified; raw SQL fallback is safer
-- Resend as Supabase custom SMTP — configuration steps not verified against current Supabase dashboard UI
+### Tertiary (LOW confidence - validate during execution)
+- RLS with Drizzle in production - the `pgPolicy()` DSL stability is not fully verified; raw SQL fallback is safer
+- Resend as Supabase custom SMTP - configuration steps not verified against current Supabase dashboard UI
 
 ---
 
 ## Metadata
 
 **Confidence breakdown:**
-- Standard stack: HIGH — All packages verified against official docs; versions confirmed current
-- Architecture: HIGH — Patterns verified against official Supabase + Next.js 15 docs; auth callback and middleware verified against source
-- Pitfalls: HIGH — Most pitfalls verified against official docs (getUser vs getSession, async cookies); Drizzle prepare:false verified against Supabase + Drizzle docs
-- GDPR consent approach: MEDIUM — GDPR recording consent as onboarding step (not cookie banner) is legally correct interpretation but specific UI requirements may need legal review
+- Standard stack: HIGH - All packages verified against official docs; versions confirmed current
+- Architecture: HIGH - Patterns verified against official Supabase + Next.js 15 docs; auth callback and middleware verified against source
+- Pitfalls: HIGH - Most pitfalls verified against official docs (getUser vs getSession, async cookies); Drizzle prepare:false verified against Supabase + Drizzle docs
+- GDPR consent approach: MEDIUM - GDPR recording consent as onboarding step (not cookie banner) is legally correct interpretation but specific UI requirements may need legal review
 
 **Research date:** 2026-03-21
 **Valid until:** 2026-04-21 (30 days; Supabase SSR API is stable, Next.js 15 breaking changes are now stable)
