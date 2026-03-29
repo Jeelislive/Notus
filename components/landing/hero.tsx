@@ -103,7 +103,7 @@ export function Hero() {
             </div>
 
             {/* Three-panel content */}
-            <div className="grid grid-cols-3 divide-x divide-border min-h-[300px] text-left">
+            <div className="grid grid-cols-1 sm:grid-cols-3 sm:divide-x divide-border min-h-[300px] text-left">
 
               {/* Panel 1: Live Transcript */}
               <div className="p-5 bg-muted/[0.03] space-y-3">
@@ -141,7 +141,7 @@ export function Hero() {
               </div>
 
               {/* Panel 2: AI Notes */}
-              <div className="p-5 space-y-4">
+              <div className="hidden sm:block p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-muted-foreground uppercase tracking-[0.13em]">AI Notes</span>
                   <span className="text-xs text-indigo-600 font-medium">✦ Generating</span>
@@ -192,7 +192,7 @@ export function Hero() {
               </div>
 
               {/* Panel 3: Ask Notus (AI Chat) */}
-              <div className="p-5 space-y-2.5">
+              <div className="hidden sm:block p-5 space-y-2.5">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs font-semibold text-muted-foreground uppercase tracking-[0.13em]">Ask Notus</span>
                   <div className="size-4 rounded-full bg-indigo-600/15 flex items-center justify-center">

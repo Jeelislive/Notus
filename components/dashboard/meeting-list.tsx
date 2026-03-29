@@ -386,7 +386,7 @@ export function MeetingTable({ meetings }: MeetingListProps) {
   return (
     <div>
       {/* Filter / search bar — sticky so it stays visible while table scrolls */}
-      <div className="sticky top-0 z-10 bg-background flex items-center justify-between px-5 border-b border-border">
+      <div className="sticky top-0 z-10 bg-background flex flex-col sm:flex-row sm:items-center gap-0 px-3 sm:px-5 border-b border-border">
         {/* Tabs */}
         <div className="flex items-center gap-0">
           {tabs.map((tab) => (
@@ -405,8 +405,8 @@ export function MeetingTable({ meetings }: MeetingListProps) {
           ))}
         </div>
 
-        {/* Search + Delete all — width matches DATE+DURATION+TYPE+STATUS+ACTIONS columns */}
-        <div className="flex items-center gap-2 py-2 w-[48rem] shrink-0">
+        {/* Search + Delete all */}
+        <div className="flex items-center gap-2 py-2 sm:ml-auto sm:min-w-0 sm:max-w-sm w-full sm:w-auto">
           <div className="relative flex items-center flex-1">
             <Search
               className="absolute left-3 size-3.5 text-muted-foreground pointer-events-none"
@@ -459,7 +459,8 @@ export function MeetingTable({ meetings }: MeetingListProps) {
           </p>
         </div>
       ) : (
-        <table className="w-full border-collapse">
+        <div className="overflow-x-auto">
+        <table className="w-full border-collapse min-w-[640px]">
           <thead>
             <tr className="border-b border-border">
               <ColHeader
@@ -511,6 +512,7 @@ export function MeetingTable({ meetings }: MeetingListProps) {
             ))}
           </tbody>
         </table>
+        </div>
       )}
 
       {/* Delete All confirmation dialog */}
