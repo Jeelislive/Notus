@@ -33,16 +33,22 @@ export async function testJiraConnection(config: JiraConfig): Promise<{ ok: bool
 
 export async function createJiraIssues(
   config: JiraConfig,
-  issues: { summary: string; description: string; issueType?: string; priority?: string }[]
+  issues: { summary: string; description: string; issueType?: string }[]
 ) {
+  if (!config.projectKey?.trim()) {
+    return { created: [], errors: ['Project key is missing. Re-connect Jira in Settings → Integrations.'] }
+  }
+
   const auth = Buffer.from(`${config.email}:${config.apiToken}`).toString('base64')
   const baseUrl = `https://${config.domain}/rest/api/3/issue`
   const created: { key: string; url: string; summary: string }[] = []
   const errors: string[] = []
 
   for (const issue of issues) {
+    // Only send the minimal required fields — omit priority to avoid
+    // "priority not found" errors on Jira instances with custom schemes
     const fields: Record<string, unknown> = {
-      project: { key: config.projectKey },
+      project: { key: config.projectKey.trim().toUpperCase() },
       summary: issue.summary,
       description: {
         type: 'doc',
@@ -55,7 +61,6 @@ export async function createJiraIssues(
         ],
       },
       issuetype: { name: issue.issueType || 'Task' },
-      priority: { name: issue.priority || 'Medium' },
     }
     try {
       const res = await fetch(baseUrl, {
@@ -68,7 +73,17 @@ export async function createJiraIssues(
         body: JSON.stringify({ fields }),
       })
       if (!res.ok) {
-        errors.push(`${issue.summary}: ${res.status}`)
+        // Surface the actual Jira error message
+        let detail = `HTTP ${res.status}`
+        try {
+          const body = await res.json() as { errorMessages?: string[]; errors?: Record<string, string> }
+          const msgs = [
+            ...(body.errorMessages ?? []),
+            ...Object.values(body.errors ?? {}),
+          ]
+          if (msgs.length) detail = msgs.join(', ')
+        } catch { /* ignore parse errors */ }
+        errors.push(`"${issue.summary}": ${detail}`)
         continue
       }
       const data = (await res.json()) as { key: string }
@@ -78,7 +93,7 @@ export async function createJiraIssues(
         summary: issue.summary,
       })
     } catch (e) {
-      errors.push(`${issue.summary}: ${e instanceof Error ? e.message : 'error'}`)
+      errors.push(`"${issue.summary}": ${e instanceof Error ? e.message : 'Network error'}`)
     }
   }
   return { created, errors }
