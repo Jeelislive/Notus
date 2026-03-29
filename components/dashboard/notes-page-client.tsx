@@ -61,14 +61,22 @@ function MeetingTypePill({ type, className = '' }: { type: string; className?: s
   )
 }
 
+interface JiraConfig {
+  domain: string
+  email: string
+  apiToken: string
+  projectKey: string
+}
+
 interface NotesPageClientProps {
   meetings: Meeting[]
   notesByMeeting: Record<string, Note[]>
   selectedNoteId: string | null
   currentUser: CurrentUser
+  jiraConfig?: JiraConfig | null
 }
 
-export function NotesPageClient({ meetings, notesByMeeting, selectedNoteId, currentUser }: NotesPageClientProps) {
+export function NotesPageClient({ meetings, notesByMeeting, selectedNoteId, currentUser, jiraConfig }: NotesPageClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -269,6 +277,7 @@ export function NotesPageClient({ meetings, notesByMeeting, selectedNoteId, curr
             note={activeNote}
             currentUser={currentUser}
             meetingType={detectMeetingType(notesByMeeting[activeMeeting.id] ?? [])}
+            jiraConfig={jiraConfig}
             key={activeNote.id}
           />
         ) : (
@@ -288,7 +297,7 @@ export function NotesPageClient({ meetings, notesByMeeting, selectedNoteId, curr
 // ─────────────────────────────────────────────
 // Note editor (right panel)
 // ─────────────────────────────────────────────
-function NoteEditor({ meeting, note, currentUser, meetingType }: { meeting: Meeting; note: Note; currentUser: CurrentUser; meetingType: string | null }) {
+function NoteEditor({ meeting, note, currentUser, meetingType, jiraConfig }: { meeting: Meeting; note: Note; currentUser: CurrentUser; meetingType: string | null; jiraConfig?: { domain: string; email: string; apiToken: string; projectKey: string } | null }) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('notes')
   const [content, setContent] = useState(note.content ?? '')
@@ -724,10 +733,8 @@ function NoteEditor({ meeting, note, currentUser, meetingType }: { meeting: Meet
         meetingTitle={meeting.title}
         open={showActionItems}
         onClose={() => setShowActionItems(false)}
-        onCreateInNotus={(tasks) => {
-          // Tasks are already visible in the AI tab; just close
-          setShowActionItems(false)
-        }}
+        onCreateInNotus={() => setShowActionItems(false)}
+        jiraConfig={jiraConfig}
       />
     </div>
   )

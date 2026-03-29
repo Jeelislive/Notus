@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Check, ChevronRight, Loader2, Zap } from 'lucide-react'
+import { Check, ChevronRight, Loader2, Zap, ExternalLink, Settings } from 'lucide-react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -10,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { pushMeetingToJira } from '@/app/actions/integrations'
 
 export interface ActionItemTask {
   text: string
@@ -38,6 +40,7 @@ interface ActionItemsPopupProps {
   open: boolean
   onClose: () => void
   onCreateInNotus: (items: ActionItemTask[]) => void
+  jiraConfig?: JiraConfig | null
 }
 
 const PRIORITY_STYLES: Record<ActionItemTask['priority'], string> = {
@@ -46,38 +49,17 @@ const PRIORITY_STYLES: Record<ActionItemTask['priority'], string> = {
   low: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
 }
 
-const JIRA_STORAGE_KEY = 'notus_jira_config'
-
-function loadJiraConfig(): JiraConfig | null {
-  if (typeof window === 'undefined') return null
-  try {
-    const raw = localStorage.getItem(JIRA_STORAGE_KEY)
-    if (!raw) return null
-    return JSON.parse(raw) as JiraConfig
-  } catch {
-    return null
-  }
-}
-
 export function ActionItemsPopup({
   items,
-  meetingId: _meetingId,
+  meetingId,
   meetingTitle,
   open,
   onClose,
   onCreateInNotus,
+  jiraConfig,
 }: ActionItemsPopupProps) {
   const [selected, setSelected] = useState<Set<number>>(() => new Set(items.map((_, i) => i)))
   const [panel, setPanel] = useState<'list' | 'jira'>('list')
-
-  // Jira connect form
-  const [jiraConfig, setJiraConfig] = useState<JiraConfig | null>(null)
-  const [connectForm, setConnectForm] = useState<JiraConfig>({
-    domain: '',
-    email: '',
-    apiToken: '',
-    projectKey: '',
-  })
 
   // Per-task Jira fields
   const [jiraIssueType, setJiraIssueType] = useState<Record<number, string>>({})
@@ -88,10 +70,8 @@ export function ActionItemsPopup({
   const [jiraResults, setJiraResults] = useState<Record<number, JiraResult>>({})
   const [jiraError, setJiraError] = useState<string | null>(null)
 
-  // Load jira config from localStorage on open
   useEffect(() => {
     if (open) {
-      setJiraConfig(loadJiraConfig())
       setPanel('list')
       setSelected(new Set(items.map((_, i) => i)))
       setJiraResults({})
@@ -114,12 +94,6 @@ export function ActionItemsPopup({
     onClose()
   }
 
-  function saveJiraConfig() {
-    const cfg = { ...connectForm }
-    localStorage.setItem(JIRA_STORAGE_KEY, JSON.stringify(cfg))
-    setJiraConfig(cfg)
-  }
-
   async function handlePushToJira() {
     if (!jiraConfig) return
     setPushing(true)
@@ -131,39 +105,27 @@ export function ActionItemsPopup({
 
     const issues = selectedItems.map(({ item, i }) => ({
       summary: item.text,
-      description: `Action item from meeting: ${meetingTitle}${item.assignee ? `\nAssignee: ${item.assignee}` : ''}`,
-      assigneeEmail: jiraAssignee[i] ?? item.assignee ?? '',
-      dueDate: item.deadline ?? '',
-      priority: item.priority.charAt(0).toUpperCase() + item.priority.slice(1),
+      description: `Action item from meeting: ${meetingTitle}${item.assignee ? `\nAssignee: ${item.assignee}` : ''}${item.deadline ? `\nDue: ${item.deadline}` : ''}`,
       issueType: jiraIssueType[i] ?? 'Task',
+      priority: item.priority.charAt(0).toUpperCase() + item.priority.slice(1),
     }))
 
-    try {
-      const res = await fetch('/api/integrations/jira/create-issue', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          domain: jiraConfig.domain,
-          email: jiraConfig.email,
-          apiToken: jiraConfig.apiToken,
-          projectKey: jiraConfig.projectKey,
-          issues,
-        }),
-      })
+    const result = await pushMeetingToJira(meetingId, issues)
 
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Failed to create issues')
-
+    if ('error' in result && result.error) {
+      setJiraError(result.error)
+    } else if ('created' in result) {
       const results: Record<number, JiraResult> = {}
       selectedItems.forEach(({ i }, idx) => {
-        if (data.created?.[idx]) results[i] = data.created[idx]
+        if (result.created?.[idx]) results[i] = result.created[idx]
       })
       setJiraResults(results)
-    } catch (err) {
-      setJiraError(err instanceof Error ? err.message : 'Unknown error')
-    } finally {
-      setPushing(false)
+      if (result.errors?.length) {
+        setJiraError(`Some issues failed: ${result.errors.join(', ')}`)
+      }
     }
+
+    setPushing(false)
   }
 
   const selectedCount = selected.size
@@ -181,7 +143,7 @@ export function ActionItemsPopup({
           </p>
         </DialogHeader>
 
-        {/* Panel switcher tabs */}
+        {/* Panel switcher back button */}
         {panel === 'jira' && (
           <div className="px-6 pt-4 shrink-0">
             <button
@@ -204,7 +166,6 @@ export function ActionItemsPopup({
                 className="flex items-start gap-3 p-3 rounded-xl border border-border hover:bg-muted/40 cursor-pointer"
                 style={{ transition: 'background-color 120ms ease-out' }}
               >
-                {/* Checkbox */}
                 <div className="mt-0.5 shrink-0">
                   <input
                     type="checkbox"
@@ -223,8 +184,6 @@ export function ActionItemsPopup({
                     {selected.has(i) && <Check className="size-2.5 text-white" strokeWidth={3} />}
                   </div>
                 </div>
-
-                {/* Content */}
                 <div className="flex-1 min-w-0 space-y-1.5">
                   <p className="text-[14px] text-foreground leading-snug">{item.text}</p>
                   <div className="flex flex-wrap items-center gap-1.5">
@@ -238,9 +197,7 @@ export function ActionItemsPopup({
                         {item.deadline}
                       </span>
                     )}
-                    <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${PRIORITY_STYLES[item.priority]}`}
-                    >
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${PRIORITY_STYLES[item.priority]}`}>
                       {item.priority}
                     </span>
                   </div>
@@ -254,77 +211,48 @@ export function ActionItemsPopup({
         {panel === 'jira' && (
           <div className="flex-1 overflow-y-auto px-6 pb-4 space-y-5 min-h-0">
             {!jiraConfig ? (
-              /* Connect form */
-              <div className="space-y-4">
+              /* Not connected — direct to settings */
+              <div className="flex flex-col items-center justify-center py-8 text-center gap-4">
+                <div className="size-12 rounded-2xl bg-[#0052CC]/10 flex items-center justify-center">
+                  <svg viewBox="0 0 24 24" className="size-6" style={{ fill: '#0052CC' }} aria-hidden="true">
+                    <path d="M11.571 11.513H0a5.218 5.218 0 0 0 5.232 5.215h2.13v2.057A5.215 5.215 0 0 0 12.575 24V12.518a1.005 1.005 0 0 0-1.005-1.005zm5.723-5.756H5.736a5.215 5.215 0 0 0 5.215 5.214h2.129v2.058a5.218 5.218 0 0 0 5.215 5.214V6.758a1.001 1.001 0 0 0-1.001-1.001zM23.013 0H11.455a5.215 5.215 0 0 0 5.215 5.215h2.129v2.057A5.215 5.215 0 0 0 24 12.483V1.005A1.001 1.001 0 0 0 23.013 0Z" />
+                  </svg>
+                </div>
                 <div>
-                  <p className="text-[14px] font-medium text-foreground mb-1">Connect Jira</p>
-                  <p className="text-[13px] text-muted-foreground">Enter your Jira workspace details to push action items.</p>
+                  <p className="text-[15px] font-semibold text-foreground">Jira not connected</p>
+                  <p className="text-[13px] text-muted-foreground mt-1">
+                    Connect your Jira workspace to push action items directly.
+                  </p>
                 </div>
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-[12px] font-medium text-muted-foreground mb-1">Domain</label>
-                    <Input
-                      placeholder="mycompany.atlassian.net"
-                      value={connectForm.domain}
-                      onChange={(e) => setConnectForm((p) => ({ ...p, domain: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[12px] font-medium text-muted-foreground mb-1">Email</label>
-                    <Input
-                      type="email"
-                      placeholder="you@company.com"
-                      value={connectForm.email}
-                      onChange={(e) => setConnectForm((p) => ({ ...p, email: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[12px] font-medium text-muted-foreground mb-1">API Token</label>
-                    <Input
-                      type="password"
-                      placeholder="ATATT3x…"
-                      value={connectForm.apiToken}
-                      onChange={(e) => setConnectForm((p) => ({ ...p, apiToken: e.target.value }))}
-                    />
-                    <p className="text-[11px] text-muted-foreground mt-1">
-                      Generate at{' '}
-                      <a href="https://id.atlassian.com/manage-profile/security/api-tokens" target="_blank" rel="noopener noreferrer" className="text-indigo-500 hover:underline">
-                        atlassian.com/manage-profile
-                      </a>
-                    </p>
-                  </div>
-                  <div>
-                    <label className="block text-[12px] font-medium text-muted-foreground mb-1">Project Key</label>
-                    <Input
-                      placeholder="PROJ"
-                      value={connectForm.projectKey}
-                      onChange={(e) => setConnectForm((p) => ({ ...p, projectKey: e.target.value.toUpperCase() }))}
-                    />
-                  </div>
-                </div>
-                <Button
-                  onClick={saveJiraConfig}
-                  disabled={!connectForm.domain || !connectForm.email || !connectForm.apiToken || !connectForm.projectKey}
-                  className="w-full"
+                <Link
+                  href="/dashboard/integrations"
+                  onClick={onClose}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#0052CC] text-white text-[13px] font-medium hover:bg-[#0052CC]/90 transition-colors"
                 >
-                  Save &amp; Connect Jira
-                </Button>
+                  <Settings className="size-3.5" />
+                  Go to Integrations
+                </Link>
               </div>
             ) : (
-              /* Task list for Jira */
+              /* Connected — show tasks */
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-[14px] font-medium text-foreground">Push to Jira</p>
-                    <p className="text-[12px] text-muted-foreground">Project: <span className="font-semibold text-foreground">{jiraConfig.projectKey}</span> · {jiraConfig.domain}</p>
+                    <p className="text-[12px] text-muted-foreground">
+                      Project: <span className="font-semibold text-foreground">{jiraConfig.projectKey}</span>
+                      {' · '}{jiraConfig.domain}
+                    </p>
                   </div>
-                  <button
-                    onClick={() => { localStorage.removeItem(JIRA_STORAGE_KEY); setJiraConfig(null) }}
-                    className="text-[12px] text-muted-foreground hover:text-red-500"
+                  <Link
+                    href="/dashboard/integrations"
+                    onClick={onClose}
+                    className="text-[12px] text-muted-foreground hover:text-foreground flex items-center gap-1"
                     style={{ transition: 'color 120ms ease-out' }}
                   >
-                    Disconnect
-                  </button>
+                    <Settings className="size-3" />
+                    Manage
+                  </Link>
                 </div>
 
                 <div className="space-y-3">
@@ -344,6 +272,7 @@ export function ActionItemsPopup({
                             >
                               <Check className="size-3" />
                               {result.key}
+                              <ExternalLink className="size-2.5" />
                             </a>
                           )}
                         </div>
@@ -429,7 +358,7 @@ export function ActionItemsPopup({
                 ) : Object.keys(jiraResults).length === selectedCount && selectedCount > 0 ? (
                   <><Check className="size-3.5" />Done</>
                 ) : (
-                  'Apply &amp; Create in Jira'
+                  'Create in Jira'
                 )}
               </Button>
             )}

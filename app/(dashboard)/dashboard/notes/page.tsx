@@ -4,8 +4,8 @@ import { Suspense } from 'react'
 import { getSession } from '@/lib/session'
 import { getMeetingsByUser } from '@/lib/db/queries'
 import { db } from '@/lib/db'
-import { notes, profiles } from '@/lib/db/schema'
-import { inArray, eq } from 'drizzle-orm'
+import { notes, profiles, userIntegrations } from '@/lib/db/schema'
+import { inArray, eq, and } from 'drizzle-orm'
 import { NotesPageClient } from '@/components/dashboard/notes-page-client'
 
 export const metadata: Metadata = { title: 'Notes | Notus' }
@@ -19,10 +19,17 @@ export default async function NotesPage({
   const session = await getSession()
   if (!session) redirect('/login')
 
-  const [allMeetings, profileRows] = await Promise.all([
+  const [allMeetings, profileRows, jiraIntegration] = await Promise.all([
     getMeetingsByUser(session.user.id),
     db.select().from(profiles).where(eq(profiles.id, session.user.id)).limit(1),
+    db.query.userIntegrations.findFirst({
+      where: and(eq(userIntegrations.userId, session.user.id), eq(userIntegrations.provider, 'jira')),
+    }),
   ])
+
+  const jiraConfig = jiraIntegration?.config
+    ? (jiraIntegration.config as { domain: string; email: string; apiToken: string; projectKey: string })
+    : null
   const profile = profileRows[0]
   const currentUser = {
     name: profile?.fullName ?? session.user.name ?? 'Me',
@@ -51,6 +58,7 @@ export default async function NotesPage({
         notesByMeeting={notesByMeeting}
         selectedNoteId={selectedNoteId ?? null}
         currentUser={currentUser}
+        jiraConfig={jiraConfig}
       />
     </Suspense>
   )

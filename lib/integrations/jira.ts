@@ -8,10 +8,23 @@ interface JiraConfig {
 export async function testJiraConnection(config: JiraConfig): Promise<{ ok: boolean; error?: string }> {
   try {
     const auth = Buffer.from(`${config.email}:${config.apiToken}`).toString('base64')
-    const res = await fetch(`https://${config.domain}/rest/api/3/myself`, {
+
+    // 1. Verify credentials
+    const meRes = await fetch(`https://${config.domain}/rest/api/3/myself`, {
       headers: { Authorization: `Basic ${auth}`, Accept: 'application/json' },
     })
-    if (!res.ok) return { ok: false, error: `HTTP ${res.status}` }
+    if (!meRes.ok) return { ok: false, error: `Authentication failed (HTTP ${meRes.status}). Check your email and API token.` }
+
+    // 2. Verify the project key exists and is accessible
+    if (config.projectKey) {
+      const projRes = await fetch(`https://${config.domain}/rest/api/3/project/${config.projectKey}`, {
+        headers: { Authorization: `Basic ${auth}`, Accept: 'application/json' },
+      })
+      if (!projRes.ok) {
+        return { ok: false, error: `Project "${config.projectKey}" not found. Check the project key and your permissions.` }
+      }
+    }
+
     return { ok: true }
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : 'Network error' }
