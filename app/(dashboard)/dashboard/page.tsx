@@ -30,11 +30,11 @@ export default async function DashboardPage({ searchParams }: Props) {
   const thisWeek = meetings.filter((m) => new Date(m.createdAt) >= sevenDaysAgo).length
 
   return (
-    <div className="-mx-8 -mt-8 flex flex-col h-full min-h-0">
+    <div className="-mx-4 md:-mx-8 -mt-16 md:-mt-8 flex flex-col h-full min-h-0">
       {/* Stats container — fixed, does not scroll */}
       <div className="border-b border-border shrink-0">
         {/* Top bar */}
-        <div className="flex items-center justify-between px-8 pt-8 pb-6">
+        <div className="flex items-center justify-between px-4 md:px-8 pt-6 md:pt-8 pb-4 md:pb-6">
           <div>
             <h1 className="text-[22px] font-bold text-foreground tracking-tight leading-none">
               Meetings
@@ -49,62 +49,62 @@ export default async function DashboardPage({ searchParams }: Props) {
         </div>
 
         {/* Stats row */}
-        <div className="grid grid-cols-4 border-t border-border">
+        <div className="grid grid-cols-2 md:grid-cols-4 border-t border-border">
           {/* Total Meetings */}
-          <div className="flex items-center gap-4 px-8 py-5 border-r border-border">
-            <div className="size-11 rounded-lg bg-muted flex items-center justify-center shrink-0">
-              <Video className="size-5 text-muted-foreground" strokeWidth={1.75} />
+          <div className="flex items-center gap-3 px-4 md:px-8 py-4 md:py-5 border-r border-border">
+            <div className="size-9 md:size-11 rounded-lg bg-muted flex items-center justify-center shrink-0">
+              <Video className="size-4 md:size-5 text-muted-foreground" strokeWidth={1.75} />
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground leading-none mb-1.5">
+              <p className="text-[9px] md:text-[10px] font-semibold uppercase tracking-wide md:tracking-widest text-muted-foreground leading-none mb-1 truncate">
                 Total Meetings
               </p>
-              <p className="text-[26px] font-bold text-foreground leading-none tabular-nums">
+              <p className="text-[22px] md:text-[26px] font-bold text-foreground leading-none tabular-nums">
                 {totalMeetings}
               </p>
             </div>
           </div>
 
           {/* Completed */}
-          <div className="flex items-center gap-4 px-8 py-5 border-r border-border">
-            <div className="size-11 rounded-lg bg-muted flex items-center justify-center shrink-0">
-              <CheckCircle2 className="size-5 text-emerald-400" strokeWidth={1.75} />
+          <div className="flex items-center gap-3 px-4 md:px-8 py-4 md:py-5 md:border-r border-border">
+            <div className="size-9 md:size-11 rounded-lg bg-muted flex items-center justify-center shrink-0">
+              <CheckCircle2 className="size-4 md:size-5 text-emerald-400" strokeWidth={1.75} />
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground leading-none mb-1.5">
+              <p className="text-[9px] md:text-[10px] font-semibold uppercase tracking-wide md:tracking-widest text-muted-foreground leading-none mb-1 truncate">
                 Completed
               </p>
-              <p className="text-[26px] font-bold text-foreground leading-none tabular-nums">
+              <p className="text-[22px] md:text-[26px] font-bold text-foreground leading-none tabular-nums">
                 {completedMeetings}
               </p>
             </div>
           </div>
 
           {/* Total Minutes */}
-          <div className="flex items-center gap-4 px-8 py-5 border-r border-border">
-            <div className="size-11 rounded-lg bg-muted flex items-center justify-center shrink-0">
-              <Clock className="size-5 text-muted-foreground" strokeWidth={1.75} />
+          <div className="flex items-center gap-3 px-4 md:px-8 py-4 md:py-5 border-r border-border border-t md:border-t-0">
+            <div className="size-9 md:size-11 rounded-lg bg-muted flex items-center justify-center shrink-0">
+              <Clock className="size-4 md:size-5 text-muted-foreground" strokeWidth={1.75} />
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground leading-none mb-1.5">
+              <p className="text-[9px] md:text-[10px] font-semibold uppercase tracking-wide md:tracking-widest text-muted-foreground leading-none mb-1 truncate">
                 Total Minutes
               </p>
-              <p className="text-[26px] font-bold text-foreground leading-none tabular-nums">
+              <p className="text-[22px] md:text-[26px] font-bold text-foreground leading-none tabular-nums">
                 {totalMinutes}
               </p>
             </div>
           </div>
 
           {/* This Week */}
-          <div className="flex items-center gap-4 px-8 py-5">
-            <div className="size-11 rounded-lg bg-muted flex items-center justify-center shrink-0">
-              <CalendarDays className="size-5 text-indigo-400" strokeWidth={1.75} />
+          <div className="flex items-center gap-3 px-4 md:px-8 py-4 md:py-5 border-t md:border-t-0">
+            <div className="size-9 md:size-11 rounded-lg bg-muted flex items-center justify-center shrink-0">
+              <CalendarDays className="size-4 md:size-5 text-indigo-400" strokeWidth={1.75} />
             </div>
             <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground leading-none mb-1.5">
+              <p className="text-[9px] md:text-[10px] font-semibold uppercase tracking-wide md:tracking-widest text-muted-foreground leading-none mb-1 truncate">
                 This Week
               </p>
-              <p className="text-[26px] font-bold text-foreground leading-none tabular-nums">
+              <p className="text-[22px] md:text-[26px] font-bold text-foreground leading-none tabular-nums">
                 {thisWeek}
               </p>
             </div>

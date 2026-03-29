@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import {
   FileText, Sparkles, MessageSquare, Copy, Check,
   Send, Loader2, CheckSquare, Mail, Calendar, Clock,
-  Wand2, ChevronRight, Plus, Trash2, ExternalLink,
+  Wand2, ChevronRight, Plus, Trash2, ExternalLink, ArrowLeft,
 } from 'lucide-react'
 import type { Meeting, Note } from '@/lib/db/schema'
 import { Button } from '@/components/ui/button'
@@ -79,6 +79,7 @@ interface NotesPageClientProps {
 export function NotesPageClient({ meetings, notesByMeeting, selectedNoteId, currentUser, jiraConfig }: NotesPageClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const [mobileView, setMobileView] = useState<'list' | 'editor'>('list')
 
   // ?meeting=id navigates to first note of that meeting
   const meetingParam = searchParams.get('meeting')
@@ -120,6 +121,7 @@ export function NotesPageClient({ meetings, notesByMeeting, selectedNoteId, curr
     const params = new URLSearchParams(searchParams.toString())
     params.set('note', noteId)
     router.push(`/dashboard/notes?${params.toString()}`, { scroll: false })
+    setMobileView('editor')
   }
 
   function toggleExpand(meetingId: string) {
@@ -150,9 +152,9 @@ export function NotesPageClient({ meetings, notesByMeeting, selectedNoteId, curr
   }
 
   return (
-    <div className="flex h-[calc(100vh-64px)] -mx-8 -my-8">
+    <div className="flex flex-1 -mx-4 -mt-16 -mb-4 md:-mx-8 md:-mt-8 md:-mb-8">
       {/* ── Left accordion sidebar ── */}
-      <div className="w-[320px] shrink-0 border-r border-border flex flex-col overflow-hidden bg-background">
+      <div className={`${mobileView === 'list' ? 'flex' : 'hidden'} md:flex w-full md:w-[320px] shrink-0 border-r border-border flex-col overflow-hidden bg-background`}>
         <div className="px-5 py-4 border-b border-border shrink-0">
           <h1 className="text-[17px] font-bold text-foreground tracking-tight">Notes</h1>
           <p className="text-[13px] text-muted-foreground mt-0.5">{meetings.length} meetings</p>
@@ -270,7 +272,15 @@ export function NotesPageClient({ meetings, notesByMeeting, selectedNoteId, curr
       </div>
 
       {/* ── Right: note editor ── */}
-      <div className="flex-1 min-w-0 overflow-hidden">
+      <div className={`${mobileView === 'editor' ? 'flex' : 'hidden'} md:flex flex-col flex-1 min-w-0 overflow-hidden`}>
+        {/* Mobile back button */}
+        <button
+          onClick={() => setMobileView('list')}
+          className="md:hidden flex items-center gap-1.5 px-4 py-3 border-b border-border text-sm text-muted-foreground hover:text-foreground shrink-0"
+        >
+          <ArrowLeft className="size-4" />
+          Back to notes
+        </button>
         {activeNote && activeMeeting ? (
           <NoteEditor
             meeting={activeMeeting}

@@ -158,18 +158,18 @@ function DashboardPreview() {
           {/* Stats row */}
           <div className="grid grid-cols-4 border-b border-border shrink-0">
             {[
-              { Icon: Video,         label: 'Meetings',  value: '24', color: 'text-muted-foreground' },
-              { Icon: CheckCircle2,  label: 'Completed', value: '18', color: 'text-emerald-500' },
-              { Icon: Clock,         label: 'Minutes',   value: '847', color: 'text-muted-foreground' },
-              { Icon: CalendarDays,  label: 'This Week', value: '6',  color: 'text-indigo-500' },
+              { Icon: Video,         label: 'Meets',  value: '24', color: 'text-muted-foreground' },
+              { Icon: CheckCircle2,  label: 'Done',   value: '18', color: 'text-emerald-500' },
+              { Icon: Clock,         label: 'Mins',   value: '847', color: 'text-muted-foreground' },
+              { Icon: CalendarDays,  label: 'Week',   value: '6',  color: 'text-indigo-500' },
             ].map(({ Icon, label, value, color }) => (
-              <div key={label} className="flex items-center gap-2 px-3 py-2.5 border-r border-border last:border-0">
-                <div className="size-6 rounded-md bg-muted flex items-center justify-center shrink-0">
-                  <Icon className={`size-3 ${color}`} strokeWidth={1.75} />
+              <div key={label} className="flex items-center gap-1 px-1.5 py-2 border-r border-border last:border-0 min-w-0 overflow-hidden">
+                <div className="size-5 rounded-md bg-muted flex items-center justify-center shrink-0">
+                  <Icon className={`size-2.5 ${color}`} strokeWidth={1.75} />
                 </div>
-                <div>
-                  <p className="text-[8px] font-semibold uppercase tracking-widest text-muted-foreground leading-none mb-0.5">{label}</p>
-                  <p className="text-[14px] font-bold text-foreground leading-none tabular-nums">{value}</p>
+                <div className="min-w-0">
+                  <p className="text-[7px] font-semibold uppercase tracking-wide text-muted-foreground leading-none mb-0.5 truncate">{label}</p>
+                  <p className="text-[12px] font-bold text-foreground leading-none tabular-nums">{value}</p>
                 </div>
               </div>
             ))}
@@ -184,7 +184,7 @@ function DashboardPreview() {
           </div>
 
           {/* Table header */}
-          <div className="grid border-b border-border shrink-0 bg-muted/10 pr-8" style={{ gridTemplateColumns: '1fr 56px 48px 72px' }}>
+          <div className="grid border-b border-border shrink-0 bg-muted/10" style={{ gridTemplateColumns: '1fr 56px 48px 72px' }}>
             {['Name', 'Dur.', 'Date', 'Type'].map((h) => (
               <div key={h} className="px-3 py-1.5 text-[8px] font-bold uppercase tracking-widest text-muted-foreground">{h}</div>
             ))}
@@ -193,7 +193,7 @@ function DashboardPreview() {
           {/* Rows */}
           <div className="overflow-hidden flex-1">
             {meetings.map((m, i) => (
-              <div key={i} className="grid border-b border-border/60 hover:bg-muted/30 last:border-0 pr-8" style={{ gridTemplateColumns: '1fr 56px 48px 72px' }}>
+              <div key={i} className="grid border-b border-border/60 hover:bg-muted/30 last:border-0" style={{ gridTemplateColumns: '1fr 56px 48px 72px' }}>
                 <div className="px-3 py-2 flex items-center gap-1.5 min-w-0">
                   <span className={`size-1.5 rounded-full shrink-0 ${m.dot}`} />
                   <span className="text-[10px] font-semibold truncate" style={{ color: 'var(--foreground)' }}>{m.title}</span>
@@ -317,7 +317,7 @@ export function Features() {
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight leading-[1.15]">
                 Empowering your<br />meeting workflow
               </h2>
-              <div className="grid grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 {splitFeature1.map(({ Icon, title, desc }, i) => (
                   <div key={title} className="section-reveal space-y-2" style={{ transitionDelay: `${i * 50}ms` }}>
                     <div className="flex items-center gap-2 mb-1">
@@ -345,7 +345,7 @@ export function Features() {
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight leading-[1.15]">
                 Built to keep you<br />in the conversation
               </h2>
-              <div className="grid grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 {splitFeature2.map(({ Icon, title, desc }, i) => (
                   <div key={title} className="section-reveal space-y-2" style={{ transitionDelay: `${i * 50}ms` }}>
                     <div className="flex items-center gap-2 mb-1">

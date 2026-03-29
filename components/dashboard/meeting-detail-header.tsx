@@ -117,14 +117,14 @@ export function MeetingDetailHeader({ meeting, connectedIntegrations = [] }: Mee
         All meetings
       </Link>
 
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-2 flex-1 min-w-0">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-bold text-foreground truncate">{meeting.title}</h1>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <div className="space-y-1.5 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground leading-tight">{meeting.title}</h1>
             <Badge variant={status.variant}>{status.label}</Badge>
           </div>
 
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <Calendar className="size-3" />
               {formatDate(meeting.createdAt)}
@@ -138,7 +138,7 @@ export function MeetingDetailHeader({ meeting, connectedIntegrations = [] }: Mee
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+        <div className="flex items-center gap-2 flex-wrap sm:shrink-0 sm:justify-end">
           {/* Integration quick-actions — only shown when meeting is completed */}
           {meeting.status === 'completed' && connectedIntegrations.includes('slack') && (
             <button

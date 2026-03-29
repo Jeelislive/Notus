@@ -11,7 +11,11 @@ import {
   ChevronUp,
   ChevronDown,
   Search,
+  Calendar,
+  Clock,
+  ArrowRight,
 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import type { Meeting } from '@/lib/db/schema'
 
 const MEETING_TYPE_LABELS: Record<NonNullable<Meeting['meetingType']>, string> = {
@@ -124,6 +128,136 @@ function StatusDot({ status }: { status: Meeting['status'] }) {
     <span
       className={`size-2 rounded-full shrink-0 ${dotClass[status] ?? 'bg-zinc-500'}`}
     />
+  )
+}
+
+// ─────────────────────────────────────────────────────────
+// Mobile card — tap to open detail popup
+// ─────────────────────────────────────────────────────────
+
+function MobileMeetingCard({ meeting, index }: { meeting: Meeting; index: number }) {
+  const router = useRouter()
+  const [open, setOpen] = useState(false)
+  const [renameOpen, setRenameOpen] = useState(false)
+  const [renameValue, setRenameValue] = useState(meeting.title)
+  const [renaming, setRenaming] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  async function handleRename() {
+    setRenaming(true)
+    await renameMeeting(meeting.id, renameValue)
+    setRenaming(false)
+    setRenameOpen(false)
+  }
+
+  async function handleDelete() {
+    if (!confirm(`Delete "${meeting.title}"? This cannot be undone.`)) return
+    setOpen(false)
+    setDeleting(true)
+    await deleteMeeting(meeting.id)
+  }
+
+  return (
+    <>
+      {/* List row — name only */}
+      <button
+        onClick={() => setOpen(true)}
+        disabled={deleting}
+        className={`w-full flex items-center gap-3 px-4 py-3.5 border-b border-border text-left active:bg-muted/60 animate-meeting-row ${
+          deleting ? 'opacity-40 pointer-events-none' : ''
+        }`}
+        style={{ animationDelay: `${index * 30}ms`, transition: 'background-color 120ms ease-out' }}
+      >
+        <StatusDot status={meeting.status} />
+        <div className="flex-1 min-w-0">
+          <p className="text-[15px] font-semibold text-foreground truncate leading-snug">{meeting.title}</p>
+          <p className="text-[12px] text-muted-foreground mt-0.5">{formatDate(meeting.createdAt)}</p>
+        </div>
+        <ArrowRight className="size-4 text-muted-foreground/40 shrink-0" />
+      </button>
+
+      {/* Detail popup */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-sm mx-4">
+          <DialogHeader>
+            <DialogTitle className="text-left pr-6 leading-snug">{meeting.title}</DialogTitle>
+          </DialogHeader>
+
+          {/* Status + badges */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <StatusBadge status={meeting.status} />
+            <TypeBadge templateName={meeting.templateName} meetingType={meeting.meetingType} />
+          </div>
+
+          {/* Meta info */}
+          <div className="space-y-2.5">
+            <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
+              <Calendar className="size-3.5 shrink-0" />
+              <span>{formatDate(meeting.createdAt)}</span>
+            </div>
+            {(meeting.durationSeconds ?? 0) > 0 && (
+              <div className="flex items-center gap-2 text-[13px] text-muted-foreground">
+                <Clock className="size-3.5 shrink-0" />
+                <span className="font-mono tabular-nums">{formatDuration(meeting.durationSeconds ?? 0)}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-col gap-2 pt-1">
+            <Button
+              onClick={() => { setOpen(false); router.push(`/dashboard/meetings/${meeting.id}`) }}
+              className="w-full"
+            >
+              Open meeting
+              <ArrowRight className="size-4" />
+            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => { setOpen(false); setTimeout(() => setRenameOpen(true), 150) }}
+              >
+                <Pencil className="size-3.5" />
+                Rename
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1 text-red-500 hover:text-red-500 hover:border-red-500/30 hover:bg-red-500/5"
+                onClick={handleDelete}
+              >
+                <Trash2 className="size-3.5" />
+                Delete
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Rename dialog */}
+      <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rename meeting</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Input
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              placeholder="Meeting title"
+              onKeyDown={(e) => e.key === 'Enter' && handleRename()}
+              autoFocus
+            />
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setRenameOpen(false)}>Cancel</Button>
+              <Button onClick={handleRename} disabled={renaming || !renameValue.trim()}>
+                {renaming ? 'Saving...' : 'Save'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 
@@ -459,7 +593,16 @@ export function MeetingTable({ meetings }: MeetingListProps) {
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
+        <>
+        {/* ── Mobile list (tap to open popup) ── */}
+        <div className="md:hidden">
+          {filtered.map((meeting, index) => (
+            <MobileMeetingCard key={meeting.id} meeting={meeting} index={index} />
+          ))}
+        </div>
+
+        {/* ── Desktop table ── */}
+        <div className="hidden md:block overflow-x-auto">
         <table className="w-full border-collapse min-w-[640px]">
           <thead>
             <tr className="border-b border-border">
@@ -513,6 +656,7 @@ export function MeetingTable({ meetings }: MeetingListProps) {
           </tbody>
         </table>
         </div>
+        </>
       )}
 
       {/* Delete All confirmation dialog */}

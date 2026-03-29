@@ -25,20 +25,25 @@ export function SidebarNav({ user }: SidebarNavProps) {
   const pathname  = usePathname()
   const router    = useRouter()
   const [hovered, setHovered] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth < 768 : false
+  )
   const [mobileOpen, setMobileOpen] = useState(false)
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
+    // Set initial CSS variable to match the already-correct isMobile state
+    document.documentElement.style.setProperty('--sidebar-width', isMobile ? '0px' : `${COLLAPSED_W}px`)
+
     function updateLayout() {
       const mobile = window.innerWidth < 768
       setIsMobile(mobile)
       document.documentElement.style.setProperty('--sidebar-width', mobile ? '0px' : `${COLLAPSED_W}px`)
       if (!mobile) setMobileOpen(false)
     }
-    updateLayout()
     window.addEventListener('resize', updateLayout)
     return () => window.removeEventListener('resize', updateLayout)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useEffect(() => {
@@ -119,7 +124,7 @@ export function SidebarNav({ user }: SidebarNavProps) {
       {/* Mobile backdrop */}
       {isMobile && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+          className="fixed inset-0 z-40 bg-black/40"
           style={{
             opacity: mobileOpen ? 1 : 0,
             pointerEvents: mobileOpen ? 'auto' : 'none',
