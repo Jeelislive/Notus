@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import { LayoutDashboard, Settings, LogOut, Users, FileText, Search } from 'lucide-react'
+import { LayoutDashboard, Settings, LogOut, Users, FileText, Search, Puzzle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { signOut } from '@/lib/auth-client'
 import { ThemeSwitcher } from '@/components/theme-switcher'
@@ -61,11 +61,12 @@ export function SidebarNav({ user }: SidebarNavProps) {
   }
 
   const navItems = [
-    { href: '/dashboard',          label: 'Meetings', icon: LayoutDashboard },
-    { href: '/dashboard/notes',    label: 'Notes',    icon: FileText },
-    { href: '/dashboard/search',   label: 'Search',   icon: Search },
-    { href: '/dashboard/teams',    label: 'Teams',    icon: Users },
-    { href: '/dashboard/settings', label: 'Settings', icon: Settings },
+    { href: '/dashboard',                  label: 'Meetings',     icon: LayoutDashboard },
+    { href: '/dashboard/notes',            label: 'Notes',        icon: FileText },
+    { href: '/dashboard/search',           label: 'Search',       icon: Search },
+    { href: '/dashboard/teams',            label: 'Teams',        icon: Users },
+    { href: '/dashboard/integrations',     label: 'Integrations', icon: Puzzle },
+    { href: '/dashboard/settings',         label: 'Settings',     icon: Settings },
   ]
 
   const isCollapsed = !hovered

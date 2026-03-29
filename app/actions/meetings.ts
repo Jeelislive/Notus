@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { getSession } from '@/lib/session'
 import { db } from '@/lib/db'
 import { meetings, notes } from '@/lib/db/schema'
-import { eq, and, inArray } from 'drizzle-orm'
+import { eq, and } from 'drizzle-orm'
 
 async function getAuthenticatedUser() {
   const session = await getSession()
@@ -176,5 +176,22 @@ export async function deleteNote(noteId: string) {
 
   await db.delete(notes).where(eq(notes.id, noteId))
   revalidatePath('/dashboard/notes')
+  return { success: true }
+}
+
+export async function saveSpeakerMappings(meetingId: string, mappings: Record<string, string>) {
+  const session = await getSession()
+  if (!session) return { error: 'Unauthorized' }
+
+  const meeting = await db.query.meetings.findFirst({
+    where: and(eq(meetings.id, meetingId), eq(meetings.userId, session.user.id)),
+  })
+  if (!meeting) return { error: 'Meeting not found' }
+
+  await db
+    .update(meetings)
+    .set({ speakerMappings: mappings, updatedAt: new Date() })
+    .where(eq(meetings.id, meetingId))
+
   return { success: true }
 }

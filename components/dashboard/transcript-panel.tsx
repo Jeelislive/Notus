@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { Mic } from 'lucide-react'
 import { ShiningText } from '@/components/ui/shining-text'
 import { TypewriterText } from '@/components/ui/typewriter-text'
+import { SpeakerAvatar } from '@/components/ui/speaker-avatar'
 import type { TranscriptSegment } from '@/lib/db/schema'
 import type { LiveSegment } from '@/hooks/use-recording'
 
@@ -71,9 +72,10 @@ interface TranscriptPanelProps {
   liveSegments: LiveSegment[]
   status: string
   isRecording: boolean
+  speakerMappings?: Record<string, string>
 }
 
-export function TranscriptPanel({ transcript, liveSegments, status, isRecording }: TranscriptPanelProps) {
+export function TranscriptPanel({ transcript, liveSegments, status, isRecording, speakerMappings }: TranscriptPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const colorMapRef = useRef<Record<string, typeof SPEAKER_PALETTE[0]>>({})
   const colorIndexRef = useRef(0)
@@ -130,6 +132,7 @@ export function TranscriptPanel({ transcript, liveSegments, status, isRecording 
         ) : (
           groups.map((group) => {
             const color = getColor(group.speaker)
+            const resolvedName = speakerMappings?.[group.speaker] ?? group.speaker
             const para = group.texts.join(' ')
             const classification = classifySegment(para)
             const classifyClass = classification ? SEGMENT_CLASSIFY_CLASSES[classification] : ''
@@ -141,9 +144,11 @@ export function TranscriptPanel({ transcript, liveSegments, status, isRecording 
               >
                 {/* Speaker + timestamp */}
                 <div className="flex items-center gap-2 mb-2.5">
-                  <span className={`size-2.5 rounded-full shrink-0 ${color.dot}`} />
+                  <div className="shrink-0 rounded-full overflow-hidden">
+                    <SpeakerAvatar name={resolvedName} size={24} />
+                  </div>
                   <span className={`text-[14px] font-semibold tracking-wide ${color.text}`}>
-                    {group.speaker}
+                    {resolvedName}
                   </span>
                   <span className="text-[12px] text-muted-foreground/50">{formatMs(group.startMs)}</span>
                 </div>

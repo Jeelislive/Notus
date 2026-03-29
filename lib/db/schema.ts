@@ -8,6 +8,7 @@ import {
   pgEnum,
   index,
   uniqueIndex,
+  jsonb,
 } from 'drizzle-orm/pg-core'
 import { sql } from 'drizzle-orm'
 
@@ -165,6 +166,7 @@ export const meetings = pgTable('meetings', {
   shareToken: text('share_token').unique(),
   templateId: uuid('template_id'),
   calendarEventId: text('calendar_event_id'),
+  speakerMappings: jsonb('speaker_mappings').$type<Record<string, string>>(),
   startedAt: timestamp('started_at', { withTimezone: true }),
   endedAt: timestamp('ended_at', { withTimezone: true }),
   createdAt: timestamp('created_at', { withTimezone: true })
@@ -258,6 +260,36 @@ export const usageTracking = pgTable('usage_tracking', {
     .notNull(),
 })
 
+export const integrationProviderEnum = pgEnum('integration_provider', [
+  'jira',
+  'slack',
+  'notion',
+  'linear',
+  'github',
+])
+
+export const userIntegrations = pgTable(
+  'user_integrations',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    userId: text('user_id')
+      .notNull()
+      .references(() => profiles.id, { onDelete: 'cascade' }),
+    provider: integrationProviderEnum('provider').notNull(),
+    config: jsonb('config').notNull().$type<Record<string, string>>(),
+    isActive: boolean('is_active').default(true).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .default(sql`now()`)
+      .notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .default(sql`now()`)
+      .notNull(),
+  },
+  (t) => [uniqueIndex('user_integrations_user_provider_idx').on(t.userId, t.provider)]
+)
+
 export type AuthUser = typeof authUser.$inferSelect
 export type Profile = typeof profiles.$inferSelect
 export type Team = typeof teams.$inferSelect
@@ -267,3 +299,5 @@ export type TranscriptSegment = typeof transcriptSegments.$inferSelect
 export type Note = typeof notes.$inferSelect
 export type Template = typeof templates.$inferSelect
 export type UsageTracking = typeof usageTracking.$inferSelect
+export type UserIntegration = typeof userIntegrations.$inferSelect
+export type SpeakerMappings = Record<string, string>

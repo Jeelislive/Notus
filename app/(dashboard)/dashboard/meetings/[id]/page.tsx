@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
 import { getSession } from '@/lib/session'
 import { getMeetingById, getTranscriptByMeetingId } from '@/lib/db/queries'
+import { getIntegrations } from '@/app/actions/integrations'
 import { MeetingDetailHeader } from '@/components/dashboard/meeting-detail-header'
 import { MeetingClient } from '@/components/dashboard/meeting-client'
 
@@ -22,17 +23,24 @@ export default async function MeetingDetailPage({ params }: Props) {
   const session = await getSession()
   if (!session) redirect('/login')
 
-  const [meeting, transcript] = await Promise.all([
+  const [meeting, transcript, integrations] = await Promise.all([
     getMeetingById(id, session.user.id),
     getTranscriptByMeetingId(id),
+    getIntegrations(),
   ])
 
   if (!meeting) notFound()
 
+  const connectedIntegrations = integrations.map((i) => i.provider)
+
   return (
     <div className="space-y-6">
-      <MeetingDetailHeader meeting={meeting} />
-      <MeetingClient meeting={meeting} transcript={transcript} />
+      <MeetingDetailHeader meeting={meeting} connectedIntegrations={connectedIntegrations} />
+      <MeetingClient
+        meeting={meeting}
+        transcript={transcript}
+        speakerMappings={meeting.speakerMappings ?? undefined}
+      />
     </div>
   )
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { getSession } from '@/lib/session'
-import { JiraSettings } from './jira-settings'
+import { Puzzle, ChevronRight } from 'lucide-react'
 
 export const metadata: Metadata = { title: 'Settings | Notus' }
 
@@ -35,7 +36,22 @@ export default async function SettingsPage() {
         </div>
       </div>
 
-      <JiraSettings />
+      {/* Integrations card — links to dedicated hub */}
+      <Link
+        href="/dashboard/integrations"
+        className="flex items-center justify-between px-5 py-4 rounded-2xl border border-border bg-background hover:border-border/80 hover:shadow-sm active:scale-[0.99] transition-all duration-150 group"
+      >
+        <div className="flex items-center gap-3">
+          <div className="size-9 rounded-xl bg-indigo-500/10 flex items-center justify-center shrink-0">
+            <Puzzle className="size-4 text-indigo-500" strokeWidth={1.75} />
+          </div>
+          <div>
+            <p className="text-[15px] font-medium text-foreground">Integrations</p>
+            <p className="text-[13px] text-muted-foreground mt-0.5">Connect Jira, Slack, Notion, Linear and more</p>
+          </div>
+        </div>
+        <ChevronRight className="size-4 text-muted-foreground group-hover:text-foreground transition-colors" />
+      </Link>
     </div>
   )
 }

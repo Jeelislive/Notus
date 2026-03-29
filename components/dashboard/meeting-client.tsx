@@ -8,31 +8,49 @@ import { useRecording } from '@/hooks/use-recording'
 import { RecordingControls } from '@/components/recording/recording-controls'
 import { TranscriptPanel } from '@/components/dashboard/transcript-panel'
 import { LiveAssistantPanel } from '@/components/dashboard/live-assistant-panel'
+import { SpeakerNameModal } from '@/components/dashboard/speaker-name-modal'
 
 interface MeetingClientProps {
   meeting: Meeting
   transcript: TranscriptSegment[]
+  speakerMappings?: Record<string, string>
 }
 
-export function MeetingClient({ meeting, transcript }: MeetingClientProps) {
+export function MeetingClient({ meeting, transcript, speakerMappings: initialMappings }: MeetingClientProps) {
   const router = useRouter()
   const { status, error, elapsedSeconds, audioLevel, liveSegments, reDiarizing, start, stop } = useRecording({
     meetingId: meeting.id,
   })
   const prevReDiarizingRef = useRef(false)
+  const [mappings, setMappings] = useState<Record<string, string>>(initialMappings ?? {})
+  const [showNamingModal, setShowNamingModal] = useState(false)
 
   // When re-diarization finishes, refresh server data to load corrected speaker labels
+  // then show speaker naming modal after a brief delay
   useEffect(() => {
     if (prevReDiarizingRef.current && !reDiarizing) {
+      setTimeout(() => setShowNamingModal(true), 1200)
       router.refresh()
     }
     prevReDiarizingRef.current = reDiarizing
   }, [reDiarizing, router])
+
+  // On mount: show naming modal if multiple speakers and no mappings yet
+  useEffect(() => {
+    const uniqueSpeakers = [...new Set(transcript.map((s) => s.speaker).filter(Boolean))]
+    if (uniqueSpeakers.length > 1 && Object.keys(mappings).length === 0) {
+      setShowNamingModal(true)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const [assistantOpen, setAssistantOpen] = useState(false)
 
   const isRecordingActive = status === 'recording' || status === 'stopping' || status === 'requesting'
   const displayStatus =
     status === 'recording' || status === 'stopping' ? 'recording' : meeting.status
+
+  const speakerKeys = [...new Set(transcript.map((s) => s.speaker).filter(Boolean))] as string[]
 
   return (
     <div className="flex flex-col gap-4">
@@ -61,6 +79,7 @@ export function MeetingClient({ meeting, transcript }: MeetingClientProps) {
             liveSegments={liveSegments}
             status={displayStatus}
             isRecording={isRecordingActive}
+            speakerMappings={mappings}
           />
         </div>
 
@@ -87,6 +106,14 @@ export function MeetingClient({ meeting, transcript }: MeetingClientProps) {
           </button>
         )}
       </div>
+
+      <SpeakerNameModal
+        open={showNamingModal && speakerKeys.length > 1}
+        onClose={() => setShowNamingModal(false)}
+        meetingId={meeting.id}
+        speakerKeys={speakerKeys}
+        onSaved={(m) => setMappings(m)}
+      />
     </div>
   )
 }
