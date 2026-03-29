@@ -482,15 +482,15 @@ function NoteEditor({ meeting, note, currentUser, meetingType, jiraConfig }: { m
     try { structuredData = JSON.parse(note.summaryStructured) } catch { structuredData = null }
   }
 
-  const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: 'notes', label: 'Notes', icon: <FileText className="size-4.5" /> },
-    { id: 'ai', label: 'AI Summary', icon: <Sparkles className="size-4.5" /> },
-    { id: 'email', label: 'Follow-up', icon: <Mail className="size-4.5" /> },
-    { id: 'chat', label: 'Chat', icon: <MessageSquare className="size-4.5" /> },
+  const tabs: { id: Tab; label: string; shortLabel: string; icon: React.ReactNode }[] = [
+    { id: 'notes',  label: 'Notes',      shortLabel: 'Notes',  icon: <FileText className="size-4" /> },
+    { id: 'ai',     label: 'AI Summary', shortLabel: 'AI',     icon: <Sparkles className="size-4" /> },
+    { id: 'email',  label: 'Follow-up',  shortLabel: 'Email',  icon: <Mail className="size-4" /> },
+    { id: 'chat',   label: 'Chat',       shortLabel: 'Chat',   icon: <MessageSquare className="size-4" /> },
   ]
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col flex-1 min-h-0">
       {/* Header */}
       <div className="px-6 pt-5 pb-4 border-b border-border shrink-0">
         <div className="flex items-start justify-between gap-4">
@@ -531,80 +531,89 @@ function NoteEditor({ meeting, note, currentUser, meetingType, jiraConfig }: { m
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center justify-between px-5 border-b border-border shrink-0">
-        <div className="flex items-center gap-1">
+      <div className="border-b border-border shrink-0">
+        <div className="flex items-center overflow-x-auto scrollbar-none">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`relative flex items-center gap-2 px-4 py-4 text-[15px] font-medium active:scale-[0.95] ${
+              className={`relative flex items-center gap-1.5 px-3 md:px-4 py-3.5 md:py-4 text-[13px] md:text-[15px] font-medium whitespace-nowrap shrink-0 active:scale-[0.95] ${
                 activeTab === tab.id
                   ? 'text-foreground'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
               style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), color 150ms ease-out' }}
             >
-              {tab.icon}{tab.label}
+              {tab.icon}
+              <span className="sm:hidden">{tab.shortLabel}</span>
+              <span className="hidden sm:inline">{tab.label}</span>
               {tab.id === 'ai' && isProcessing && <span className="size-2 rounded-full bg-amber-400 animate-pulse" />}
               {activeTab === tab.id && (
                 <span className="absolute bottom-0 left-3 right-3 h-[2px] rounded-full bg-foreground" />
               )}
             </button>
           ))}
-        </div>
-        {activeTab === 'notes' && (
-          <div className="flex items-center gap-2.5 py-2">
-            {meeting.status === 'completed' && (
-              <button
-                onClick={handleNotesFill}
-                disabled={aiFilling}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-[14px] font-medium border border-indigo-500/30 bg-indigo-500/8 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/15 active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none"
-                style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), background-color 150ms ease-out' }}
-              >
-                {aiFilling
-                  ? <><Loader2 className="size-4 animate-spin" />Filling…</>
-                  : <><Sparkles className="size-4" />Fill by Notus</>
-                }
+          {/* Desktop-only tab actions */}
+          <div className="ml-auto hidden md:flex items-center gap-2.5 px-4 py-2 shrink-0">
+            {activeTab === 'notes' && meeting.status === 'completed' && (
+              <button onClick={handleNotesFill} disabled={aiFilling}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-[14px] font-medium border border-indigo-500/30 bg-indigo-500/8 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/15 active:scale-[0.97] disabled:opacity-50"
+                style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), background-color 150ms ease-out' }}>
+                {aiFilling ? <><Loader2 className="size-4 animate-spin" />Filling…</> : <><Sparkles className="size-4" />Fill by Notus</>}
               </button>
             )}
-            <span
-              className="text-[14px]"
-              style={{
-                color: saveStatus === 'saved' ? 'var(--muted-foreground)' : saveStatus === 'saving' ? 'var(--foreground)' : '#f59e0b',
-                opacity: saveStatus === 'saved' ? 0.45 : 1,
-                transition: 'color 200ms ease-out, opacity 200ms ease-out',
-              }}
-            >
-              {saveStatus === 'saved' ? 'Saved' : saveStatus === 'saving' ? 'Saving…' : 'Unsaved'}
-            </span>
-          </div>
-        )}
-
-        {activeTab === 'ai' && meeting.status === 'completed' && (
-          <div className="flex items-center gap-1.5 py-1.5">
-            {hasAI && (
-              <button
-                onClick={handlePushToJira}
+            {activeTab === 'notes' && (
+              <span className="text-[14px]" style={{ color: saveStatus === 'saved' ? 'var(--muted-foreground)' : saveStatus === 'saving' ? 'var(--foreground)' : '#f59e0b', opacity: saveStatus === 'saved' ? 0.45 : 1, transition: 'color 200ms ease-out, opacity 200ms ease-out' }}>
+                {saveStatus === 'saved' ? 'Saved' : saveStatus === 'saving' ? 'Saving…' : 'Unsaved'}
+              </span>
+            )}
+            {activeTab === 'ai' && meeting.status === 'completed' && hasAI && (
+              <button onClick={handlePushToJira}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border border-blue-500/30 bg-blue-500/8 text-blue-600 dark:text-blue-400 hover:bg-blue-500/15 active:scale-[0.97]"
-                style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), background-color 150ms ease-out' }}
-              >
-                <ExternalLink className="size-3.5" />
-                Push to Jira
+                style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), background-color 150ms ease-out' }}>
+                <ExternalLink className="size-3.5" />Push to Jira
               </button>
             )}
-            <button
-              onClick={handleGenerate}
-              disabled={generating}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 active:scale-[0.97] disabled:opacity-50 disabled:pointer-events-none"
-              style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), background-color 150ms ease-out, color 150ms ease-out' }}
-            >
-              {generating
-                ? <><Loader2 className="size-3.5 animate-spin" />{hasAI ? 'Regenerating…' : 'Generating…'}</>
-                : <><Wand2 className="size-3.5" />{hasAI ? 'Regenerate AI' : 'Generate AI'}</>
-              }
-            </button>
+            {activeTab === 'ai' && meeting.status === 'completed' && (
+              <button onClick={handleGenerate} disabled={generating}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border border-border text-muted-foreground hover:text-foreground hover:bg-muted/50 active:scale-[0.97] disabled:opacity-50"
+                style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), background-color 150ms ease-out, color 150ms ease-out' }}>
+                {generating ? <><Loader2 className="size-3.5 animate-spin" />{hasAI ? 'Regenerating…' : 'Generating…'}</> : <><Wand2 className="size-3.5" />{hasAI ? 'Regenerate AI' : 'Generate AI'}</>}
+              </button>
+            )}
           </div>
-        )}
+        </div>
+
+        {/* Mobile-only action bar */}
+        <div className="md:hidden flex items-center gap-2 px-3 py-2 border-t border-border/60">
+          {activeTab === 'notes' && (
+            <>
+              {meeting.status === 'completed' && (
+                <button onClick={handleNotesFill} disabled={aiFilling}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border border-indigo-500/30 bg-indigo-500/8 text-indigo-600 dark:text-indigo-400 active:scale-[0.97] disabled:opacity-50">
+                  {aiFilling ? <><Loader2 className="size-3.5 animate-spin" />Filling…</> : <><Sparkles className="size-3.5" />Fill by Notus</>}
+                </button>
+              )}
+              <span className="ml-auto text-[12px]" style={{ color: saveStatus === 'saved' ? 'var(--muted-foreground)' : saveStatus === 'saving' ? 'var(--foreground)' : '#f59e0b', opacity: saveStatus === 'saved' ? 0.45 : 1 }}>
+                {saveStatus === 'saved' ? 'Saved' : saveStatus === 'saving' ? 'Saving…' : 'Unsaved'}
+              </span>
+            </>
+          )}
+          {activeTab === 'ai' && meeting.status === 'completed' && (
+            <>
+              {hasAI && (
+                <button onClick={handlePushToJira}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border border-blue-500/30 bg-blue-500/8 text-blue-600 dark:text-blue-400 active:scale-[0.97]">
+                  <ExternalLink className="size-3.5" />Push to Jira
+                </button>
+              )}
+              <button onClick={handleGenerate} disabled={generating}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border border-border text-muted-foreground active:scale-[0.97] disabled:opacity-50">
+                {generating ? <><Loader2 className="size-3.5 animate-spin" />{hasAI ? 'Regenerating…' : 'Generating…'}</> : <><Wand2 className="size-3.5" />{hasAI ? 'Regenerate AI' : 'Generate AI'}</>}
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Content */}
