@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/session'
+import { log } from '@/lib/logger'
+
+const logger = log('transcribe')
 
 export async function POST(request: NextRequest) {
   const session = await getSession()
@@ -11,6 +14,8 @@ export async function POST(request: NextRequest) {
   if (!audio || audio.size === 0) {
     return NextResponse.json({ text: '', segments: [] })
   }
+
+  logger.info('Transcribing chunk', { userId: session.user.id, sizeBytes: audio.size })
 
   // Wrap in File with explicit name+type — Groq requires a filename with a recognized extension
   const file = new File([audio], 'chunk.webm', { type: audio.type || 'audio/webm' })
@@ -34,7 +39,7 @@ export async function POST(request: NextRequest) {
 
     if (!res.ok) {
       const err = await res.text()
-      console.error('Groq API error:', res.status, err)
+      logger.error('Groq API error', { status: res.status, body: err, userId: session.user.id })
       return NextResponse.json(
         { error: 'Transcription failed' },
         { status: res.status >= 400 && res.status < 500 ? 400 : 500 }
@@ -42,13 +47,19 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await res.json()
+    logger.info('Transcription OK', {
+      userId: session.user.id,
+      textLength: (result.text ?? '').length,
+      segments: Array.isArray(result.segments) ? result.segments.length : 0,
+      words: Array.isArray(result.words) ? result.words.length : 0,
+    })
     return NextResponse.json({
       text: result.text ?? '',
       segments: Array.isArray(result.segments) ? result.segments : [],
       words: Array.isArray(result.words) ? result.words : [],
     })
   } catch (err) {
-    console.error('Groq fetch error:', err)
+    logger.error('Groq fetch threw', { error: err instanceof Error ? err.message : String(err), userId: session.user.id })
     return NextResponse.json({ error: 'Transcription request failed' }, { status: 500 })
   }
 }

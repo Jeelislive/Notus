@@ -4,6 +4,9 @@ import { db } from '@/lib/db'
 import { userIntegrations, meetings, notes } from '@/lib/db/schema'
 import { getSession } from '@/lib/session'
 import { eq, and } from 'drizzle-orm'
+import { log } from '@/lib/logger'
+
+const logger = log('integrations')
 import { testJiraConnection, createJiraIssues } from '@/lib/integrations/jira'
 import { testSlackWebhook, postToSlack } from '@/lib/integrations/slack'
 import { testNotionConnection, exportToNotion } from '@/lib/integrations/notion'
@@ -153,17 +156,29 @@ export async function pushMeetingToJira(meetingId: string, issues: { summary: st
       eq(userIntegrations.provider, 'jira')
     ),
   })
-  if (!integration) return { error: 'Jira not connected' }
+  if (!integration) {
+    logger.error('Jira not connected', { userId: session.user.id, meetingId })
+    return { error: 'Jira not connected' }
+  }
 
   const meeting = await db.query.meetings.findFirst({
     where: and(eq(meetings.id, meetingId), eq(meetings.userId, session.user.id)),
   })
   if (!meeting) return { error: 'Meeting not found' }
 
-  return createJiraIssues(
-    integration.config as { domain: string; email: string; apiToken: string; projectKey: string },
-    issues
-  )
+  // Log the config keys and values (except token) so we can debug issues
+  const config = integration.config as { domain: string; email: string; apiToken: string; projectKey: string }
+  logger.info('Pushing to Jira', {
+    userId: session.user.id,
+    meetingId,
+    domain: config.domain,
+    email: config.email,
+    projectKey: config.projectKey,
+    projectKeyLength: config.projectKey?.length ?? 0,
+    issueCount: issues.length,
+  })
+
+  return createJiraIssues(config, issues)
 }
 
 export async function pushMeetingToLinear(meetingId: string, issues: { title: string; description: string }[]) {

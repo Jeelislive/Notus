@@ -3,6 +3,9 @@ import { getSession } from '@/lib/session'
 import { db } from '@/lib/db'
 import { transcriptSegments, meetings } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
+import { log } from '@/lib/logger'
+
+const logger = log('re-diarize')
 
 interface DGWord {
   word: string
@@ -74,7 +77,8 @@ export async function POST(request: NextRequest) {
     segments.map((s) => ({ meetingId, ...s }))
   )
 
-  console.log(`[re-diarize] replaced segments for meeting ${meetingId}: ${segments.length} segments, ${new Set(segments.map(s => s.speaker)).size} speakers`)
+  const uniqueSpeakers = new Set(segments.map(s => s.speaker)).size
+  logger.info('Re-diarization complete', { meetingId, segments: segments.length, speakers: uniqueSpeakers, userId: session.user.id })
 
   return NextResponse.json({ updated: segments.length })
 }

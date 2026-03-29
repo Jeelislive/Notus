@@ -1,28 +1,36 @@
+import { log } from '@/lib/logger'
+
+const logger = log('linear')
+
 export async function testLinearConnection(
   apiKey: string
 ): Promise<{ ok: boolean; error?: string; teamName?: string }> {
+  logger.info('Testing connection')
   try {
     const res = await fetch('https://api.linear.app/graphql', {
       method: 'POST',
-      headers: {
-        Authorization: apiKey,
-        'Content-Type': 'application/json',
-      },
+      headers: { Authorization: apiKey, 'Content-Type': 'application/json' },
       body: JSON.stringify({ query: '{ viewer { name } teams { nodes { id name } } }' }),
     })
-    if (!res.ok) return { ok: false, error: `HTTP ${res.status}` }
+    if (!res.ok) {
+      const body = await res.text()
+      logger.error('Auth check failed', { status: res.status, body })
+      return { ok: false, error: `HTTP ${res.status}` }
+    }
     const data = (await res.json()) as {
-      data?: {
-        viewer?: { name?: string }
-        teams?: { nodes?: { id: string; name: string }[] }
-      }
+      data?: { viewer?: { name?: string }; teams?: { nodes?: { id: string; name: string }[] } }
     }
     if (data.data?.viewer) {
-      return { ok: true, teamName: data.data.teams?.nodes?.[0]?.name }
+      const teamName = data.data.teams?.nodes?.[0]?.name
+      logger.info('Connection OK', { viewer: data.data.viewer.name, teamName })
+      return { ok: true, teamName }
     }
+    logger.error('Invalid API key — no viewer in response')
     return { ok: false, error: 'Invalid API key' }
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : 'Network error' }
+    const msg = e instanceof Error ? e.message : 'Network error'
+    logger.error('Connection threw', { error: msg })
+    return { ok: false, error: msg }
   }
 }
 
@@ -31,6 +39,8 @@ export async function createLinearIssues(
   teamId: string,
   issues: { title: string; description: string }[]
 ) {
+  logger.info('Creating issues', { teamId, count: issues.length, titles: issues.map(i => i.title) })
+
   const created: { id: string; identifier: string; url: string; title: string }[] = []
   const errors: string[] = []
 
@@ -48,28 +58,31 @@ export async function createLinearIssues(
       const res = await fetch('https://api.linear.app/graphql', {
         method: 'POST',
         headers: { Authorization: apiKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: mutation,
-          variables: { teamId, title: issue.title, description: issue.description },
-        }),
+        body: JSON.stringify({ query: mutation, variables: { teamId, title: issue.title, description: issue.description } }),
       })
       const data = (await res.json()) as {
-        data?: {
-          issueCreate?: {
-            success: boolean
-            issue?: { id: string; identifier: string; url: string; title: string }
-          }
-        }
+        data?: { issueCreate?: { success: boolean; issue?: { id: string; identifier: string; url: string; title: string } } }
+        errors?: { message: string }[]
       }
-      if (data.data?.issueCreate?.success && data.data.issueCreate.issue) {
+      if (data.errors?.length) {
+        const msg = data.errors.map(e => e.message).join(', ')
+        logger.error('Issue creation GQL error', { title: issue.title, errors: msg })
+        errors.push(`"${issue.title}": ${msg}`)
+      } else if (data.data?.issueCreate?.success && data.data.issueCreate.issue) {
+        logger.info('Issue created', { identifier: data.data.issueCreate.issue.identifier, title: issue.title })
         created.push(data.data.issueCreate.issue)
       } else {
-        errors.push(issue.title)
+        logger.error('Issue creation returned no success', { title: issue.title, data })
+        errors.push(`"${issue.title}": creation failed`)
       }
     } catch (e) {
-      errors.push(`${issue.title}: ${e instanceof Error ? e.message : 'error'}`)
+      const msg = e instanceof Error ? e.message : 'error'
+      logger.error('Issue request threw', { title: issue.title, error: msg })
+      errors.push(`"${issue.title}": ${msg}`)
     }
   }
+
+  logger.info('Done', { created: created.length, errors: errors.length })
   return { created, errors }
 }
 

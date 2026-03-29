@@ -1,6 +1,11 @@
+import { log } from '@/lib/logger'
+
+const logger = log('notion')
+
 export async function testNotionConnection(
   apiKey: string
 ): Promise<{ ok: boolean; error?: string; workspaceName?: string }> {
+  logger.info('Testing connection')
   try {
     const res = await fetch('https://api.notion.com/v1/users/me', {
       headers: {
@@ -8,11 +13,18 @@ export async function testNotionConnection(
         'Notion-Version': '2022-06-28',
       },
     })
-    if (!res.ok) return { ok: false, error: `HTTP ${res.status}` }
+    if (!res.ok) {
+      const body = await res.text()
+      logger.error('Auth check failed', { status: res.status, body })
+      return { ok: false, error: `HTTP ${res.status}` }
+    }
     const data = (await res.json()) as { bot?: { workspace_name?: string } }
+    logger.info('Connection OK', { workspace: data.bot?.workspace_name })
     return { ok: true, workspaceName: data.bot?.workspace_name }
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : 'Network error' }
+    const msg = e instanceof Error ? e.message : 'Network error'
+    logger.error('Connection threw', { error: msg })
+    return { ok: false, error: msg }
   }
 }
 
@@ -27,6 +39,8 @@ export async function exportToNotion(
     date: string
   }
 ) {
+  logger.info('Exporting meeting', { pageId, meetingTitle: meeting.title, hasSummary: !!meeting.summary, hasActionItems: !!meeting.actionItems })
+
   const children: unknown[] = [
     {
       object: 'block',
@@ -69,20 +83,29 @@ export async function exportToNotion(
     children,
   }
 
-  const res = await fetch('https://api.notion.com/v1/pages', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'Notion-Version': '2022-06-28',
-    },
-    body: JSON.stringify(body),
-  })
+  try {
+    const res = await fetch('https://api.notion.com/v1/pages', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+        'Notion-Version': '2022-06-28',
+      },
+      body: JSON.stringify(body),
+    })
 
-  if (!res.ok) {
-    const err = await res.text()
-    return { ok: false, error: err }
+    if (!res.ok) {
+      const err = await res.text()
+      logger.error('Export failed', { status: res.status, error: err, pageId, meetingTitle: meeting.title })
+      return { ok: false, error: err }
+    }
+
+    const data = (await res.json()) as { url: string }
+    logger.info('Export OK', { pageUrl: data.url, meetingTitle: meeting.title })
+    return { ok: true, url: data.url }
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : 'Network error'
+    logger.error('Export threw', { error: msg, meetingTitle: meeting.title })
+    return { ok: false, error: msg }
   }
-  const data = (await res.json()) as { url: string }
-  return { ok: true, url: data.url }
 }
