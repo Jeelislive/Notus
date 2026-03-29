@@ -113,11 +113,16 @@ export function IntegrationSheet({
 
       {/* Sheet */}
       <div
-        className={`fixed right-0 top-0 z-50 h-full w-full max-w-[480px] bg-background border-l border-border shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
-          open ? 'translate-x-0' : 'translate-x-full'
-        }`}
-        style={{ height: '100vh', maxHeight: '100vh' }}
+        className={`fixed inset-0 z-50 flex items-center justify-center p-4 ${
+          open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        } transition-opacity duration-300 ease-out`}
       >
+        <div
+          className={`w-full max-w-[480px] bg-background border border-border shadow-2xl rounded-2xl flex flex-col transition-transform duration-300 ease-out max-h-[90vh] ${
+            open ? 'translate-y-0 scale-100' : 'translate-y-4 scale-95'
+          }`}
+          onClick={(e) => e.stopPropagation()}
+        >
         {/* Header */}
         <div className="flex items-start justify-between px-6 pt-6 pb-5 border-b border-border shrink-0">
           <div className="flex items-center gap-3">
@@ -257,6 +262,7 @@ export function IntegrationSheet({
             </Button>
           </div>
         </div>
+      </div>
       </div>
     </>
   )
