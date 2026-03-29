@@ -152,9 +152,9 @@ export function NotesPageClient({ meetings, notesByMeeting, selectedNoteId, curr
   }
 
   return (
-    <div className="flex flex-1 -mx-4 -mt-16 -mb-4 md:-mx-8 md:-mt-8 md:-mb-8">
+    <div className="flex flex-1 -mx-4 -mt-16 -mb-4 md:-mx-8 md:-mt-8 md:-mb-8 h-full md:h-auto">
       {/* ── Left accordion sidebar ── */}
-      <div className={`${mobileView === 'list' ? 'flex' : 'hidden'} md:flex w-full md:w-[320px] shrink-0 border-r border-border flex-col overflow-hidden bg-background`}>
+      <div className={`${mobileView === 'list' ? 'flex' : 'hidden'} md:flex w-full md:w-[320px] shrink-0 border-r border-border flex-col overflow-hidden bg-background h-full md:h-auto`}>
         <div className="px-5 py-4 border-b border-border shrink-0">
           <h1 className="text-[17px] font-bold text-foreground tracking-tight">Notes</h1>
           <p className="text-[13px] text-muted-foreground mt-0.5">{meetings.length} meetings</p>
@@ -272,7 +272,7 @@ export function NotesPageClient({ meetings, notesByMeeting, selectedNoteId, curr
       </div>
 
       {/* ── Right: note editor ── */}
-      <div className={`${mobileView === 'editor' ? 'flex' : 'hidden'} md:flex flex-col flex-1 min-w-0 overflow-hidden`}>
+      <div className={`${mobileView === 'editor' ? 'flex' : 'hidden'} md:flex flex-col flex-1 min-w-0 overflow-hidden h-full md:h-auto`}>
         {/* Mobile back button */}
         <button
           onClick={() => setMobileView('list')}
@@ -490,7 +490,7 @@ function NoteEditor({ meeting, note, currentUser, meetingType, jiraConfig }: { m
   ]
 
   return (
-    <div className="flex flex-col flex-1 min-h-0">
+    <div className="flex flex-col flex-1 min-h-0 h-full md:h-auto">
       {/* Header */}
       <div className="px-6 pt-5 pb-4 border-b border-border shrink-0">
         <div className="flex items-start justify-between gap-4">
@@ -618,7 +618,7 @@ function NoteEditor({ meeting, note, currentUser, meetingType, jiraConfig }: { m
 
       {/* Content */}
       {activeTab === 'notes' && (
-        <div className="flex-1 overflow-hidden min-h-0">
+        <div className="flex-1 overflow-hidden min-h-0 md:min-h-0">
           <TiptapEditor
             content={parseAgendaContent(content) ? '' : content}
             onChange={handleContentChange}
@@ -629,7 +629,7 @@ function NoteEditor({ meeting, note, currentUser, meetingType, jiraConfig }: { m
       )}
 
       {activeTab === 'ai' && (
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5 min-h-0">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5 min-h-0 md:min-h-0">
           {isProcessing ? (
             <div className="flex flex-col items-center justify-center h-40 text-center">
               <ShiningText text="Generating AI summary…" className="text-[16px]" />
@@ -686,7 +686,7 @@ function NoteEditor({ meeting, note, currentUser, meetingType, jiraConfig }: { m
       )}
 
       {activeTab === 'email' && (
-        <div className="flex-1 overflow-y-auto px-6 py-5 min-h-0">
+        <div className="flex-1 overflow-y-auto px-6 py-5 min-h-0 md:min-h-0">
           {note.followUpEmail ? (
             <div className="space-y-3">
               <div className="flex items-center justify-between">

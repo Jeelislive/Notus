@@ -9,14 +9,16 @@ export default async function IntegrationsPage() {
   const connectedProviders = integrations.map((i) => i.provider)
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="max-w-4xl space-y-6 h-full md:h-auto">
       <div>
         <h1 className="text-xl font-semibold text-foreground tracking-tight">Integrations</h1>
         <p className="text-[13px] text-muted-foreground mt-0.5">
           Connect your tools to automatically sync meeting notes, action items, and insights.
         </p>
       </div>
-      <IntegrationsHub connectedProviders={connectedProviders} integrations={integrations} />
+      <div className="flex-1 overflow-y-auto md:overflow-visible min-h-0 md:min-h-auto">
+        <IntegrationsHub connectedProviders={connectedProviders} integrations={integrations} />
+      </div>
     </div>
   )
 }

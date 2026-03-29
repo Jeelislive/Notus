@@ -9,7 +9,7 @@ export default async function SettingsPage() {
   const session = await getSession()
 
   return (
-    <div className="space-y-5 max-w-2xl">
+    <div className="space-y-5 max-w-2xl h-full md:h-auto overflow-y-auto md:overflow-visible min-h-0 md:min-h-auto">
       <div>
         <h1 className="text-xl font-semibold text-foreground tracking-tight">Settings</h1>
         <p className="text-[13px] text-muted-foreground mt-0.5">Manage your account</p>

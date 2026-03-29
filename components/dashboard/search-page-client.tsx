@@ -176,7 +176,7 @@ export function SearchPageClient() {
   const showResults = searched && !loading && results.length > 0
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto space-y-6 h-full md:h-auto overflow-y-auto md:overflow-visible min-h-0 md:min-h-auto">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-foreground tracking-tight">Search</h1>

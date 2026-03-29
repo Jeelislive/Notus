@@ -116,6 +116,7 @@ export function IntegrationSheet({
         className={`fixed right-0 top-0 z-50 h-full w-full max-w-[480px] bg-background border-l border-border shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
           open ? 'translate-x-0' : 'translate-x-full'
         }`}
+        style={{ height: '100vh', maxHeight: '100vh' }}
       >
         {/* Header */}
         <div className="flex items-start justify-between px-6 pt-6 pb-5 border-b border-border shrink-0">
@@ -155,7 +156,7 @@ export function IntegrationSheet({
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5 min-h-0" style={{ WebkitOverflowScrolling: 'touch' }}>
           <p className="text-[14px] text-muted-foreground">{integration.description}</p>
 
           {/* Fields */}
