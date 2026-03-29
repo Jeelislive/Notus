@@ -104,6 +104,8 @@ export const profiles = pgTable('profiles', {
   consentAt: timestamp('consent_at', { withTimezone: true }),
   emailVerified: boolean('email_verified').default(false).notNull(),
   planType: text('plan_type').default('free').notNull(),
+  preferredLanguage: text('preferred_language').default('en').notNull(), // User's preferred interface language
+  transcriptionLanguage: text('transcription_language').default('auto').notNull(), // User's preferred transcription language
   stripeCustomerId: text('stripe_customer_id'),
   stripeSubscriptionId: text('stripe_subscription_id'),
   createdAt: timestamp('created_at', { withTimezone: true })
@@ -162,6 +164,7 @@ export const meetings = pgTable('meetings', {
   templateName: text('template_name'),
   visibility: meetingVisibilityEnum('visibility').default('private').notNull(),
   durationSeconds: integer('duration_seconds').default(0),
+  detectedLanguage: text('detected_language').default('auto'), // Auto-detected language of the meeting
   audioStoragePath: text('audio_storage_path'),
   shareToken: text('share_token').unique(),
   templateId: uuid('template_id'),

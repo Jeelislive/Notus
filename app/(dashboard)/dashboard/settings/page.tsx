@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { getSession } from '@/lib/session'
 import { Puzzle, ChevronRight } from 'lucide-react'
+import { UserLanguageSelector } from '@/components/ui/user-language-selector'
+import { LanguageSettings } from '@/components/settings/language-settings'
 
 export const metadata: Metadata = { title: 'Settings | Notus' }
 
@@ -12,8 +14,13 @@ export default async function SettingsPage() {
     <div className="space-y-5 max-w-2xl h-full md:h-auto overflow-y-auto md:overflow-visible min-h-0 md:min-h-auto">
       <div>
         <h1 className="text-xl font-semibold text-foreground tracking-tight">Settings</h1>
-        <p className="text-[13px] text-muted-foreground mt-0.5">Manage your account</p>
+        <p className="text-[13px] text-muted-foreground mt-0.5">Manage your account and preferences</p>
       </div>
+
+      <LanguageSettings 
+        currentPreferredLanguage="en"
+        currentTranscriptionLanguage="auto"
+      />
 
       <div className="rounded-2xl border border-border overflow-hidden">
         <div className="px-5 py-4 border-b border-border">

@@ -51,17 +51,20 @@ export function SignupForm() {
   async function onSubmit(data: FormData) {
     setError(null)
     setLoading(true)
+    
     const { error } = await signUp.email({
       name: data.fullName,
       email: data.email,
       password: data.password,
       callbackURL: '/dashboard',
     })
+    
     if (error) {
       setError(error.message ?? 'Something went wrong')
       setLoading(false)
       return
     }
+
     setSuccess(true)
     setLoading(false)
     window.location.href = '/dashboard'

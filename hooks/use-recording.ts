@@ -438,7 +438,7 @@ export function useRecording({ meetingId }: { meetingId: string }) {
             'https://api.deepgram.com/v1/listen' +
             '?model=nova-3' +
             '&diarize=true' +
-            '&language=en' +
+            '&language=auto' + // Changed from 'en' to 'auto' for multi-language support
             '&punctuate=true' +
             '&smart_format=true',
             {
