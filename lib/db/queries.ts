@@ -1,5 +1,5 @@
 import { db } from './index'
-import { meetings, notes, transcriptSegments, profiles, teams, teamMembers } from './schema'
+import { meetings, notes, transcriptSegments, profiles, teams, teamMembers, meetingTranslations } from './schema'
 import { eq, desc, ilike, sql, and } from 'drizzle-orm'
 
 export async function getMeetingsByUser(userId: string) {
@@ -124,4 +124,43 @@ export async function getMeetingsByTeam(teamId: string) {
     .from(meetings)
     .where(eq(meetings.teamId, teamId))
     .orderBy(desc(meetings.createdAt))
+}
+
+export async function getMeetingTranslation(meetingId: string, language: string) {
+  const result = await db
+    .select()
+    .from(meetingTranslations)
+    .where(and(eq(meetingTranslations.meetingId, meetingId), eq(meetingTranslations.language, language)))
+    .limit(1)
+  return result[0] ?? null
+}
+
+export async function upsertMeetingTranslation(
+  meetingId: string,
+  language: string,
+  data: {
+    transcript?: string
+    summary?: string
+    summaryStructured?: string
+    actionItems?: string
+    followUpEmail?: string
+  }
+) {
+  const existing = await getMeetingTranslation(meetingId, language)
+  if (existing) {
+    await db
+      .update(meetingTranslations)
+      .set({ ...data, updatedAt: new Date() })
+      .where(and(eq(meetingTranslations.meetingId, meetingId), eq(meetingTranslations.language, language)))
+  } else {
+    await db.insert(meetingTranslations).values({ meetingId, language, ...data })
+  }
+}
+
+export async function getUserPreferredLanguage(userId: string): Promise<string> {
+  const result = await db.select({ preferredLanguage: profiles.preferredLanguage })
+    .from(profiles)
+    .where(eq(profiles.id, userId))
+    .limit(1)
+  return result[0]?.preferredLanguage ?? 'en'
 }

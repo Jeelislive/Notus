@@ -241,6 +241,32 @@ export const templates = pgTable('templates', {
     .notNull(),
 })
 
+export const meetingTranslations = pgTable(
+  'meeting_translations',
+  {
+    id: uuid('id')
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    meetingId: uuid('meeting_id')
+      .notNull()
+      .references(() => meetings.id, { onDelete: 'cascade' }),
+    language: text('language').notNull(), // e.g. 'hi', 'ur', 'gu'
+    // JSON string: [{id, content}] — translated segment content (speaker labels preserved)
+    transcript: text('transcript'),
+    summary: text('summary'),
+    summaryStructured: text('summary_structured'),
+    actionItems: text('action_items'),
+    followUpEmail: text('follow_up_email'),
+    createdAt: timestamp('created_at', { withTimezone: true })
+      .default(sql`now()`)
+      .notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true })
+      .default(sql`now()`)
+      .notNull(),
+  },
+  (t) => [uniqueIndex('meeting_translations_meeting_lang_idx').on(t.meetingId, t.language)]
+)
+
 export const usageTracking = pgTable('usage_tracking', {
   id: uuid('id')
     .primaryKey()
@@ -303,4 +329,5 @@ export type Note = typeof notes.$inferSelect
 export type Template = typeof templates.$inferSelect
 export type UsageTracking = typeof usageTracking.$inferSelect
 export type UserIntegration = typeof userIntegrations.$inferSelect
+export type MeetingTranslation = typeof meetingTranslations.$inferSelect
 export type SpeakerMappings = Record<string, string>

@@ -73,9 +73,12 @@ interface TranscriptPanelProps {
   status: string
   isRecording: boolean
   speakerMappings?: Record<string, string>
+  // map of segmentId → translated content (applied when user has non-English preferred language)
+  translatedSegmentMap?: Record<string, string>
+  isTranslating?: boolean
 }
 
-export function TranscriptPanel({ transcript, liveSegments, status, isRecording, speakerMappings }: TranscriptPanelProps) {
+export function TranscriptPanel({ transcript, liveSegments, status, isRecording, speakerMappings, translatedSegmentMap, isTranslating }: TranscriptPanelProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const colorMapRef = useRef<Record<string, typeof SPEAKER_PALETTE[0]>>({})
   const colorIndexRef = useRef(0)
@@ -122,19 +125,38 @@ export function TranscriptPanel({ transcript, liveSegments, status, isRecording,
           {!isRecording && transcript.length > 0 && (
             <span className="text-[12px] text-muted-foreground">{transcript.length} segments</span>
           )}
+          {translatedSegmentMap && !isRecording && (
+            <span className="text-[11px] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-500 font-medium">Translated</span>
+          )}
         </div>
       </div>
 
       {/* Content */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-5 space-y-7 min-h-0">
+        {isTranslating && (
+          <div className="flex items-center gap-2 text-[12px] text-muted-foreground animate-pulse pb-2">
+            <span className="size-1.5 rounded-full bg-indigo-400 shrink-0" />
+            Translating transcript…
+          </div>
+        )}
         {groups.length === 0 ? (
           <EmptyState status={status} isRecording={isRecording} />
         ) : (
           groups.map((group) => {
             const color = getColor(group.speaker)
             const resolvedName = speakerMappings?.[group.speaker] ?? group.speaker
-            const para = group.texts.join(' ')
-            const classification = classifySegment(para)
+            // Use translated content for each segment if available
+            const translatedTexts = translatedSegmentMap && !isRecording
+              ? group.texts.map((_, i) => {
+                  // texts in a group come from consecutive segments with the same speaker;
+                  // we stored translations per segment id on the group key (first segment id)
+                  // so for a merged group we show translated text from the first segment's translation
+                  const segId = group.key
+                  return translatedSegmentMap[segId] ?? group.texts[i]
+                })
+              : group.texts
+            const para = (translatedSegmentMap && !isRecording ? translatedTexts : group.texts).join(' ')
+            const classification = classifySegment(group.texts.join(' ')) // classify on original
             const classifyClass = classification ? SEGMENT_CLASSIFY_CLASSES[classification] : ''
             return (
               <div

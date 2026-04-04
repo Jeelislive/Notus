@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
 import { getSession } from '@/lib/session'
-import { getMeetingsByUser } from '@/lib/db/queries'
+import { getMeetingsByUser, getMeetingTranslation, getUserPreferredLanguage } from '@/lib/db/queries'
 import { db } from '@/lib/db'
 import { notes, profiles, userIntegrations } from '@/lib/db/schema'
 import { inArray, eq, and } from 'drizzle-orm'
@@ -19,12 +19,13 @@ export default async function NotesPage({
   const session = await getSession()
   if (!session) redirect('/login')
 
-  const [allMeetings, profileRows, jiraIntegration] = await Promise.all([
+  const [allMeetings, profileRows, jiraIntegration, preferredLanguage] = await Promise.all([
     getMeetingsByUser(session.user.id),
     db.select().from(profiles).where(eq(profiles.id, session.user.id)).limit(1),
     db.query.userIntegrations.findFirst({
       where: and(eq(userIntegrations.userId, session.user.id), eq(userIntegrations.provider, 'jira')),
     }),
+    getUserPreferredLanguage(session.user.id),
   ])
 
   const jiraConfig = jiraIntegration?.config
@@ -51,6 +52,25 @@ export default async function NotesPage({
     notesByMeeting[note.meetingId].push(note)
   }
 
+  // Pre-load cached translations for all meetings (if user has non-English preferred language)
+  const translationsByMeeting: Record<string, { summary?: string | null; summaryStructured?: string | null; actionItems?: string | null; followUpEmail?: string | null }> = {}
+  if (preferredLanguage !== 'en' && meetingIds.length > 0) {
+    const translationResults = await Promise.all(
+      meetingIds.map((id) => getMeetingTranslation(id, preferredLanguage))
+    )
+    for (let i = 0; i < meetingIds.length; i++) {
+      const t = translationResults[i]
+      if (t) {
+        translationsByMeeting[meetingIds[i]] = {
+          summary: t.summary,
+          summaryStructured: t.summaryStructured,
+          actionItems: t.actionItems,
+          followUpEmail: t.followUpEmail,
+        }
+      }
+    }
+  }
+
   return (
     <Suspense>
       <NotesPageClient
@@ -59,6 +79,8 @@ export default async function NotesPage({
         selectedNoteId={selectedNoteId ?? null}
         currentUser={currentUser}
         jiraConfig={jiraConfig}
+        preferredLanguage={preferredLanguage}
+        translationsByMeeting={translationsByMeeting}
       />
     </Suspense>
   )

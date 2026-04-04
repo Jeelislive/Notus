@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound, redirect } from 'next/navigation'
 import { getSession } from '@/lib/session'
-import { getMeetingById, getTranscriptByMeetingId } from '@/lib/db/queries'
+import { getMeetingById, getTranscriptByMeetingId, getMeetingTranslation, getUserPreferredLanguage } from '@/lib/db/queries'
 import { getIntegrations } from '@/app/actions/integrations'
 import { MeetingDetailHeader } from '@/components/dashboard/meeting-detail-header'
 import { MeetingClient } from '@/components/dashboard/meeting-client'
@@ -23,13 +23,19 @@ export default async function MeetingDetailPage({ params }: Props) {
   const session = await getSession()
   if (!session) redirect('/login')
 
-  const [meeting, transcript, integrations] = await Promise.all([
+  const [meeting, transcript, integrations, preferredLanguage] = await Promise.all([
     getMeetingById(id, session.user.id),
     getTranscriptByMeetingId(id),
     getIntegrations(),
+    getUserPreferredLanguage(session.user.id),
   ])
 
   if (!meeting) notFound()
+
+  // Load cached translation if user has a non-English preferred language
+  const translation = preferredLanguage !== 'en'
+    ? await getMeetingTranslation(id, preferredLanguage)
+    : null
 
   const connectedIntegrations = integrations.map((i) => i.provider)
 
@@ -40,6 +46,8 @@ export default async function MeetingDetailPage({ params }: Props) {
         meeting={meeting}
         transcript={transcript}
         speakerMappings={meeting.speakerMappings ?? undefined}
+        preferredLanguage={preferredLanguage}
+        initialTranslation={translation}
       />
     </div>
   )

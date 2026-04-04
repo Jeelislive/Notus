@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { Bot, Users } from 'lucide-react'
-import type { Meeting, TranscriptSegment } from '@/lib/db/schema'
+import type { Meeting, TranscriptSegment, MeetingTranslation } from '@/lib/db/schema'
 import { useRecording } from '@/hooks/use-recording'
 import { RecordingControls } from '@/components/recording/recording-controls'
 import { TranscriptPanel } from '@/components/dashboard/transcript-panel'
@@ -14,9 +14,17 @@ interface MeetingClientProps {
   meeting: Meeting
   transcript: TranscriptSegment[]
   speakerMappings?: Record<string, string>
+  preferredLanguage?: string
+  initialTranslation?: MeetingTranslation | null
 }
 
-export function MeetingClient({ meeting, transcript, speakerMappings: initialMappings }: MeetingClientProps) {
+export function MeetingClient({
+  meeting,
+  transcript,
+  speakerMappings: initialMappings,
+  preferredLanguage = 'en',
+  initialTranslation,
+}: MeetingClientProps) {
   const router = useRouter()
   const { status, error, elapsedSeconds, audioLevel, liveSegments, reDiarizing, start, stop } = useRecording({
     meetingId: meeting.id,
@@ -25,8 +33,49 @@ export function MeetingClient({ meeting, transcript, speakerMappings: initialMap
   const [mappings, setMappings] = useState<Record<string, string>>(initialMappings ?? {})
   const [showNamingModal, setShowNamingModal] = useState(false)
 
-  // When re-diarization finishes, refresh server data to load corrected speaker labels
-  // then show speaker naming modal after a brief delay
+  // Translation state
+  const needsTranslation = preferredLanguage !== 'en'
+  const [translation, setTranslation] = useState<MeetingTranslation | null>(initialTranslation ?? null)
+  const [isTranslating, setIsTranslating] = useState(false)
+  const translationTriggeredRef = useRef(false)
+
+  // Build segment map from cached translation
+  const translatedSegmentMap: Record<string, string> | undefined = (() => {
+    if (!translation?.transcript) return undefined
+    try {
+      const arr: { id: string; content: string }[] = JSON.parse(translation.transcript)
+      return Object.fromEntries(arr.map((s) => [s.id, s.content]))
+    } catch {
+      return undefined
+    }
+  })()
+
+  // Lazy-trigger translation when user has a non-English preferred language and no cache yet
+  useEffect(() => {
+    if (
+      !needsTranslation ||
+      translation !== null ||
+      translationTriggeredRef.current ||
+      transcript.length === 0 ||
+      meeting.status !== 'completed'
+    ) return
+
+    translationTriggeredRef.current = true
+    setIsTranslating(true)
+    fetch('/api/translate/meeting', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ meetingId: meeting.id, targetLanguage: preferredLanguage }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.translation) setTranslation(data.translation)
+      })
+      .catch((e) => console.error('[Translation]', e))
+      .finally(() => setIsTranslating(false))
+  }, [needsTranslation, translation, transcript.length, meeting.id, meeting.status, preferredLanguage])
+
+  // When re-diarization finishes, refresh server data then show speaker naming modal
   useEffect(() => {
     if (prevReDiarizingRef.current && !reDiarizing) {
       setTimeout(() => setShowNamingModal(true), 1200)
@@ -72,7 +121,7 @@ export function MeetingClient({ meeting, transcript, speakerMappings: initialMap
       />
 
       <div className="relative flex gap-3" style={{ height: 'calc(100vh - 240px)' }}>
-        {/* Transcript panel - fills remaining width */}
+        {/* Transcript panel */}
         <div className="flex-1 min-w-0">
           <TranscriptPanel
             transcript={transcript}
@@ -80,6 +129,8 @@ export function MeetingClient({ meeting, transcript, speakerMappings: initialMap
             status={displayStatus}
             isRecording={isRecordingActive}
             speakerMappings={mappings}
+            translatedSegmentMap={translatedSegmentMap}
+            isTranslating={isTranslating}
           />
         </div>
 
@@ -94,7 +145,6 @@ export function MeetingClient({ meeting, transcript, speakerMappings: initialMap
             onClose={() => setAssistantOpen(false)}
           />
         ) : (
-          /* Floating AI button on the right edge when panel is closed */
           <button
             onClick={() => setAssistantOpen(true)}
             className="absolute right-0 top-4 z-10 flex items-center gap-1.5 px-3 py-2 rounded-l-xl border border-r-0 border-border bg-background shadow-sm hover:bg-muted active:scale-[0.97]"

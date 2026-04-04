@@ -68,15 +68,24 @@ interface JiraConfig {
   projectKey: string
 }
 
+type NoteTranslation = {
+  summary?: string | null
+  summaryStructured?: string | null
+  actionItems?: string | null
+  followUpEmail?: string | null
+}
+
 interface NotesPageClientProps {
   meetings: Meeting[]
   notesByMeeting: Record<string, Note[]>
   selectedNoteId: string | null
   currentUser: CurrentUser
   jiraConfig?: JiraConfig | null
+  preferredLanguage?: string
+  translationsByMeeting?: Record<string, NoteTranslation>
 }
 
-export function NotesPageClient({ meetings, notesByMeeting, selectedNoteId, currentUser, jiraConfig }: NotesPageClientProps) {
+export function NotesPageClient({ meetings, notesByMeeting, selectedNoteId, currentUser, jiraConfig, preferredLanguage = 'en', translationsByMeeting = {} }: NotesPageClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [mobileView, setMobileView] = useState<'list' | 'editor'>('list')
@@ -288,6 +297,8 @@ export function NotesPageClient({ meetings, notesByMeeting, selectedNoteId, curr
             currentUser={currentUser}
             meetingType={detectMeetingType(notesByMeeting[activeMeeting.id] ?? [])}
             jiraConfig={jiraConfig}
+            preferredLanguage={preferredLanguage}
+            translation={translationsByMeeting[activeMeeting.id] ?? null}
             key={activeNote.id}
           />
         ) : (
@@ -307,7 +318,7 @@ export function NotesPageClient({ meetings, notesByMeeting, selectedNoteId, curr
 // ─────────────────────────────────────────────
 // Note editor (right panel)
 // ─────────────────────────────────────────────
-function NoteEditor({ meeting, note, currentUser, meetingType, jiraConfig }: { meeting: Meeting; note: Note; currentUser: CurrentUser; meetingType: string | null; jiraConfig?: { domain: string; email: string; apiToken: string; projectKey: string } | null }) {
+function NoteEditor({ meeting, note, currentUser, meetingType, jiraConfig, preferredLanguage = 'en', translation }: { meeting: Meeting; note: Note; currentUser: CurrentUser; meetingType: string | null; jiraConfig?: { domain: string; email: string; apiToken: string; projectKey: string } | null; preferredLanguage?: string; translation?: NoteTranslation | null }) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('notes')
   const [content, setContent] = useState(note.content ?? '')
@@ -320,12 +331,44 @@ function NoteEditor({ meeting, note, currentUser, meetingType, jiraConfig }: { m
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
   const [chatInput, setChatInput] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
+  const [liveTranslation, setLiveTranslation] = useState<NoteTranslation | null>(translation ?? null)
+  const [isTranslating, setIsTranslating] = useState(false)
+  const translationTriggeredRef = useRef(false)
   const [, startTransition] = useTransition()
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const chatEndRef = useRef<HTMLDivElement>(null)
 
   const isProcessing = meeting.status === 'processing' || generating
   const hasAI = !!(note.summary || note.actionItems || note.followUpEmail)
+
+  // Lazy-trigger translation for AI summary if not yet cached
+  useEffect(() => {
+    if (
+      preferredLanguage === 'en' ||
+      liveTranslation !== null ||
+      translationTriggeredRef.current ||
+      !hasAI ||
+      meeting.status !== 'completed'
+    ) return
+    translationTriggeredRef.current = true
+    setIsTranslating(true)
+    fetch('/api/translate/meeting', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ meetingId: meeting.id, targetLanguage: preferredLanguage }),
+    })
+      .then((r) => r.json())
+      .then((data) => { if (data.translation) setLiveTranslation(data.translation) })
+      .catch((e) => console.error('[Translation]', e))
+      .finally(() => setIsTranslating(false))
+  }, [preferredLanguage, liveTranslation, hasAI, meeting.id, meeting.status])
+
+  // Resolved note fields — use translation if available
+  const resolvedSummary = liveTranslation?.summary ?? note.summary
+  const resolvedActionItems = liveTranslation?.actionItems ?? note.actionItems
+  const resolvedFollowUpEmail = liveTranslation?.followUpEmail ?? note.followUpEmail
+  const resolvedSummaryStructured = liveTranslation?.summaryStructured ?? note.summaryStructured
+  const isTranslated = preferredLanguage !== 'en' && !!liveTranslation
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -404,9 +447,9 @@ function NoteEditor({ meeting, note, currentUser, meetingType, jiraConfig }: { m
           ? (a.priority as ActionItemTask['priority'])
           : 'medium',
       }))
-    } else if (note.actionItems) {
+    } else if (resolvedActionItems) {
       try {
-        const parsed: unknown = JSON.parse(note.actionItems)
+        const parsed: unknown = JSON.parse(resolvedActionItems)
         if (Array.isArray(parsed)) {
           tasks = parsed.map((item) => {
             if (typeof item === 'string') return { text: item, assignee: '', deadline: '', priority: 'medium' as const }
@@ -475,11 +518,11 @@ function NoteEditor({ meeting, note, currentUser, meetingType, jiraConfig }: { m
   const serif = { fontFamily: 'var(--font-bitter), var(--font-playfair), Georgia, serif' } as const
 
   let actionItems: string[] = []
-  if (note.actionItems) { try { actionItems = JSON.parse(note.actionItems) } catch { actionItems = [] } }
+  if (resolvedActionItems) { try { actionItems = JSON.parse(resolvedActionItems) } catch { actionItems = [] } }
 
   let structuredData: StructuredSummaryData | null = null
-  if (note.summaryStructured) {
-    try { structuredData = JSON.parse(note.summaryStructured) } catch { structuredData = null }
+  if (resolvedSummaryStructured) {
+    try { structuredData = JSON.parse(resolvedSummaryStructured) } catch { structuredData = null }
   }
 
   const tabs: { id: Tab; label: string; shortLabel: string; icon: React.ReactNode }[] = [
@@ -634,18 +677,23 @@ function NoteEditor({ meeting, note, currentUser, meetingType, jiraConfig }: { m
             <div className="flex flex-col items-center justify-center h-40 text-center">
               <ShiningText text="Generating AI summary…" className="text-[16px]" />
             </div>
+          ) : isTranslating ? (
+            <div className="flex flex-col items-center justify-center h-40 text-center">
+              <ShiningText text="Translating summary…" className="text-[16px]" />
+            </div>
           ) : hasAI ? (
             structuredData ? (
               <StructuredSummary data={structuredData} />
             ) : (
               <>
-                {note.summary && (
+                {resolvedSummary && (
                   <section className="rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-5 space-y-3">
                     <div className="flex items-center gap-2">
                       <Sparkles className="size-4 text-indigo-500" />
                       <p className="text-[11px] font-bold text-indigo-500 uppercase tracking-widest">Summary</p>
+                      {isTranslated && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-500 font-medium ml-auto">Translated</span>}
                     </div>
-                    <p className="text-foreground" style={{ ...serif, fontSize: '17px', fontWeight: 500, lineHeight: '1.85', letterSpacing: '0.005em' }}>{note.summary}</p>
+                    <p className="text-foreground" style={{ ...serif, fontSize: '17px', fontWeight: 500, lineHeight: '1.85', letterSpacing: '0.005em' }}>{resolvedSummary}</p>
                   </section>
                 )}
                 {actionItems.length > 0 && (
@@ -687,19 +735,20 @@ function NoteEditor({ meeting, note, currentUser, meetingType, jiraConfig }: { m
 
       {activeTab === 'email' && (
         <div className="flex-1 overflow-y-auto px-6 py-5 min-h-0 md:min-h-0">
-          {note.followUpEmail ? (
+          {resolvedFollowUpEmail ? (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Mail className="size-4 text-amber-500" />
                   <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest">Follow-up Email</p>
+                  {isTranslated && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-500 font-medium">Translated</span>}
                 </div>
-                <Button size="sm" variant="ghost" onClick={() => { navigator.clipboard.writeText(note.followUpEmail!); setCopiedEmail(true); setTimeout(() => setCopiedEmail(false), 2000) }} className="h-7 px-2.5 text-[12px] gap-1.5">
+                <Button size="sm" variant="ghost" onClick={() => { navigator.clipboard.writeText(resolvedFollowUpEmail!); setCopiedEmail(true); setTimeout(() => setCopiedEmail(false), 2000) }} className="h-7 px-2.5 text-[12px] gap-1.5">
                   {copiedEmail ? <><Check className="size-3" />Copied</> : <><Copy className="size-3" />Copy</>}
                 </Button>
               </div>
               <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-5">
-                <pre className="text-foreground whitespace-pre-wrap leading-[1.85]" style={{ ...serif, fontSize: '16px', fontWeight: 500 }}>{note.followUpEmail}</pre>
+                <pre className="text-foreground whitespace-pre-wrap leading-[1.85]" style={{ ...serif, fontSize: '16px', fontWeight: 500 }}>{resolvedFollowUpEmail}</pre>
               </div>
             </div>
           ) : (
