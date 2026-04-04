@@ -251,15 +251,12 @@ export function useRecording({ meetingId }: { meetingId: string }) {
       const userLanguage = await getUserTranscriptionLanguage()
       console.log(`[Recording] User language preference: ${userLanguage}`)
 
-      // 1. Get a short-lived Deepgram token from our server (only for English)
-      let token = null
-      if (userLanguage === 'en' || userLanguage === 'auto') {
-        const tokenRes = await fetch('/api/deepgram-token')
-        if (!tokenRes.ok) throw new Error('Could not create Deepgram session')
-        const { token: deepgramToken } = await tokenRes.json()
-        token = deepgramToken
-        tokenRef.current = token
-      }
+      // 1. Get a short-lived Deepgram token from our server
+      const tokenRes = await fetch('/api/deepgram-token')
+      if (!tokenRes.ok) throw new Error('Could not create Deepgram session')
+      const { token: deepgramToken } = await tokenRes.json()
+      const token = deepgramToken
+      tokenRef.current = token
 
       // 2. Capture audio
       let stream: MediaStream
@@ -295,46 +292,28 @@ export function useRecording({ meetingId }: { meetingId: string }) {
       source.connect(analyser)
       analyserRef.current = analyser
 
-      // 4. Open transcription service based on language preference
-      let ws = null
-      if (userLanguage === 'en' || userLanguage === 'auto') {
-        // Use Deepgram for English (real-time WebSocket)
-        ws = new WebSocket(
-          'wss://api.deepgram.com/v1/listen' +
-          '?model=nova-3' +            // latest model - best diarization
-          '&diarize=true' +
-          '&language=en' +
-          '&punctuate=true' +
-          '&smart_format=true' +
-          '&interim_results=true' +
-          '&utterance_end_ms=1000' +
-          '&vad_events=true' +
-          '&encoding=linear16' +
-          '&sample_rate=16000' +
-          `&channels=${nChannels}`,    // match actual stream channels
-          ['token', token]
-        )
-        console.log('[Recording] Using Deepgram for English transcription')
-      } else {
-        // For non-English languages, use Groq via chunked approach
-        console.log(`[Recording] Using Groq for ${userLanguage} transcription`)
-        // For now, fall back to Deepgram with auto-detect
-        ws = new WebSocket(
-          'wss://api.deepgram.com/v1/listen' +
-          '?model=nova-3' +
-          '&diarize=true' +
-          '&language=auto' +
-          '&punctuate=true' +
-          '&smart_format=true' +
-          '&interim_results=true' +
-          '&utterance_end_ms=1000' +
-          '&vad_events=true' +
-          '&encoding=linear16' +
-          '&sample_rate=16000' +
-          `&channels=${nChannels}`,
-          ['token', token]
-        )
-      }
+      // 4. Open Deepgram WebSocket with the user's language
+      // nova-3 natively supports these codes; everything else uses 'multi' for auto-detection
+      const DEEPGRAM_NATIVE = new Set(['en', 'hi', 'es', 'fr', 'de', 'it', 'pt', 'ja', 'ko', 'zh', 'ru', 'nl', 'sv', 'pl', 'tr', 'id', 'uk', 'ar'])
+      const dgLanguage = userLanguage === 'auto'
+        ? 'multi'
+        : DEEPGRAM_NATIVE.has(userLanguage) ? userLanguage : 'multi'
+      console.log(`[Recording] Deepgram language param: ${dgLanguage} (user pref: ${userLanguage})`)
+      const ws = new WebSocket(
+        'wss://api.deepgram.com/v1/listen' +
+        '?model=nova-3' +
+        '&diarize=true' +
+        `&language=${dgLanguage}` +
+        '&punctuate=true' +
+        '&smart_format=true' +
+        '&interim_results=true' +
+        '&utterance_end_ms=1000' +
+        '&vad_events=true' +
+        '&encoding=linear16' +
+        '&sample_rate=16000' +
+        `&channels=${nChannels}`,
+        ['token', token]
+      )
       wsRef.current = ws
 
       ws.onopen = () => console.log('[Deepgram] WebSocket open')
