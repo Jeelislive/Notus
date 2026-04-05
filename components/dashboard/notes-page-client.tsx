@@ -16,6 +16,7 @@ import { parseAgendaContent, type CurrentUser } from '@/components/dashboard/one
 import { StructuredSummary, type StructuredSummaryData } from '@/components/dashboard/structured-summary'
 import { ActionItemsPopup, type ActionItemTask } from '@/components/dashboard/action-items-popup'
 import { updateNoteContent, createNote, deleteNote } from '@/app/actions/meetings'
+import { toast } from '@/hooks/use-toast'
 import { formatDate, formatDuration } from '@/lib/utils'
 
 type Tab = 'notes' | 'ai' | 'email' | 'chat'
@@ -144,16 +145,27 @@ export function NotesPageClient({ meetings, notesByMeeting, selectedNoteId, curr
     startTransition(async () => {
       const result = await createNote(meetingId, newNoteTitle.trim())
       if (result.note) {
+        toast('Note created', { variant: 'success' })
         router.refresh()
         selectNote(result.note.id)
+      } else if (result.error) {
+        toast(result.error, { variant: 'destructive' })
       }
     })
   }
 
   async function handleDeleteNote(noteId: string, meetingId: string) {
     const notesForMeeting = notesByMeeting[meetingId] ?? []
-    if (notesForMeeting.length <= 1) return // don't delete last note
-    await deleteNote(noteId)
+    if (notesForMeeting.length <= 1) {
+      toast("Can't delete the last note", { variant: 'destructive' })
+      return
+    }
+    const result = await deleteNote(noteId)
+    if (result?.error) {
+      toast(result.error, { variant: 'destructive' })
+      return
+    }
+    toast('Note deleted', { variant: 'success' })
     router.refresh()
     // select another note for same meeting
     const other = notesForMeeting.find((n) => n.id !== noteId)

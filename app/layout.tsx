@@ -4,6 +4,7 @@ import { Suspense } from 'react'
 import { ThemeProvider } from '@/components/theme-provider'
 import { PostHogProvider } from '@/components/posthog-provider'
 import { PostHogPageView } from '@/components/posthog-pageview'
+import { Toaster } from '@/components/ui/toaster'
 import './globals.css'
 
 const inter = Inter({
@@ -59,6 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <PostHogPageView />
             </Suspense>
             {children}
+            <Toaster />
           </ThemeProvider>
         </PostHogProvider>
       </body>

@@ -5,6 +5,7 @@ import { LayoutTemplate, Plus, Trash2, X } from 'lucide-react'
 import { BUILT_IN_TEMPLATES } from '@/lib/templates'
 import type { Template } from '@/lib/db/schema'
 import { createTemplate, deleteTemplate } from '@/app/actions/templates'
+import { toast } from '@/hooks/use-toast'
 
 interface TemplatePickerProps {
   userTemplates: Template[]
@@ -34,12 +35,20 @@ export function TemplatePicker({ userTemplates, onApply }: TemplatePickerProps) 
       setName('')
       setDescription('')
       setCreating(false)
+      toast('Template created', { variant: 'success' })
+    } else if (result.error) {
+      toast(result.error, { variant: 'destructive' })
     }
   }
 
   async function handleDelete(id: string) {
-    await deleteTemplate(id)
-    setLocalUserTemplates((prev) => prev.filter((t) => t.id !== id))
+    const result = await deleteTemplate(id)
+    if (result?.error) {
+      toast(result.error, { variant: 'destructive' })
+    } else {
+      setLocalUserTemplates((prev) => prev.filter((t) => t.id !== id))
+      toast('Template deleted', { variant: 'success' })
+    }
   }
 
   return (

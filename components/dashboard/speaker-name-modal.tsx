@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SpeakerAvatar } from '@/components/ui/speaker-avatar'
 import { saveSpeakerMappings } from '@/app/actions/meetings'
+import { toast } from '@/hooks/use-toast'
 
 interface SpeakerNameModalProps {
   open: boolean
@@ -34,10 +35,15 @@ export function SpeakerNameModal({
     for (const key of speakerKeys) {
       mappings[key] = names[key]?.trim() || key
     }
-    await saveSpeakerMappings(meetingId, mappings)
-    onSaved(mappings)
+    const result = await saveSpeakerMappings(meetingId, mappings)
     setSaving(false)
-    onClose()
+    if (result?.error) {
+      toast(result.error, { variant: 'destructive' })
+    } else {
+      toast('Speaker names saved', { variant: 'success' })
+      onSaved(mappings)
+      onClose()
+    }
   }
 
   return (

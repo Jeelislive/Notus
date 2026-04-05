@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { deleteMeeting, renameMeeting } from '@/app/actions/meetings'
+import { toast } from '@/hooks/use-toast'
 import { pushMeetingToSlack, exportMeetingToNotion } from '@/app/actions/integrations'
 import { formatDate, formatDuration } from '@/lib/utils'
 import { SharePanel } from '@/components/dashboard/share-panel'
@@ -73,9 +74,12 @@ export function MeetingDetailHeader({ meeting, connectedIntegrations = [] }: Mee
     const result = await pushMeetingToSlack(meeting.id)
     if ('ok' in result && result.ok) {
       setSlackState({ loading: false, success: true, error: null })
+      toast('Shared to Slack', { variant: 'success' })
       setTimeout(() => setSlackState(DEFAULT_ACTION_STATE), 3000)
     } else {
-      setSlackState({ loading: false, success: false, error: 'error' in result ? result.error ?? 'Failed' : 'Failed' })
+      const msg = 'error' in result ? result.error ?? 'Failed to share' : 'Failed to share'
+      setSlackState({ loading: false, success: false, error: msg })
+      toast(msg, { variant: 'destructive' })
       setTimeout(() => setSlackState(DEFAULT_ACTION_STATE), 3000)
     }
   }
@@ -85,18 +89,26 @@ export function MeetingDetailHeader({ meeting, connectedIntegrations = [] }: Mee
     const result = await exportMeetingToNotion(meeting.id)
     if ('ok' in result && result.ok) {
       setNotionState({ loading: false, success: true, error: null })
+      toast('Exported to Notion', { variant: 'success' })
       setTimeout(() => setNotionState(DEFAULT_ACTION_STATE), 3000)
     } else {
-      setNotionState({ loading: false, success: false, error: 'error' in result ? result.error ?? 'Failed' : 'Failed' })
+      const msg = 'error' in result ? result.error ?? 'Failed to export' : 'Failed to export'
+      setNotionState({ loading: false, success: false, error: msg })
+      toast(msg, { variant: 'destructive' })
       setTimeout(() => setNotionState(DEFAULT_ACTION_STATE), 3000)
     }
   }
 
   async function handleRename() {
     setRenaming(true)
-    await renameMeeting(meeting.id, renameValue)
+    const result = await renameMeeting(meeting.id, renameValue)
     setRenaming(false)
-    setRenameOpen(false)
+    if (result?.error) {
+      toast(result.error, { variant: 'destructive' })
+    } else {
+      toast('Meeting renamed', { variant: 'success' })
+      setRenameOpen(false)
+    }
   }
 
   async function handleDelete() {

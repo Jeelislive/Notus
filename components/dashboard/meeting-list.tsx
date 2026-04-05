@@ -51,6 +51,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { deleteMeeting, renameMeeting, deleteAllMeetings } from '@/app/actions/meetings'
+import { toast } from '@/hooks/use-toast'
 import { formatDuration, formatDate } from '@/lib/utils'
 
 // ─────────────────────────────────────────────────────────
@@ -145,9 +146,14 @@ function MobileMeetingCard({ meeting, index }: { meeting: Meeting; index: number
 
   async function handleRename() {
     setRenaming(true)
-    await renameMeeting(meeting.id, renameValue)
+    const result = await renameMeeting(meeting.id, renameValue)
     setRenaming(false)
-    setRenameOpen(false)
+    if (result?.error) {
+      toast(result.error, { variant: 'destructive' })
+    } else {
+      toast('Meeting renamed', { variant: 'success' })
+      setRenameOpen(false)
+    }
   }
 
   async function handleDelete() {
@@ -345,9 +351,14 @@ function MeetingRow({ meeting, index }: { meeting: Meeting; index: number }) {
 
   async function handleRename() {
     setRenaming(true)
-    await renameMeeting(meeting.id, renameValue)
+    const result = await renameMeeting(meeting.id, renameValue)
     setRenaming(false)
-    setRenameOpen(false)
+    if (result?.error) {
+      toast(result.error, { variant: 'destructive' })
+    } else {
+      toast('Meeting renamed', { variant: 'success' })
+      setRenameOpen(false)
+    }
   }
 
   async function handleDelete() {
@@ -678,6 +689,7 @@ export function MeetingTable({ meetings }: MeetingListProps) {
               onClick={async () => {
                 setDeletingAll(true)
                 await deleteAllMeetings()
+                toast('All meetings deleted', { variant: 'success' })
                 setDeleteAllOpen(false)
                 setDeletingAll(false)
               }}
