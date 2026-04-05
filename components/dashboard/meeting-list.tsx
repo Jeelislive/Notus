@@ -143,6 +143,7 @@ function MobileMeetingCard({ meeting, index }: { meeting: Meeting; index: number
   const [renameValue, setRenameValue] = useState(meeting.title)
   const [renaming, setRenaming] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
 
   async function handleRename() {
     setRenaming(true)
@@ -157,7 +158,7 @@ function MobileMeetingCard({ meeting, index }: { meeting: Meeting; index: number
   }
 
   async function handleDelete() {
-    if (!confirm(`Delete "${meeting.title}"? This cannot be undone.`)) return
+    setDeleteOpen(false)
     setOpen(false)
     setDeleting(true)
     await deleteMeeting(meeting.id)
@@ -230,12 +231,36 @@ function MobileMeetingCard({ meeting, index }: { meeting: Meeting; index: number
               <Button
                 variant="outline"
                 className="flex-1 text-red-500 hover:text-red-500 hover:border-red-500/30 hover:bg-red-500/5"
-                onClick={handleDelete}
+                onClick={() => setDeleteOpen(true)}
               >
                 <Trash2 className="size-3.5" />
                 Delete
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete meeting?</DialogTitle>
+          </DialogHeader>
+          <p className="text-[14px] text-muted-foreground">
+            This will permanently delete "{meeting.title}" including its transcript and notes. This cannot be undone.
+          </p>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="ghost" onClick={() => setDeleteOpen(false)} disabled={deleting}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={deleting}
+              onClick={handleDelete}
+            >
+              {deleting ? 'Deleting…' : 'Delete'}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -348,6 +373,7 @@ function MeetingRow({ meeting, index }: { meeting: Meeting; index: number }) {
   const [renameValue, setRenameValue] = useState(meeting.title)
   const [renaming, setRenaming] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
 
   async function handleRename() {
     setRenaming(true)
@@ -362,7 +388,7 @@ function MeetingRow({ meeting, index }: { meeting: Meeting; index: number }) {
   }
 
   async function handleDelete() {
-    if (!confirm(`Delete "${meeting.title}"? This cannot be undone.`)) return
+    setDeleteOpen(false)
     setDeleting(true)
     await deleteMeeting(meeting.id)
   }
@@ -438,7 +464,7 @@ function MeetingRow({ meeting, index }: { meeting: Meeting; index: number }) {
                 Rename
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem destructive onClick={handleDelete}>
+              <DropdownMenuItem destructive onClick={() => setDeleteOpen(true)}>
                 <Trash2 className="size-3.5" />
                 Delete
               </DropdownMenuItem>
@@ -446,6 +472,30 @@ function MeetingRow({ meeting, index }: { meeting: Meeting; index: number }) {
           </DropdownMenu>
         </td>
       </tr>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete meeting?</DialogTitle>
+          </DialogHeader>
+          <p className="text-[14px] text-muted-foreground">
+            This will permanently delete "{meeting.title}" including its transcript and notes. This cannot be undone.
+          </p>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="ghost" onClick={() => setDeleteOpen(false)} disabled={deleting}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={deleting}
+              onClick={handleDelete}
+            >
+              {deleting ? 'Deleting…' : 'Delete'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Rename dialog */}
       <Dialog open={renameOpen} onOpenChange={setRenameOpen}>
