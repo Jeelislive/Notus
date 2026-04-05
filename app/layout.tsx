@@ -1,6 +1,9 @@
 import type { Metadata } from 'next'
 import { Inter, Bitter } from 'next/font/google'
+import { Suspense } from 'react'
 import { ThemeProvider } from '@/components/theme-provider'
+import { PostHogProvider } from '@/components/posthog-provider'
+import { PostHogPageView } from '@/components/posthog-pageview'
 import './globals.css'
 
 const inter = Inter({
@@ -45,14 +48,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} ${bitter.variable}`} suppressHydrationWarning>
       <body>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem={false}
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
+        <PostHogProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem={false}
+            disableTransitionOnChange
+          >
+            <Suspense fallback={null}>
+              <PostHogPageView />
+            </Suspense>
+            {children}
+          </ThemeProvider>
+        </PostHogProvider>
       </body>
     </html>
   )
