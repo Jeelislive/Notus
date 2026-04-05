@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { inviteMember, removeMember, changeMemberRole, leaveTeam, deleteTeam, renameTeam } from '@/app/actions/teams'
+import { toast } from '@/hooks/use-toast'
 
 interface Member {
   id: string
@@ -63,6 +64,7 @@ export function TeamDetailClient({ team, members, currentUserId }: TeamDetailCli
     try {
       const res = await inviteMember(team.id, inviteEmail)
       if (res?.error) { setInviteError(res.error); return }
+      toast('Member invited', { variant: 'success' })
       setInviteOpen(false)
       setInviteEmail('')
       router.refresh()
@@ -77,6 +79,7 @@ export function TeamDetailClient({ team, members, currentUserId }: TeamDetailCli
     setRemoving(userId)
     try {
       await removeMember(team.id, userId)
+      toast('Member removed', { variant: 'success' })
       router.refresh()
     } finally {
       setRemoving(null)
@@ -87,6 +90,7 @@ export function TeamDetailClient({ team, members, currentUserId }: TeamDetailCli
     setChangingRole(userId)
     try {
       await changeMemberRole(team.id, userId, role)
+      toast('Role changed', { variant: 'success' })
       router.refresh()
     } finally {
       setChangingRole(null)
@@ -97,6 +101,7 @@ export function TeamDetailClient({ team, members, currentUserId }: TeamDetailCli
     setRenaming(true)
     try {
       await renameTeam(team.id, renameValue)
+      toast('Team renamed', { variant: 'success' })
       setRenameOpen(false)
       router.refresh()
     } finally {
@@ -107,11 +112,13 @@ export function TeamDetailClient({ team, members, currentUserId }: TeamDetailCli
   async function handleLeave() {
     if (!confirm('Leave this team?')) return
     await leaveTeam(team.id)
+    toast('Left team', { variant: 'success' })
   }
 
   async function handleDelete() {
     setDeleteOpen(false)
     await deleteTeam(team.id)
+    toast('Team deleted', { variant: 'success' })
   }
 
   return (

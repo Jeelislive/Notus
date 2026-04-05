@@ -161,7 +161,10 @@ function MobileMeetingCard({ meeting, index }: { meeting: Meeting; index: number
     setDeleteOpen(false)
     setOpen(false)
     setDeleting(true)
-    await deleteMeeting(meeting.id)
+    const result = await deleteMeeting(meeting.id)
+    if (result?.success) {
+      toast('Meeting deleted', { variant: 'success' })
+    }
   }
 
   return (
@@ -248,7 +251,7 @@ function MobileMeetingCard({ meeting, index }: { meeting: Meeting; index: number
             <DialogTitle>Delete meeting?</DialogTitle>
           </DialogHeader>
           <p className="text-[14px] text-muted-foreground">
-            This will permanently delete "{meeting.title}" including its transcript and notes. This cannot be undone.
+            This will permanently delete &quot;{meeting.title}&quot; including its transcript and notes. This cannot be undone.
           </p>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="ghost" onClick={() => setDeleteOpen(false)} disabled={deleting}>
@@ -390,7 +393,10 @@ function MeetingRow({ meeting, index }: { meeting: Meeting; index: number }) {
   async function handleDelete() {
     setDeleteOpen(false)
     setDeleting(true)
-    await deleteMeeting(meeting.id)
+    const result = await deleteMeeting(meeting.id)
+    if (result?.success) {
+      toast('Meeting deleted', { variant: 'success' })
+    }
   }
 
   return (
@@ -480,7 +486,7 @@ function MeetingRow({ meeting, index }: { meeting: Meeting; index: number }) {
             <DialogTitle>Delete meeting?</DialogTitle>
           </DialogHeader>
           <p className="text-[14px] text-muted-foreground">
-            This will permanently delete "{meeting.title}" including its transcript and notes. This cannot be undone.
+            This will permanently delete &quot;{meeting.title}&quot; including its transcript and notes. This cannot be undone.
           </p>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="ghost" onClick={() => setDeleteOpen(false)} disabled={deleting}>

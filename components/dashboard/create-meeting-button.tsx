@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { BUILT_IN_TEMPLATES } from '@/lib/templates'
 import { createMeeting } from '@/app/actions/meetings'
+import { toast } from '@/hooks/use-toast'
+import { useRouter } from 'next/navigation'
 
 const TEMPLATE_ICONS: Record<string, string> = {
   'customer-discovery': '🔍',
@@ -32,6 +34,7 @@ export function CreateMeetingButton() {
   const [title, setTitle] = useState('')
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const router = useRouter()
 
   function handleOpen() {
     setOpen(true)
@@ -59,8 +62,16 @@ export function CreateMeetingButton() {
     fd.set('templateId', '') // built-in templates don't have DB UUIDs
     fd.set('templateName', template?.name ?? '')
     startTransition(async () => {
-      await createMeeting(fd)
-      handleClose()
+      try {
+        const result = await createMeeting(fd)
+        if (result.meeting) {
+          toast('Meeting created', { variant: 'success' })
+          handleClose()
+          router.push(`/dashboard/meetings/${result.meeting.id}`)
+        }
+      } catch (error) {
+        toast('Failed to create meeting', { variant: 'destructive' })
+      }
     })
   }
 

@@ -50,7 +50,7 @@ export async function createTeam(formData: FormData) {
   })
 
   revalidatePath('/dashboard/teams')
-  redirect(`/dashboard/teams/${team.id}`)
+  return { team }
 }
 
 export async function inviteMember(teamId: string, email: string) {

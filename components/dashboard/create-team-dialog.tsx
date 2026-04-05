@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { createTeam } from '@/app/actions/teams'
+import { toast } from '@/hooks/use-toast'
+import { useRouter } from 'next/navigation'
 
 interface CreateTeamDialogProps {
   trigger?: 'icon' | 'button'
@@ -16,6 +18,7 @@ export function CreateTeamDialog({ trigger = 'icon' }: CreateTeamDialogProps) {
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const formRef = useRef<HTMLFormElement>(null)
+  const router = useRouter()
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -23,8 +26,12 @@ export function CreateTeamDialog({ trigger = 'icon' }: CreateTeamDialogProps) {
     setPending(true)
     try {
       const fd = new FormData(e.currentTarget)
-      await createTeam(fd)
-      setOpen(false)
+      const result = await createTeam(fd)
+      if (result.team) {
+        toast('Team created', { variant: 'success' })
+        setOpen(false)
+        router.push(`/dashboard/teams/${result.team.id}`)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {

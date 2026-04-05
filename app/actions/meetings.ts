@@ -44,7 +44,7 @@ export async function createMeeting(formData: FormData) {
   })
 
   revalidatePath('/dashboard')
-  redirect(`/dashboard/meetings/${meeting.id}`)
+  return { meeting }
 }
 
 export async function renameMeeting(meetingId: string, title: string) {
@@ -70,7 +70,7 @@ export async function deleteMeeting(meetingId: string) {
     .where(and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)))
 
   revalidatePath('/dashboard')
-  redirect('/dashboard')
+  return { success: true }
 }
 
 export async function deleteAllMeetings() {
