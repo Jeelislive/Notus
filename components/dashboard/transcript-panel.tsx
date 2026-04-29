@@ -9,7 +9,7 @@ import type { TranscriptSegment } from '@/lib/db/schema'
 import type { LiveSegment } from '@/hooks/use-recording'
 
 const SPEAKER_PALETTE = [
-  { dot: 'bg-indigo-500', text: 'text-indigo-600 dark:text-indigo-400' },
+  { dot: 'bg-[#0075de]', text: 'text-[#0075de] dark:text-[#62aef0]' },
   { dot: 'bg-violet-500', text: 'text-violet-600 dark:text-violet-400' },
   { dot: 'bg-emerald-500', text: 'text-emerald-600 dark:text-emerald-400' },
   { dot: 'bg-sky-500', text: 'text-sky-600 dark:text-sky-400' },
@@ -126,7 +126,7 @@ export function TranscriptPanel({ transcript, liveSegments, status, isRecording,
             <span className="text-[12px] text-muted-foreground">{transcript.length} segments</span>
           )}
           {translatedSegmentMap && !isRecording && (
-            <span className="text-[11px] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-500 font-medium">Translated</span>
+            <span className="text-[11px] px-2 py-0.5 rounded-full bg-[#0075de]/8 text-[#0075de] font-medium">Translated</span>
           )}
         </div>
       </div>
@@ -135,7 +135,7 @@ export function TranscriptPanel({ transcript, liveSegments, status, isRecording,
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-5 space-y-7 min-h-0">
         {isTranslating && (
           <div className="flex items-center gap-2 text-[12px] text-muted-foreground animate-pulse pb-2">
-            <span className="size-1.5 rounded-full bg-indigo-400 shrink-0" />
+            <span className="size-1.5 rounded-full bg-[#0075de] shrink-0" />
             Translating transcript…
           </div>
         )}

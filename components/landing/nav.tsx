@@ -30,9 +30,9 @@ export function LandingNav() {
           <Link href="/" className="flex items-center gap-2 group">
             <div
               className="size-7 rounded-lg flex items-center justify-center shrink-0"
-              style={{ backgroundColor: '#6366f1', transition: 'background-color 150ms ease-out' }}
-              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#4f46e5')}
-              onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#6366f1')}
+              style={{ backgroundColor: '#0075de', transition: 'background-color 150ms ease-out' }}
+              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#005bab')}
+              onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#0075de')}
             >
               <svg width="16" height="14" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect x="0"  y="5" width="2.5" height="4"  rx="1.25" fill="white" fillOpacity="0.5"/>
@@ -74,9 +74,10 @@ export function LandingNav() {
             </Link>
             <Link
               href="/signup"
-              className="px-4 py-1.5 text-sm font-medium bg-primary text-primary-foreground rounded-xl shadow-lg shadow-indigo-500/20
-                active:scale-[0.97]"
+              className="px-4 py-1.5 text-sm font-semibold bg-primary text-primary-foreground rounded active:scale-[0.9]"
               style={{ transition: 'transform 120ms cubic-bezier(0.23,1,0.32,1), background-color 150ms ease-out' }}
+              onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#005bab')}
+              onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}
             >
               Start free
             </Link>
@@ -112,7 +113,7 @@ export function LandingNav() {
             <div className="mt-2 pt-2 border-t border-border flex flex-col gap-2">
               <Link href="/login" className="text-center py-2.5 text-sm text-foreground rounded-xl"
                 style={{ transition: 'background-color 150ms ease-out' }}>Sign in</Link>
-              <Link href="/signup" className="text-center py-2.5 text-sm font-medium bg-primary text-primary-foreground rounded-xl active:scale-[0.97]"
+              <Link href="/signup" className="text-center py-2.5 text-sm font-semibold bg-primary text-primary-foreground rounded active:scale-[0.9]"
                 style={{ transition: 'transform 120ms cubic-bezier(0.23,1,0.32,1), background-color 150ms ease-out' }}>Start free</Link>
             </div>
           </div>

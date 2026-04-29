@@ -9,7 +9,7 @@ export default function NotFound() {
         <p className="text-[14px] text-muted-foreground mb-6">The page you&apos;re looking for doesn&apos;t exist.</p>
         <Link
           href="/"
-          className="inline-flex items-center gap-1.5 text-[14px] font-medium text-indigo-500 hover:text-indigo-400"
+          className="inline-flex items-center gap-1.5 text-[14px] font-medium text-[#0075de] hover:text-[#005bab]"
           style={{ transition: 'color 150ms ease-out' }}
         >
           Go home

@@ -266,7 +266,7 @@ export function TiptapEditor({ content, onChange, placeholder, editable = true }
                       editor.chain().focus().setMark('textStyle', { fontSize: size }).run()
                       setSizeOpen(false)
                     }}
-                    className={`w-full text-left px-3 py-1.5 text-[13px] hover:bg-muted/60 ${currentSize === size ? 'text-indigo-500 font-semibold' : 'text-foreground/70'}`}
+                    className={`w-full text-left px-3 py-1.5 text-[13px] hover:bg-muted/60 ${currentSize === size ? 'text-[#0075de] font-semibold' : 'text-foreground/70'}`}
                     style={{ fontFamily: 'ui-monospace, monospace' }}
                   >
                     {size.replace('px', '')}
@@ -344,7 +344,7 @@ export function TiptapEditor({ content, onChange, placeholder, editable = true }
           {!askOpen ? (
             <button
               onClick={() => setAskOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-600 text-white text-[12px] font-semibold shadow-lg shadow-indigo-500/40 hover:bg-indigo-500 active:scale-[0.95]"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#0075de] text-white text-[12px] font-semibold hover:bg-[#005bab] active:scale-[0.95]"
               style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), background-color 120ms ease-out' }}
             >
               <Sparkles className="size-3" />
@@ -352,10 +352,10 @@ export function TiptapEditor({ content, onChange, placeholder, editable = true }
             </button>
           ) : (
             <div
-              className="flex items-center gap-2 pl-3 pr-2 py-2 rounded-2xl bg-background border border-indigo-500/40 shadow-xl shadow-black/15 w-[300px]"
+              className="flex items-center gap-2 pl-3 pr-2 py-2 rounded-2xl bg-background border border-[#0075de]/40 shadow-xl shadow-black/15 w-[300px]"
               style={{ animation: 'bubbleExpand 150ms cubic-bezier(0.23,1,0.32,1) both' }}
             >
-              <Sparkles className="size-3.5 text-indigo-500 shrink-0" />
+              <Sparkles className="size-3.5 text-[#0075de] shrink-0" />
               <input
                 autoFocus
                 value={askPrompt}
@@ -371,7 +371,7 @@ export function TiptapEditor({ content, onChange, placeholder, editable = true }
               <button
                 onClick={() => editor && handleAsk(editor)}
                 disabled={askLoading || !askPrompt.trim()}
-                className="p-1.5 rounded-lg text-indigo-500 hover:bg-indigo-500/10 disabled:text-muted-foreground/40 active:scale-[0.85] shrink-0"
+                className="p-1.5 rounded-lg text-[#0075de] hover:bg-[#0075de]/10 disabled:text-muted-foreground/40 active:scale-[0.85] shrink-0"
                 style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), background-color 120ms ease-out' }}
               >
                 {askLoading ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
@@ -396,7 +396,7 @@ function ToolbarButton({ onClick, active, title, children, disabled }: {
       disabled={disabled}
       className={`px-3.5 py-2.5 rounded-xl text-[16px] font-mono font-semibold active:scale-[0.93] disabled:opacity-25 disabled:pointer-events-none ${
         active
-          ? 'bg-indigo-500/20 text-indigo-500 dark:text-indigo-400'
+          ? 'bg-[#0075de]/20 text-[#0075de] dark:text-[#62aef0]'
           : 'text-foreground/60 hover:text-foreground hover:bg-muted'
       }`}
       style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), background-color 120ms ease-out, color 120ms ease-out' }}

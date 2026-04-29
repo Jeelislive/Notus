@@ -36,7 +36,7 @@ export default async function DashboardPage({ searchParams }: Props) {
         {/* Top bar */}
         <div className="flex items-center justify-between px-4 md:px-8 pt-6 md:pt-8 pb-4 md:pb-6">
           <div>
-            <h1 className="text-[22px] font-bold text-foreground tracking-tight leading-none">
+            <h1 className="text-[22px] font-bold text-foreground tracking-[-0.025em] leading-none">
               Meetings
             </h1>
             <p className="text-[13px] text-muted-foreground mt-1.5">
@@ -98,7 +98,7 @@ export default async function DashboardPage({ searchParams }: Props) {
           {/* This Week */}
           <div className="flex items-center gap-3 px-4 md:px-8 py-4 md:py-5 border-t md:border-t-0">
             <div className="size-9 md:size-11 rounded-lg bg-muted flex items-center justify-center shrink-0">
-              <CalendarDays className="size-4 md:size-5 text-indigo-400" strokeWidth={1.75} />
+              <CalendarDays className="size-4 md:size-5 text-primary" strokeWidth={1.75} />
             </div>
             <div className="min-w-0">
               <p className="text-[9px] md:text-[10px] font-semibold uppercase tracking-wide md:tracking-widest text-muted-foreground leading-none mb-1 truncate">

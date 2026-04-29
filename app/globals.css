@@ -5,26 +5,48 @@
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-card: var(--card);
 }
 
 @layer base {
   :root {
+    /* Notion warm light palette */
     --background: #ffffff;
-    --foreground: #000000;
-    --muted: #f4f4f5;
-    --muted-foreground: #71717a;
-    --border: #e4e4e7;
-    --primary: #4f46e5;
+    --foreground: #0f0e0d;
+    --card: #ffffff;
+    --muted: #f6f5f4;
+    --muted-foreground: #615d59;
+    --border: #e8e6e3;
+    --primary: #0075de;
     --primary-foreground: #ffffff;
+    /* Notion accent tokens */
+    --primary-active: #005bab;
+    --primary-light: #62aef0;
+    --badge-bg: #f2f9ff;
+    --badge-text: #097fe8;
+    --focus-ring: #097fe8;
+    --warm-dark: #31302e;
+    --warm-gray-300: #a39e98;
   }
   .dark {
-    --background: #000000;
-    --foreground: #ffffff;
-    --muted: #111111;
-    --muted-foreground: #a1a1aa;
-    --border: #222222;
-    --primary: #6366f1;
+    --background: #1f1e1d;
+    --foreground: #f0efed;
+    --card: #2a2927;
+    --muted: #2b2927;
+    --muted-foreground: #a39e98;
+    --border: #3a3835;
+    --primary: #0075de;
     --primary-foreground: #ffffff;
+    --primary-active: #1a8fee;
+    --primary-light: #62aef0;
+    --badge-bg: #0c2340;
+    --badge-text: #62aef0;
+    --focus-ring: #1a8fee;
   }
 }
 
@@ -35,7 +57,7 @@ html {
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  font-family: var(--font-inter), Inter, -apple-system, system-ui, 'Segoe UI', Helvetica, Arial, sans-serif;
   font-feature-settings: 'cv11', 'ss01';
   font-variation-settings: 'opsz' 32;
   -webkit-font-smoothing: antialiased;
@@ -44,14 +66,14 @@ body {
 }
 
 ::selection {
-  background-color: rgba(99, 102, 241, 0.25);
+  background-color: rgba(0, 117, 222, 0.18);
   color: var(--foreground);
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--muted-foreground); }
 
 /* Custom easing curves */
@@ -190,24 +212,24 @@ body {
 .delay-600 { animation-delay: 600ms; }
 .delay-700 { animation-delay: 700ms; }
 
-/* Gradient mesh background */
+/* Gradient mesh background — Notion warm blue tint */
 .bg-mesh {
   background-color: var(--background);
   background-image:
-    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(99, 102, 241, 0.08) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(0, 117, 222, 0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(0, 91, 171, 0.04) 0%, transparent 50%);
 }
 
-/* Subtle border gradient */
+/* Subtle border gradient — Notion blue accent */
 .border-gradient {
   border: 1px solid transparent;
   background: linear-gradient(var(--background), var(--background)) padding-box,
-              linear-gradient(135deg, rgba(99,102,241,0.4), rgba(99,102,241,0.05) 50%, transparent) border-box;
+              linear-gradient(135deg, rgba(0,117,222,0.35), rgba(0,117,222,0.04) 50%, transparent) border-box;
 }
 
-/* Text gradient - used sparingly */
+/* Text gradient */
 .text-gradient {
-  background: linear-gradient(135deg, #a5b4fc 0%, #818cf8 50%, #6366f1 100%);
+  background: linear-gradient(135deg, #62aef0 0%, #1a8fee 50%, #0075de 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -217,8 +239,8 @@ body {
    TIPTAP EDITOR
    =========================== */
 
-.tiptap-content h1 { font-size: 1.25rem; font-weight: 700; color: var(--foreground); margin: 1.25rem 0 0.5rem; }
-.tiptap-content h2 { font-size: 1.05rem; font-weight: 600; color: var(--foreground); margin: 1rem 0 0.4rem; }
+.tiptap-content h1 { font-size: 1.25rem; font-weight: 700; color: var(--foreground); margin: 1.25rem 0 0.5rem; letter-spacing: -0.02em; }
+.tiptap-content h2 { font-size: 1.05rem; font-weight: 600; color: var(--foreground); margin: 1rem 0 0.4rem; letter-spacing: -0.01em; }
 .tiptap-content h3 { font-size: 0.95rem; font-weight: 600; color: var(--muted-foreground); margin: 0.85rem 0 0.35rem; }
 .tiptap-content p  { margin: 0.35rem 0; color: var(--foreground); }
 .tiptap-content strong { color: var(--foreground); }

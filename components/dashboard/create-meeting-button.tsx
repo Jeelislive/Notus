@@ -125,13 +125,13 @@ export function CreateMeetingButton() {
                   onClick={() => setSelectedTemplateId(null)}
                   className={`relative text-left p-4 rounded-xl border-2 active:scale-[0.97] ${
                     selectedTemplateId === null
-                      ? 'border-indigo-500 bg-indigo-500/5'
+                      ? 'border-[#0075de] bg-[#0075de]/[0.04]'
                       : 'border-border hover:border-border/80 hover:bg-muted/30'
                   }`}
                   style={{ transition: 'transform 120ms cubic-bezier(0.23,1,0.32,1), border-color 120ms ease-out, background-color 120ms ease-out' }}
                 >
                   {selectedTemplateId === null && (
-                    <span className="absolute top-2.5 right-2.5 size-4 rounded-full bg-indigo-500 flex items-center justify-center">
+                    <span className="absolute top-2.5 right-2.5 size-4 rounded-full bg-[#0075de] flex items-center justify-center">
                       <Check className="size-2.5 text-white" />
                     </span>
                   )}
@@ -149,13 +149,13 @@ export function CreateMeetingButton() {
                       onClick={() => setSelectedTemplateId(t.id)}
                       className={`relative text-left p-4 rounded-xl border-2 active:scale-[0.97] ${
                         active
-                          ? 'border-indigo-500 bg-indigo-500/5'
+                          ? 'border-[#0075de] bg-[#0075de]/[0.04]'
                           : 'border-border hover:border-border/80 hover:bg-muted/30'
                       }`}
                       style={{ transition: 'transform 120ms cubic-bezier(0.23,1,0.32,1), border-color 120ms ease-out, background-color 120ms ease-out' }}
                     >
                       {active && (
-                        <span className="absolute top-2.5 right-2.5 size-4 rounded-full bg-indigo-500 flex items-center justify-center">
+                        <span className="absolute top-2.5 right-2.5 size-4 rounded-full bg-[#0075de] flex items-center justify-center">
                           <Check className="size-2.5 text-white" />
                         </span>
                       )}

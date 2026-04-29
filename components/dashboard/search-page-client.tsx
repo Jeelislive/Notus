@@ -48,7 +48,7 @@ function formatDate(dateStr: string | null): string {
 function SourceBadge({ type }: { type: SearchResult['type'] }) {
   if (type === 'transcript') {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#f2f9ff] dark:bg-[#0075de]/10 text-[#0075de] dark:text-[#62aef0]">
         <Mic className="size-3" strokeWidth={2} />
         Transcript
       </span>
@@ -79,13 +79,13 @@ function ResultCard({ result, query }: { result: SearchResult; query: string }) 
   return (
     <Link
       href={href}
-      className="group block p-4 rounded-xl border border-border bg-card hover:bg-muted/40 hover:border-indigo-300 dark:hover:border-indigo-700 active:scale-[0.97]"
+      className="group block p-4 rounded-xl border border-border bg-card hover:bg-muted/40 hover:border-[#0075de]/30 active:scale-[0.97]"
       style={{ transition: 'background-color 120ms ease-out, border-color 120ms ease-out' }}
     >
       <div className="flex items-start gap-3">
         {/* Avatar */}
-        <div className="size-9 rounded-lg bg-primary/10 border border-indigo-500/20 flex items-center justify-center shrink-0 mt-0.5">
-          <span className="text-sm font-semibold text-indigo-500 dark:text-indigo-400">
+        <div className="size-9 rounded-lg bg-primary/10 border border-[#0075de]/20 flex items-center justify-center shrink-0 mt-0.5">
+          <span className="text-sm font-semibold text-[#0075de] dark:text-[#62aef0]">
             {result.meetingTitle.charAt(0).toUpperCase()}
           </span>
         </div>
@@ -198,7 +198,7 @@ export function SearchPageClient() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search meetings, notes, transcripts..."
-            className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-background text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/40 focus:border-indigo-400"
+            className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-background text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[#097fe8]/40 focus:border-[#0075de]"
             style={{ transition: 'border-color 150ms ease-out, box-shadow 150ms ease-out' }}
           />
         </div>
@@ -214,7 +214,7 @@ export function SearchPageClient() {
             onClick={() => setAiMode((v) => !v)}
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border active:scale-[0.97] ${
               aiMode
-                ? 'bg-indigo-500 text-white border-indigo-500 hover:bg-indigo-600'
+                ? 'bg-[#0075de] text-white border-[#0075de] hover:bg-[#0075de]'
                 : 'bg-background text-muted-foreground border-border hover:text-foreground hover:bg-muted/50'
             }`}
             style={{ transition: 'background-color 120ms ease-out, color 120ms ease-out, border-color 120ms ease-out' }}
@@ -268,7 +268,7 @@ export function SearchPageClient() {
               <button
                 key={s}
                 onClick={() => handleSuggestion(s)}
-                className="px-3 py-1.5 rounded-lg border border-border text-[13px] text-muted-foreground hover:text-foreground hover:bg-muted/50 hover:border-indigo-300 dark:hover:border-indigo-700 active:scale-[0.97]"
+                className="px-3 py-1.5 rounded-lg border border-border text-[13px] text-muted-foreground hover:text-foreground hover:bg-muted/50 hover:border-[#0075de]/30 active:scale-[0.97]"
                 style={{ transition: 'background-color 120ms ease-out, color 120ms ease-out, border-color 120ms ease-out' }}
               >
                 {s}

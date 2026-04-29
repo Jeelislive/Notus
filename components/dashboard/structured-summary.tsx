@@ -75,10 +75,10 @@ export function StructuredSummary({ data }: StructuredSummaryProps) {
     <div className="space-y-5">
       {/* Overview */}
       {(data.overview?.participants?.length > 0 || data.overview?.type) && (
-        <section className="rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-5 space-y-3">
+        <section className="rounded-2xl border border-[#0075de]/15 bg-[#0075de]/[0.03] p-5 space-y-3">
           <div className="flex items-center gap-2">
-            <span className="size-4 text-indigo-500 font-bold text-[14px] leading-none">✦</span>
-            <p className="text-[11px] font-bold text-indigo-500 uppercase tracking-widest">Overview</p>
+            <span className="size-4 text-[#0075de] font-bold text-[14px] leading-none">✦</span>
+            <p className="text-[11px] font-bold text-[#0075de] uppercase tracking-widest">Overview</p>
           </div>
           {data.overview.type && (
             <p className="text-[13px] text-muted-foreground">
@@ -90,7 +90,7 @@ export function StructuredSummary({ data }: StructuredSummaryProps) {
               {data.overview.participants.map((p) => (
                 <span
                   key={p}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[12px] font-medium text-indigo-700 dark:text-indigo-300"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#0075de]/8 border border-[#0075de]/15 text-[12px] font-medium text-[#005bab] dark:text-[#62aef0]"
                 >
                   <SpeakerChip name={p} />
                   {p}
@@ -103,10 +103,10 @@ export function StructuredSummary({ data }: StructuredSummaryProps) {
 
       {/* Summary */}
       {data.summary && (
-        <section className="rounded-2xl border border-indigo-500/15 bg-indigo-500/5 p-5 space-y-3">
+        <section className="rounded-2xl border border-[#0075de]/12 bg-[#0075de]/[0.03] p-5 space-y-3">
           <div className="flex items-center gap-2">
-            <span className="size-4 text-indigo-400 font-bold text-[14px] leading-none">★</span>
-            <p className="text-[11px] font-bold text-indigo-500 uppercase tracking-widest">Summary</p>
+            <span className="size-4 text-[#62aef0] font-bold text-[14px] leading-none">★</span>
+            <p className="text-[11px] font-bold text-[#0075de] uppercase tracking-widest">Summary</p>
           </div>
           <p
             className="text-foreground"

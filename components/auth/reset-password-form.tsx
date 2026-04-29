@@ -66,7 +66,7 @@ export function ResetPasswordForm() {
     return (
       <div className="w-full space-y-4 text-center">
         <p className="text-sm text-red-500">Invalid or expired reset link.</p>
-        <a href="/forgot-password" className="text-indigo-500 dark:text-indigo-400 hover:text-indigo-400 text-sm transition-colors">
+        <a href="/forgot-password" className="text-[#0075de] dark:text-[#62aef0] hover:text-[#62aef0] text-sm transition-colors">
           Request a new one
         </a>
       </div>

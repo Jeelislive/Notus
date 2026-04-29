@@ -7,9 +7,9 @@ const testimonials = [
     quote: "Notus has become indispensable - feels like I'm living in the future.",
     name: 'John Borthwick',
     title: 'Investor, Betaworks',
-    bg: 'bg-indigo-100 dark:bg-indigo-950/30',
+    bg: 'bg-[#f2f9ff] dark:bg-[#0075de]/10',
     initial: 'J',
-    color: 'bg-indigo-500',
+    color: 'bg-[#0075de]',
   },
   {
     quote: "The addiction is real - at this point I can't imagine life without it. Effortlessly powerful.",

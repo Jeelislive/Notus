@@ -221,7 +221,7 @@ export function NotesPageClient({ meetings, notesByMeeting, selectedNoteId, curr
                       return (
                         <div
                           key={note.id}
-                          className={`group flex items-center gap-1 rounded-lg mb-0.5 ${active ? 'bg-indigo-500/8 border border-indigo-500/15' : 'hover:bg-muted/40 border border-transparent'}`}
+                          className={`group flex items-center gap-1 rounded-lg mb-0.5 ${active ? 'bg-[#0075de]/8 border border-[#0075de]/15' : 'hover:bg-muted/60 border border-transparent'}`}
                           style={{ transition: 'background-color 120ms ease-out, border-color 120ms ease-out' }}
                         >
                           <button
@@ -230,10 +230,10 @@ export function NotesPageClient({ meetings, notesByMeeting, selectedNoteId, curr
                             style={{ transition: 'opacity 100ms ease-out' }}
                           >
                             {hasAI
-                              ? <Sparkles className={`size-3 shrink-0 ${active ? 'text-indigo-400' : 'text-muted-foreground/60'}`} />
-                              : <FileText className={`size-3 shrink-0 ${active ? 'text-indigo-400' : 'text-muted-foreground/40'}`} />
+                              ? <Sparkles className={`size-3 shrink-0 ${active ? 'text-[#0075de]' : 'text-muted-foreground/60'}`} />
+                              : <FileText className={`size-3 shrink-0 ${active ? 'text-[#0075de]' : 'text-muted-foreground/40'}`} />
                             }
-                            <span className={`text-[13px] truncate ${active ? 'text-indigo-600 dark:text-indigo-400 font-medium' : 'text-foreground/80'}`}>
+                            <span className={`text-[13px] truncate ${active ? 'text-[#0075de] font-medium' : 'text-foreground/80'}`}>
                               {note.title}
                             </span>
                           </button>
@@ -263,12 +263,12 @@ export function NotesPageClient({ meetings, notesByMeeting, selectedNoteId, curr
                             if (e.key === 'Escape') { setCreating(null); setNewNoteTitle('') }
                           }}
                           placeholder="Note title…"
-                          className="flex-1 text-[12px] px-2 py-1.5 rounded-lg border border-indigo-500/40 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                          className="flex-1 text-[12px] px-2 py-1.5 rounded-lg border border-[#0075de]/30 bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-[#097fe8]"
                           onBlur={() => { if (!newNoteTitle.trim()) { setCreating(null) } }}
                         />
                         <button
                           onClick={() => handleCreateNote(meeting.id)}
-                          className="px-2 py-1 rounded-lg bg-indigo-600 text-white text-[11px] font-medium hover:bg-indigo-500 active:scale-[0.94]"
+                          className="px-2 py-1 rounded bg-[#0075de] text-white text-[11px] font-medium hover:bg-[#005bab] active:scale-[0.94]"
                           style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), background-color 120ms ease-out' }}
                         >
                           Add
@@ -612,7 +612,7 @@ function NoteEditor({ meeting, note, currentUser, meetingType, jiraConfig, prefe
           <div className="ml-auto hidden md:flex items-center gap-2.5 px-4 py-2 shrink-0">
             {activeTab === 'notes' && meeting.status === 'completed' && (
               <button onClick={handleNotesFill} disabled={aiFilling}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-[14px] font-medium border border-indigo-500/30 bg-indigo-500/8 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/15 active:scale-[0.97] disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-[14px] font-medium border border-[#0075de]/25 bg-[#0075de]/6 text-[#0075de] hover:bg-[#0075de]/12 active:scale-[0.97] disabled:opacity-50"
                 style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), background-color 150ms ease-out' }}>
                 {aiFilling ? <><Loader2 className="size-4 animate-spin" />Filling…</> : <><Sparkles className="size-4" />Fill by Notus</>}
               </button>
@@ -645,7 +645,7 @@ function NoteEditor({ meeting, note, currentUser, meetingType, jiraConfig, prefe
             <>
               {meeting.status === 'completed' && (
                 <button onClick={handleNotesFill} disabled={aiFilling}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border border-indigo-500/30 bg-indigo-500/8 text-indigo-600 dark:text-indigo-400 active:scale-[0.97] disabled:opacity-50">
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium border border-[#0075de]/25 bg-[#0075de]/6 text-[#0075de] active:scale-[0.97] disabled:opacity-50">
                   {aiFilling ? <><Loader2 className="size-3.5 animate-spin" />Filling…</> : <><Sparkles className="size-3.5" />Fill by Notus</>}
                 </button>
               )}
@@ -699,11 +699,11 @@ function NoteEditor({ meeting, note, currentUser, meetingType, jiraConfig, prefe
             ) : (
               <>
                 {resolvedSummary && (
-                  <section className="rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-5 space-y-3">
+                  <section className="rounded-2xl border border-[#0075de]/15 bg-[#0075de]/[0.03] p-5 space-y-3">
                     <div className="flex items-center gap-2">
-                      <Sparkles className="size-4 text-indigo-500" />
-                      <p className="text-[11px] font-bold text-indigo-500 uppercase tracking-widest">Summary</p>
-                      {isTranslated && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-500 font-medium ml-auto">Translated</span>}
+                      <Sparkles className="size-4 text-[#0075de]" />
+                      <p className="text-[11px] font-bold text-[#0075de] uppercase tracking-widest">Summary</p>
+                      {isTranslated && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#0075de]/8 text-[#0075de] font-medium ml-auto">Translated</span>}
                     </div>
                     <p className="text-foreground" style={{ ...serif, fontSize: '17px', fontWeight: 500, lineHeight: '1.85', letterSpacing: '0.005em' }}>{resolvedSummary}</p>
                   </section>
@@ -728,8 +728,8 @@ function NoteEditor({ meeting, note, currentUser, meetingType, jiraConfig, prefe
             )
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-center">
-              <div className="size-14 rounded-2xl bg-indigo-500/8 border border-indigo-500/15 flex items-center justify-center mb-4">
-                <Wand2 className="size-6 text-indigo-400" strokeWidth={1.5} />
+              <div className="size-14 rounded-2xl bg-[#0075de]/6 border border-[#0075de]/12 flex items-center justify-center mb-4">
+                <Wand2 className="size-6 text-[#62aef0]" strokeWidth={1.5} />
               </div>
               <p className="text-[15px] font-semibold text-foreground mb-1.5">No AI summary yet</p>
               <p className="text-[13px] text-muted-foreground mb-5">
@@ -753,7 +753,7 @@ function NoteEditor({ meeting, note, currentUser, meetingType, jiraConfig, prefe
                 <div className="flex items-center gap-2">
                   <Mail className="size-4 text-amber-500" />
                   <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest">Follow-up Email</p>
-                  {isTranslated && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-500 font-medium">Translated</span>}
+                  {isTranslated && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#0075de]/8 text-[#0075de] font-medium">Translated</span>}
                 </div>
                 <Button size="sm" variant="ghost" onClick={() => { navigator.clipboard.writeText(resolvedFollowUpEmail!); setCopiedEmail(true); setTimeout(() => setCopiedEmail(false), 2000) }} className="h-7 px-2.5 text-[12px] gap-1.5">
                   {copiedEmail ? <><Check className="size-3" />Copied</> : <><Copy className="size-3" />Copy</>}
@@ -783,7 +783,7 @@ function NoteEditor({ meeting, note, currentUser, meetingType, jiraConfig, prefe
               </div>
             ) : chatMessages.map((msg, i) => (
               <div key={i} className={`flex animate-chat-msg ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`} style={{ animationDelay: `${Math.min(i * 25, 100)}ms` }}>
-                <div className={`max-w-[85%] px-3.5 py-2.5 rounded-2xl text-[13px] leading-relaxed ${msg.role === 'user' ? 'bg-indigo-600 text-white rounded-tr-sm' : 'bg-muted text-foreground rounded-tl-sm'}`}>
+                <div className={`max-w-[85%] px-3.5 py-2.5 rounded-2xl text-[13px] leading-relaxed ${msg.role === 'user' ? 'bg-[#0075de] text-white rounded-tr-sm' : 'bg-muted text-foreground rounded-tl-sm'}`}>
                   {msg.role === 'user' ? (
                     msg.content
                   ) : msg.content ? (
@@ -799,7 +799,7 @@ function NoteEditor({ meeting, note, currentUser, meetingType, jiraConfig, prefe
           <div className="p-3 border-t border-border">
             <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/30 px-3 py-2">
               <input value={chatInput} onChange={(e) => setChatInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendChatMessage()} placeholder="Ask about this meeting…" disabled={chatLoading} className="flex-1 bg-transparent text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none" />
-              <button onClick={sendChatMessage} disabled={chatLoading || !chatInput.trim()} className="text-indigo-500 disabled:text-muted-foreground/40 active:scale-[0.85] shrink-0" style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), color 120ms ease-out' }}>
+              <button onClick={sendChatMessage} disabled={chatLoading || !chatInput.trim()} className="text-[#0075de] disabled:text-muted-foreground/40 active:scale-[0.85] shrink-0" style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), color 120ms ease-out' }}>
                 {chatLoading ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
               </button>
             </div>

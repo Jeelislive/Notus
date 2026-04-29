@@ -10,7 +10,7 @@ function TranscriptPreview() {
   return (
     <div className="rounded-xl border border-border bg-background p-4 space-y-3 text-left">
       {[
-        { s: 'Alex M.', c: 'text-indigo-600', msg: '"Ship caching before Q3."' },
+        { s: 'Alex M.', c: 'text-[#0075de]', msg: '"Ship caching before Q3."' },
         { s: 'Sarah K.', c: 'text-violet-500', msg: '"Redis POC ready Thursday."' },
         { s: 'Mike R.', c: 'text-emerald-500', msg: '"SLA docs by Friday."' },
       ].map((l, i) => (
@@ -21,7 +21,7 @@ function TranscriptPreview() {
       ))}
       <div className="flex items-center gap-1 pt-0.5">
         <div className="h-px flex-1 bg-border/60" />
-        <span className="text-xs text-indigo-600 font-medium">● Live</span>
+        <span className="text-xs text-[#0075de] font-medium">● Live</span>
       </div>
     </div>
   )
@@ -31,14 +31,14 @@ function NotesPreview() {
   return (
     <div className="rounded-xl border border-border bg-background p-4 space-y-3 text-left">
       <div className="flex items-center gap-1.5">
-        <span className="text-xs text-indigo-600 font-semibold">✦ Summary</span>
+        <span className="text-xs text-[#0075de] font-semibold">✦ Summary</span>
       </div>
       <p className="text-xs text-muted-foreground leading-relaxed">Team agreed to prioritize caching over mobile launch.</p>
       <div className="space-y-2">
         {['Ship caching by June 1', 'Delay mobile to Q3'].map((d, i) => (
           <div key={i} className="flex items-center gap-2">
-            <div className="size-3 rounded-sm border border-indigo-600/30 bg-indigo-600/10 flex items-center justify-center shrink-0">
-              <div className="size-1.5 rounded-full bg-indigo-600" />
+            <div className="size-3 rounded-sm border border-[#0075de]/30 bg-[#0075de]/10 flex items-center justify-center shrink-0">
+              <div className="size-1.5 rounded-full bg-[#0075de]" />
             </div>
             <span className="text-xs text-muted-foreground">{d}</span>
           </div>
@@ -52,7 +52,7 @@ function ChatPreview() {
   return (
     <div className="rounded-xl border border-border bg-background p-4 space-y-2 text-left">
       <div className="flex justify-end">
-        <div className="bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-xl rounded-br-none max-w-[80%]">
+        <div className="bg-[#0075de] text-white text-xs px-3 py-1.5 rounded-xl rounded-br-none max-w-[80%]">
           Write a follow-up email
         </div>
       </div>
@@ -62,7 +62,7 @@ function ChatPreview() {
         </div>
       </div>
       <div className="flex justify-end">
-        <div className="bg-indigo-600 text-white text-xs px-3 py-1.5 rounded-xl rounded-br-none max-w-[80%]">
+        <div className="bg-[#0075de] text-white text-xs px-3 py-1.5 rounded-xl rounded-br-none max-w-[80%]">
           What was decided about mobile?
         </div>
       </div>
@@ -147,8 +147,8 @@ function DashboardPreview() {
             [Users,           false],
             [Settings,        false],
           ] as const).map(([Icon, active], i) => (
-            <div key={i} className={`size-7 rounded-lg flex items-center justify-center ${active ? 'bg-indigo-500/10' : ''}`}>
-              <Icon className={`size-3 ${active ? 'text-indigo-500' : 'text-muted-foreground'}`} strokeWidth={active ? 2.25 : 1.75} />
+            <div key={i} className={`size-7 rounded-lg flex items-center justify-center ${active ? 'bg-[#0075de]/10' : ''}`}>
+              <Icon className={`size-3 ${active ? 'text-[#0075de]' : 'text-muted-foreground'}`} strokeWidth={active ? 2.25 : 1.75} />
             </div>
           ))}
         </div>
@@ -161,7 +161,7 @@ function DashboardPreview() {
               { Icon: Video,         label: 'Meets',  value: '24', color: 'text-muted-foreground' },
               { Icon: CheckCircle2,  label: 'Done',   value: '18', color: 'text-emerald-500' },
               { Icon: Clock,         label: 'Mins',   value: '847', color: 'text-muted-foreground' },
-              { Icon: CalendarDays,  label: 'Week',   value: '6',  color: 'text-indigo-500' },
+              { Icon: CalendarDays,  label: 'Week',   value: '6',  color: 'text-[#0075de]' },
             ].map(({ Icon, label, value, color }) => (
               <div key={label} className="flex items-center gap-1 px-1.5 py-2 border-r border-border last:border-0 min-w-0 overflow-hidden">
                 <div className="size-5 rounded-md bg-muted flex items-center justify-center shrink-0">
@@ -242,7 +242,7 @@ export function Features() {
           <h2 className="section-reveal text-4xl sm:text-5xl font-bold text-foreground tracking-tight leading-[1.1] mb-5">
             Everything your meetings need,
             <br />
-            <span className="text-indigo-600">all in one place</span>
+            <span className="text-[#0075de]">all in one place</span>
           </h2>
 
           <p className="section-reveal text-muted-foreground text-lg mb-8 max-w-xl mx-auto">
@@ -267,7 +267,7 @@ export function Features() {
               <div
                 key={title}
                 className="section-reveal group flex flex-col text-left rounded-2xl border border-border bg-background p-5
-                  hover:border-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/[0.04]"
+                  hover:border-[#0075de]/20 hover:shadow-lg hover:shadow-[#0075de]/[0.04]"
                 style={{ transition: 'border-color 200ms cubic-bezier(0.23,1,0.32,1), box-shadow 200ms cubic-bezier(0.23,1,0.32,1)', transitionDelay: `${i * 60}ms` }}
               >
                 {/* Mini UI Preview */}
@@ -278,9 +278,9 @@ export function Features() {
                 {/* Icon + Title */}
                 <div className="flex items-center gap-2.5 mb-2">
                   <div className="size-7 rounded-lg bg-muted border border-border flex items-center justify-center
-                    group-hover:border-indigo-500/20 group-hover:bg-indigo-500/5"
+                    group-hover:border-[#0075de]/20 group-hover:bg-[#0075de]/5"
                     style={{ transition: 'background-color 150ms ease-out, border-color 150ms ease-out' }}>
-                    <Icon className="size-3.5 text-muted-foreground group-hover:text-indigo-500" style={{ transition: 'color 150ms ease-out' }} strokeWidth={1.5} />
+                    <Icon className="size-3.5 text-muted-foreground group-hover:text-[#0075de]" style={{ transition: 'color 150ms ease-out' }} strokeWidth={1.5} />
                   </div>
                   <h3 className="text-sm font-semibold text-foreground">{title}</h3>
                 </div>
@@ -313,7 +313,7 @@ export function Features() {
 
             {/* Right: Text */}
             <div className="section-reveal space-y-6">
-              <p className="text-[10px] font-semibold text-indigo-500 uppercase tracking-[0.15em]">Real-time intelligence</p>
+              <p className="text-[10px] font-semibold text-[#0075de] uppercase tracking-[0.15em]">Real-time intelligence</p>
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight leading-[1.15]">
                 Empowering your<br />meeting workflow
               </h2>
@@ -321,7 +321,7 @@ export function Features() {
                 {splitFeature1.map(({ Icon, title, desc }, i) => (
                   <div key={title} className="section-reveal space-y-2" style={{ transitionDelay: `${i * 50}ms` }}>
                     <div className="flex items-center gap-2 mb-1">
-                      <Icon className="size-5 text-indigo-600 shrink-0" strokeWidth={1.5} />
+                      <Icon className="size-5 text-[#0075de] shrink-0" strokeWidth={1.5} />
                       <p className="text-lg font-semibold text-foreground">{title}</p>
                     </div>
                     <p className="text-base text-foreground/70 leading-relaxed">{desc}</p>
@@ -341,7 +341,7 @@ export function Features() {
 
             {/* Left: Text */}
             <div className="section-reveal space-y-6 order-2 lg:order-1">
-              <p className="text-[10px] font-semibold text-indigo-500 uppercase tracking-[0.15em]">AI that knows your work</p>
+              <p className="text-[10px] font-semibold text-[#0075de] uppercase tracking-[0.15em]">AI that knows your work</p>
               <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight leading-[1.15]">
                 Built to keep you<br />in the conversation
               </h2>
@@ -349,7 +349,7 @@ export function Features() {
                 {splitFeature2.map(({ Icon, title, desc }, i) => (
                   <div key={title} className="section-reveal space-y-2" style={{ transitionDelay: `${i * 50}ms` }}>
                     <div className="flex items-center gap-2 mb-1">
-                      <Icon className="size-5 text-indigo-600 shrink-0" strokeWidth={1.5} />
+                      <Icon className="size-5 text-[#0075de] shrink-0" strokeWidth={1.5} />
                       <p className="text-lg font-semibold text-foreground">{title}</p>
                     </div>
                     <p className="text-base text-foreground/70 leading-relaxed">{desc}</p>
@@ -369,7 +369,7 @@ export function Features() {
                       key={tab}
                       className={`px-4 py-2.5 text-xs font-medium transition-colors duration-150 ${
                         i === 0
-                          ? 'text-foreground border-b-2 border-indigo-500 bg-background -mb-px'
+                          ? 'text-foreground border-b-2 border-[#0075de] bg-background -mb-px'
                           : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
@@ -377,7 +377,7 @@ export function Features() {
                     </button>
                   ))}
                   <div className="flex-1 flex items-center justify-end pr-4">
-                    <span className="text-[9px] text-indigo-600 font-medium">✦ Ready</span>
+                    <span className="text-[9px] text-[#0075de] font-medium">✦ Ready</span>
                   </div>
                 </div>
 
@@ -400,7 +400,7 @@ export function Features() {
                         <div key={i} className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-muted/30 border border-border/40">
                           <div className="flex items-center gap-2.5 min-w-0">
                             <div className={`size-3.5 rounded-sm border flex items-center justify-center shrink-0 ${
-                              item.done ? 'border-indigo-500 bg-indigo-500' : 'border-border'
+                              item.done ? 'border-[#0075de] bg-[#0075de]' : 'border-border'
                             }`}>
                               {item.done && (
                                 <svg className="size-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -414,7 +414,7 @@ export function Features() {
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
                             <span className="text-[9px] text-muted-foreground">{item.o}</span>
-                            <span className={`text-[9px] font-medium ${item.done ? 'text-emerald-500' : 'text-indigo-600'}`}>
+                            <span className={`text-[9px] font-medium ${item.done ? 'text-emerald-500' : 'text-[#0075de]'}`}>
                               {item.done ? 'Done' : item.d}
                             </span>
                           </div>
@@ -454,7 +454,7 @@ export function Features() {
             </svg>
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight leading-[1.15] mb-4">
               Less setup,{' '}
-              <span className="text-indigo-600">more focus</span>
+              <span className="text-[#0075de]">more focus</span>
             </h2>
             <p className="text-muted-foreground text-base mb-6 max-w-md mx-auto">
               Connects with the tools you already use. No bots, no friction, no extra tabs.

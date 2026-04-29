@@ -12,7 +12,7 @@ export function Hero() {
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-10 bg-background"
       >
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] rounded-full bg-indigo-500/[0.06] blur-[100px]" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[350px] rounded-full bg-[#0075de]/[0.06] blur-[100px]" />
       </div>
 
 
@@ -42,10 +42,10 @@ export function Hero() {
         </div>
 
         {/* Headline */}
-        <h1 className="animate-fade-up delay-100 text-6xl sm:text-7xl lg:text-[88px] font-bold text-foreground leading-[1.04] tracking-tight mb-7">
+        <h1 className="animate-fade-up delay-100 text-6xl sm:text-7xl lg:text-[88px] font-bold text-foreground leading-[1.04] tracking-[-0.03em] mb-7">
           The AI notepad for{' '}
           <br className="hidden sm:block" />
-          <span className="text-indigo-600">back-to-back</span>{' '}
+          <span className="text-[#0075de]">back-to-back</span>{' '}
           meetings
         </h1>
 
@@ -59,18 +59,19 @@ export function Hero() {
         <div className="animate-fade-up delay-300 flex flex-wrap items-center justify-center gap-4 mb-4">
           <Link
             href="/signup"
-            className="inline-flex items-center gap-2 bg-foreground text-background font-semibold rounded-full px-8 py-3.5 text-base shadow-sm
-              transition-transform duration-[160ms] ease-out active:scale-[0.97]
-              hover:opacity-90"
+            className="inline-flex items-center gap-2 bg-[#0075de] text-white font-semibold rounded px-8 py-3 text-base active:scale-[0.9]"
+            style={{ transition: 'transform 120ms cubic-bezier(0.23,1,0.32,1), background-color 150ms ease-out' }}
+            onMouseEnter={e => (e.currentTarget.style.backgroundColor = '#005bab')}
+            onMouseLeave={e => (e.currentTarget.style.backgroundColor = '#0075de')}
           >
             <Sparkles className="size-4" />
             Get started free
           </Link>
           <Link
             href="#features"
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground font-medium px-8 py-3.5 rounded-full
-              border border-border hover:border-foreground/20 hover:bg-muted/40 text-base
-              transition-colors duration-[160ms] ease-out"
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground font-medium px-8 py-3 rounded
+              border border-border hover:border-border hover:bg-muted text-base"
+            style={{ transition: 'color 150ms ease-out, background-color 150ms ease-out' }}
           >
             See how it works
           </Link>
@@ -113,10 +114,10 @@ export function Hero() {
                 </div>
 
                 {[
-                  { s: 'Alex M.', c: 'text-indigo-600', t: '23:04', msg: "The caching layer is top priority - we need it before Q3, non-negotiable." },
+                  { s: 'Alex M.', c: 'text-[#0075de]', t: '23:04', msg: "The caching layer is top priority - we need it before Q3, non-negotiable." },
                   { s: 'Sarah K.', c: 'text-violet-500', t: '23:22', msg: "Redis at the edge cuts p99 from 2.3s to under 200ms. I can have a POC Thursday." },
                   { s: 'Mike R.', c: 'text-emerald-500', t: '23:48', msg: "Agreed. We should also update the API SLA docs while we're at it." },
-                  { s: 'Alex M.', c: 'text-indigo-600', t: '24:10', msg: "Good call. Sarah, can you own that? Aim for Friday?" },
+                  { s: 'Alex M.', c: 'text-[#0075de]', t: '24:10', msg: "Good call. Sarah, can you own that? Aim for Friday?" },
                 ].map((l, i) => (
                   <div key={i} className="space-y-0.5">
                     <div className="flex items-center gap-1.5">
@@ -144,7 +145,7 @@ export function Hero() {
               <div className="hidden sm:block p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-muted-foreground uppercase tracking-[0.13em]">AI Notes</span>
-                  <span className="text-xs text-indigo-600 font-medium">✦ Generating</span>
+                  <span className="text-xs text-[#0075de] font-medium">✦ Generating</span>
                 </div>
 
                 <div className="space-y-1">
@@ -162,8 +163,8 @@ export function Hero() {
                     'Update API SLA documentation',
                   ].map((d, i) => (
                     <div key={i} className="flex items-start gap-2">
-                      <div className="mt-0.5 size-3.5 rounded-sm border border-indigo-600/30 bg-indigo-600/10 flex items-center justify-center shrink-0">
-                        <div className="size-1.5 rounded-full bg-indigo-600" />
+                      <div className="mt-0.5 size-3.5 rounded-sm border border-[#0075de]/25 bg-[#0075de]/10 flex items-center justify-center shrink-0">
+                        <div className="size-1.5 rounded-full bg-[#0075de]" />
                       </div>
                       <p className="text-xs text-muted-foreground leading-tight">{d}</p>
                     </div>
@@ -184,7 +185,7 @@ export function Hero() {
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         <span className="text-xs text-muted-foreground">{item.o}</span>
-                        <span className="text-xs text-indigo-600 font-medium">{item.d}</span>
+                        <span className="text-xs text-[#0075de] font-medium">{item.d}</span>
                       </div>
                     </div>
                   ))}
@@ -195,8 +196,8 @@ export function Hero() {
               <div className="hidden sm:block p-5 space-y-2.5">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs font-semibold text-muted-foreground uppercase tracking-[0.13em]">Ask Notus</span>
-                  <div className="size-4 rounded-full bg-indigo-600/15 flex items-center justify-center">
-                    <div className="size-2 rounded-full bg-indigo-600" />
+                  <div className="size-4 rounded-full bg-[#0075de]/10 flex items-center justify-center">
+                    <div className="size-2 rounded-full bg-[#0075de]" />
                   </div>
                 </div>
 
@@ -209,7 +210,7 @@ export function Hero() {
                   <div key={i} className={m.role === 'user' ? 'flex justify-end' : ''}>
                     <div className={`max-w-[88%] px-3 py-1.5 text-xs leading-relaxed whitespace-pre-line rounded-xl ${
                       m.role === 'user'
-                        ? 'bg-indigo-600 text-white rounded-br-none'
+                        ? 'bg-[#0075de] text-white rounded-br-none'
                         : 'bg-muted/60 text-foreground/80 border border-border/40 rounded-bl-none'
                     }`}>
                       {m.text}

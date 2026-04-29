@@ -166,7 +166,7 @@ export function NotesPanel({ note, meetingId, status, userTemplates: _userTempla
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-medium active:scale-[0.95] ${
                 activeTab === tab.id
-                  ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
+                  ? 'bg-[#0075de]/8 text-[#0075de]'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
               }`}
               style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), background-color 120ms ease-out, color 120ms ease-out' }}
@@ -273,7 +273,7 @@ export function NotesPanel({ note, meetingId, status, userTemplates: _userTempla
                   <div
                     className={`max-w-[85%] px-3.5 py-2.5 rounded-2xl text-[13px] leading-relaxed ${
                       msg.role === 'user'
-                        ? 'bg-indigo-600 text-white rounded-tr-sm'
+                        ? 'bg-[#0075de] text-white rounded-tr-sm'
                         : 'bg-muted text-foreground rounded-tl-sm'
                     }`}
                   >
@@ -297,7 +297,7 @@ export function NotesPanel({ note, meetingId, status, userTemplates: _userTempla
               <button
                 onClick={sendChatMessage}
                 disabled={chatLoading || !chatInput.trim()}
-                className="text-indigo-500 disabled:text-muted-foreground/40 active:scale-[0.85] shrink-0"
+                className="text-[#0075de] disabled:text-muted-foreground/40 active:scale-[0.85] shrink-0"
                 style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), color 120ms ease-out' }}
               >
                 {chatLoading ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
@@ -321,8 +321,8 @@ function AIProcessingState() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2.5">
-        <div className="size-8 rounded-xl bg-indigo-500/10 flex items-center justify-center">
-          <Sparkles className="size-4 text-indigo-500 animate-pulse" />
+        <div className="size-8 rounded-xl bg-[#0075de]/8 flex items-center justify-center">
+          <Sparkles className="size-4 text-[#0075de] animate-pulse" />
         </div>
         <div>
           <p className="text-[14px] font-semibold text-foreground">AI is analyzing your meeting</p>
@@ -332,7 +332,7 @@ function AIProcessingState() {
       <div className="space-y-2">
         {steps.map((step, i) => (
           <div key={i} className="flex items-center gap-2.5 py-1">
-            <div className="size-5 rounded-full border-2 border-indigo-500/30 border-t-indigo-500 animate-spin shrink-0" style={{ animationDelay: `${i * 150}ms` }} />
+            <div className="size-5 rounded-full border-2 border-[#0075de]/25 border-t-[#0075de] animate-spin shrink-0" style={{ animationDelay: `${i * 150}ms` }} />
             <span className="text-[13px] text-muted-foreground">{step}…</span>
           </div>
         ))}
@@ -352,10 +352,10 @@ function AIResults({ note }: { note: Note }) {
   return (
     <div className="space-y-5">
       {note.summary && (
-        <section className="rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-5 space-y-3">
+        <section className="rounded-2xl border border-[#0075de]/15 bg-[#0075de]/[0.03] p-5 space-y-3">
           <div className="flex items-center gap-2">
-            <Sparkles className="size-4 text-indigo-500" />
-            <p className="text-[11px] font-bold text-indigo-500 uppercase tracking-widest">Summary</p>
+            <Sparkles className="size-4 text-[#0075de]" />
+            <p className="text-[11px] font-bold text-[#0075de] uppercase tracking-widest">Summary</p>
           </div>
           <p
             className="text-foreground"

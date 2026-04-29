@@ -22,19 +22,19 @@ export function CTABanner() {
         <div className="section-reveal relative rounded-3xl border border-border bg-muted/20 overflow-hidden">
 
           {/* Subtle top gradient line */}
-          <div className="absolute top-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent" />
+          <div className="absolute top-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-[#0075de]/25 to-transparent" />
 
           {/* Background glow */}
           <div
             aria-hidden
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[200px] bg-indigo-500/[0.05] blur-[80px] rounded-full pointer-events-none"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[200px] bg-[#0075de]/[0.05] blur-[80px] rounded-full pointer-events-none"
           />
 
           <div className="relative px-8 py-20 text-center">
 
             {/* Label */}
             <p className="inline-flex items-center gap-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-8">
-              <span className="size-1.5 rounded-full bg-indigo-500 inline-block" />
+              <span className="size-1.5 rounded-full bg-[#0075de] inline-block" />
               Start with Notus
             </p>
 
@@ -50,7 +50,7 @@ export function CTABanner() {
             <div className="flex flex-wrap items-center justify-center gap-5 mb-10">
               {['Try 30 days', "It's free", 'No credit card'].map((item) => (
                 <span key={item} className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                  <Check className="size-3.5 text-indigo-500" strokeWidth={2.5} />
+                  <Check className="size-3.5 text-[#0075de]" strokeWidth={2.5} />
                   {item}
                 </span>
               ))}

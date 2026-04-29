@@ -56,7 +56,7 @@ export function Pricing() {
           <h2 className="text-4xl sm:text-5xl font-bold text-foreground tracking-tight leading-[1.1] mb-4">
             A plan for anyone.
             <br />
-            <span className="text-indigo-600">Anytime.</span>
+            <span className="text-[#0075de]">Anytime.</span>
           </h2>
           <p className="text-muted-foreground text-lg">Start free. No credit card required.</p>
         </div>
@@ -68,13 +68,13 @@ export function Pricing() {
               key={plan.name}
               className={`section-reveal flex flex-col rounded-2xl border p-6 transition-shadow duration-300 ease-out
                 ${plan.featured
-                  ? 'border-indigo-500/30 bg-background shadow-xl shadow-indigo-500/[0.06] relative'
+                  ? 'border-[#0075de]/25 bg-background shadow-xl shadow-[#0075de]/[0.06] relative'
                   : 'border-border bg-background hover:shadow-md hover:shadow-black/[0.03]'
                 }`}
               style={{ transitionDelay: `${i * 60}ms` }}
             >
               {plan.featured && (
-                <div className="absolute -top-px left-8 right-8 h-px bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent" />
+                <div className="absolute -top-px left-8 right-8 h-px bg-gradient-to-r from-transparent via-[#0075de]/40 to-transparent" />
               )}
 
               {/* Plan header */}
@@ -89,7 +89,7 @@ export function Pricing() {
                   className={`shrink-0 flex items-center justify-center size-7 rounded-full border
                     transition-colors duration-150 ease-out
                     ${plan.featured
-                      ? 'border-indigo-500/40 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-500'
+                      ? 'border-[#0075de]/30 bg-[#0075de]/8 hover:bg-[#0075de]/15 text-[#0075de]'
                       : 'border-border hover:border-foreground/30 text-muted-foreground hover:text-foreground'
                     }`}
                 >
@@ -110,7 +110,7 @@ export function Pricing() {
                 {plan.features.map((f) => (
                   <li key={f} className="flex items-start gap-2.5 text-sm">
                     <Check
-                      className={`size-3.5 shrink-0 mt-0.5 ${plan.featured ? 'text-indigo-600' : 'text-muted-foreground/50'}`}
+                      className={`size-3.5 shrink-0 mt-0.5 ${plan.featured ? 'text-[#0075de]' : 'text-muted-foreground/50'}`}
                       strokeWidth={2.5}
                     />
                     <span className="text-muted-foreground">{f}</span>
@@ -124,10 +124,10 @@ export function Pricing() {
 
               <Link
                 href={plan.href}
-                className={`w-full text-center py-2.5 rounded-xl text-sm font-semibold
+                className={`w-full text-center py-2.5 rounded text-sm font-semibold
                   transition-transform duration-[160ms] ease-out active:scale-[0.97]
                   ${plan.featured
-                    ? 'bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/20'
+                    ? 'bg-[#0075de] hover:bg-[#005bab] text-white'
                     : 'bg-muted/50 hover:bg-muted text-foreground border border-border'
                   }`}
               >

@@ -123,7 +123,7 @@ export function JiraSettings() {
                 href="https://id.atlassian.com/manage-profile/security/api-tokens"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-indigo-500 hover:underline"
+                className="text-[#0075de] hover:underline"
               >
                 id.atlassian.com/manage-profile
               </a>

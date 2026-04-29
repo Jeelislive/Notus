@@ -126,19 +126,19 @@ export function TemplatePicker({ userTemplates, onApply }: TemplatePickerProps) 
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Template name"
-                    className="w-full px-3 py-2 rounded-lg bg-muted/50 border border-border text-sm text-foreground/90 placeholder:text-muted-foreground/70 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 rounded-lg bg-muted/50 border border-border text-sm text-foreground/90 placeholder:text-muted-foreground/70 focus:outline-none focus:ring-1 focus:ring-[#097fe8]"
                   />
                   <input
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Description (optional)"
-                    className="w-full px-3 py-2 rounded-lg bg-muted/50 border border-border text-sm text-foreground/90 placeholder:text-muted-foreground/70 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full px-3 py-2 rounded-lg bg-muted/50 border border-border text-sm text-foreground/90 placeholder:text-muted-foreground/70 focus:outline-none focus:ring-1 focus:ring-[#097fe8]"
                   />
                   <div className="flex gap-2">
                     <button
                       onClick={handleCreate}
                       disabled={saving || !name.trim()}
-                      className="flex-1 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-xs font-medium text-white transition-colors"
+                      className="flex-1 py-1.5 rounded-lg bg-[#0075de] hover:bg-[#0075de] disabled:opacity-50 text-xs font-medium text-white transition-colors"
                     >
                       {saving ? 'Saving…' : 'Save Template'}
                     </button>

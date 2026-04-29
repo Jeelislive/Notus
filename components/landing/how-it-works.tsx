@@ -40,7 +40,7 @@ export function HowItWorks() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="section-reveal max-w-xl mb-20">
-          <p className="text-xs font-semibold text-indigo-600 uppercase tracking-[0.15em] mb-4">How it works</p>
+          <p className="text-xs font-semibold text-[#0075de] uppercase tracking-[0.15em] mb-4">How it works</p>
           <h2 className="text-4xl sm:text-5xl font-bold text-foreground leading-tight tracking-tight">
             Three steps. Zero friction.
           </h2>
@@ -66,7 +66,7 @@ export function HowItWorks() {
                 <h3 className="text-2xl font-bold text-foreground tracking-tight">{step.title}</h3>
                 <p className="text-muted-foreground leading-relaxed text-[15px]">{step.description}</p>
                 <div className="inline-flex items-center gap-2">
-                  <div className="size-1 rounded-full bg-indigo-500" />
+                  <div className="size-1 rounded-full bg-[#0075de]" />
                   <span className="text-sm text-muted-foreground">{step.detail}</span>
                 </div>
               </div>

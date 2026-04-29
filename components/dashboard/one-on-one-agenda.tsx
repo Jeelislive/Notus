@@ -82,7 +82,7 @@ function Avatar({ name, avatarUrl, size = 20 }: { name: string; avatarUrl?: stri
   )
   return (
     <span
-      className="rounded-full bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center uppercase shrink-0"
+      className="rounded-full bg-[#0075de]/20 text-[#0075de] dark:text-[#62aef0] font-bold flex items-center justify-center uppercase shrink-0"
       style={{ width: size, height: size, fontSize: size * 0.45 }}
     >
       {name.charAt(0)}
@@ -244,7 +244,7 @@ export function OneOnOneAgenda({ initialData, meetingId, noteId, currentUser, ed
               <button
                 onClick={handleAiFill}
                 disabled={aiFilling}
-                className="flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg border border-indigo-500/30 bg-indigo-500/8 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/15 active:scale-[0.97] disabled:opacity-60 disabled:pointer-events-none"
+                className="flex items-center gap-1.5 text-[12px] font-medium px-3 py-1.5 rounded-lg border border-[#0075de]/30 bg-[#0075de]/8 text-[#0075de] dark:text-[#62aef0] hover:bg-[#0075de]/15 active:scale-[0.97] disabled:opacity-60 disabled:pointer-events-none"
                 style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), background-color 150ms ease-out' }}
               >
                 {aiFilling
@@ -261,7 +261,7 @@ export function OneOnOneAgenda({ initialData, meetingId, noteId, currentUser, ed
             {/* Incomplete filter */}
             <button
               onClick={() => setHideCompleted(!hideCompleted)}
-              className={`flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-lg border active:scale-[0.97] ${hideCompleted ? 'border-indigo-500/40 bg-indigo-500/8 text-indigo-600 dark:text-indigo-400' : 'border-border text-muted-foreground hover:text-foreground hover:bg-muted/40'}`}
+              className={`flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-lg border active:scale-[0.97] ${hideCompleted ? 'border-[#0075de]/40 bg-[#0075de]/8 text-[#0075de] dark:text-[#62aef0]' : 'border-border text-muted-foreground hover:text-foreground hover:bg-muted/40'}`}
               style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), background-color 120ms ease-out, border-color 120ms ease-out, color 120ms ease-out' }}
             >
               <SlidersHorizontal className="size-3.5" />
@@ -272,7 +272,7 @@ export function OneOnOneAgenda({ initialData, meetingId, noteId, currentUser, ed
             <div className="relative" ref={sortMenuRef}>
               <button
                 onClick={() => setShowSortMenu(!showSortMenu)}
-                className={`flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-lg border active:scale-[0.97] ${sort !== 'none' ? 'border-indigo-500/40 bg-indigo-500/8 text-indigo-600 dark:text-indigo-400' : 'border-border text-muted-foreground hover:text-foreground hover:bg-muted/40'}`}
+                className={`flex items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-lg border active:scale-[0.97] ${sort !== 'none' ? 'border-[#0075de]/40 bg-[#0075de]/8 text-[#0075de] dark:text-[#62aef0]' : 'border-border text-muted-foreground hover:text-foreground hover:bg-muted/40'}`}
                 style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), background-color 120ms ease-out, border-color 120ms ease-out, color 120ms ease-out' }}
               >
                 <ArrowUpDown className="size-3.5" />
@@ -288,7 +288,7 @@ export function OneOnOneAgenda({ initialData, meetingId, noteId, currentUser, ed
                       style={{ transition: 'background-color 120ms ease-out' }}
                     >
                       {label}
-                      {sort === key && <Check className="size-3.5 text-indigo-500" />}
+                      {sort === key && <Check className="size-3.5 text-[#0075de]" />}
                     </button>
                   ))}
                 </div>
@@ -359,9 +359,9 @@ export function OneOnOneAgenda({ initialData, meetingId, noteId, currentUser, ed
                   onKeyDown={(e) => { if (e.key === 'Enter') addSection(); if (e.key === 'Escape') { setEditingSection(null); setNewSectionTitle('') } }}
                   onBlur={() => { if (!newSectionTitle.trim()) setEditingSection(null) }}
                   placeholder="Section name…"
-                  className="text-[13px] px-3 py-1.5 rounded-lg border border-indigo-400/60 bg-background focus:outline-none focus:ring-2 focus:ring-indigo-500/30 w-56"
+                  className="text-[13px] px-3 py-1.5 rounded-lg border border-[#0075de]/30 bg-background focus:outline-none focus:ring-2 focus:ring-[#097fe8]/30 w-56"
                 />
-                <button onClick={addSection} className="text-[12px] px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-500 active:scale-[0.97]" style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), background-color 120ms ease-out' }}>Add</button>
+                <button onClick={addSection} className="text-[12px] px-3 py-1.5 rounded-lg bg-[#0075de] text-white font-medium hover:bg-[#0075de] active:scale-[0.97]" style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), background-color 120ms ease-out' }}>Add</button>
                 <button onClick={() => setEditingSection(null)} className="text-[12px] text-muted-foreground hover:text-foreground active:opacity-70" style={{ transition: 'color 120ms ease-out, opacity 100ms ease-out' }}>Cancel</button>
               </div>
             ) : (
@@ -421,7 +421,7 @@ function SectionBlock({ section, editable, hideCompleted, sort, currentUser, onT
             onChange={(e) => setSectionTitle(e.target.value)}
             onBlur={() => { onRenameSection(sectionTitle); setRenamingSection(false) }}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === 'Escape') { onRenameSection(sectionTitle); setRenamingSection(false) } }}
-            className="text-[14px] font-bold text-foreground bg-transparent border-b border-indigo-400 focus:outline-none"
+            className="text-[14px] font-bold text-foreground bg-transparent border-b border-[#0075de] focus:outline-none"
           />
         ) : (
           <button onDoubleClick={() => editable && setRenamingSection(true)} className="text-[14px] font-bold text-foreground tracking-tight text-left">
@@ -548,7 +548,7 @@ function TaskRow({ task, rowNum, editable, currentUser, onToggleComplete, onUpda
       <div className="flex items-center gap-2.5 px-3 py-2.5 min-w-0">
         <button
           onClick={onToggleComplete}
-          className={`shrink-0 size-[18px] rounded-full border-2 flex items-center justify-center active:scale-[0.82] ${isCompleted ? 'border-emerald-500 bg-emerald-500/10' : 'border-muted-foreground/30 hover:border-indigo-400'}`}
+          className={`shrink-0 size-[18px] rounded-full border-2 flex items-center justify-center active:scale-[0.82] ${isCompleted ? 'border-emerald-500 bg-emerald-500/10' : 'border-muted-foreground/30 hover:border-[#0075de]'}`}
           style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), border-color 150ms ease-out, background-color 150ms ease-out' }}
         >
           {isCompleted && <div className="size-2 rounded-full bg-emerald-500" />}
@@ -591,7 +591,7 @@ function TaskRow({ task, rowNum, editable, currentUser, onToggleComplete, onUpda
                   <p className="text-[12px] font-medium text-foreground truncate">{currentUser.name}</p>
                   <p className="text-[10px] text-muted-foreground truncate">{currentUser.email}</p>
                 </div>
-                {task.assignee === currentUser.name && <Check className="size-3 text-indigo-500 shrink-0 ml-auto" />}
+                {task.assignee === currentUser.name && <Check className="size-3 text-[#0075de] shrink-0 ml-auto" />}
               </button>
             </div>
             {/* Manual input */}
@@ -603,10 +603,10 @@ function TaskRow({ task, rowNum, editable, currentUser, onToggleComplete, onUpda
                 onChange={(e) => setAssigneeInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') commitAssignee(assigneeInput, null); if (e.key === 'Escape') setActiveCell(null) }}
                 placeholder="Type a name…"
-                className="w-full text-[12px] px-2.5 py-1.5 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                className="w-full text-[12px] px-2.5 py-1.5 rounded-lg border border-border bg-background focus:outline-none focus:ring-2 focus:ring-[#097fe8]/30"
               />
               <div className="flex gap-1.5 mt-2">
-                <button onClick={() => commitAssignee(assigneeInput, null)} className="flex-1 text-[11px] py-1 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-500" style={{ transition: 'background-color 120ms ease-out' }}>
+                <button onClick={() => commitAssignee(assigneeInput, null)} className="flex-1 text-[11px] py-1 rounded-lg bg-[#0075de] text-white font-medium hover:bg-[#0075de]" style={{ transition: 'background-color 120ms ease-out' }}>
                   Assign
                 </button>
                 {task.assignee && (
@@ -651,7 +651,7 @@ function TaskRow({ task, rowNum, editable, currentUser, onToggleComplete, onUpda
             value={task.dueDate ?? ''}
             onChange={(e) => { onUpdateDueDate(e.target.value || null); setActiveCell(null) }}
             onBlur={() => setActiveCell(null)}
-            className="text-[12px] bg-background border border-indigo-400/60 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+            className="text-[12px] bg-background border border-[#0075de]/30 rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#097fe8]/30"
           />
         ) : task.dueDate ? (
           <button
@@ -704,7 +704,7 @@ function TaskRow({ task, rowNum, editable, currentUser, onToggleComplete, onUpda
             onChange={(e) => onUpdateMinutes(e.target.value ? Number(e.target.value) : null)}
             onBlur={() => setActiveCell(null)}
             onKeyDown={(e) => { if (e.key === 'Enter' || e.key === 'Escape') setActiveCell(null) }}
-            className="w-14 text-[12px] text-right bg-background border border-indigo-400/60 rounded-lg px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+            className="w-14 text-[12px] text-right bg-background border border-[#0075de]/30 rounded-lg px-2 py-0.5 focus:outline-none focus:ring-2 focus:ring-[#097fe8]/30"
           />
         ) : (
           <button

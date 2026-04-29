@@ -48,7 +48,7 @@ export default async function SharePage({ params }: Props) {
   }
 
   const SPEAKER_COLORS: Record<string, string> = {}
-  const PALETTE = ['text-indigo-600', 'text-violet-600', 'text-emerald-600', 'text-sky-600', 'text-pink-600', 'text-amber-600']
+  const PALETTE = ['text-[#0075de]', 'text-violet-600', 'text-emerald-600', 'text-sky-600', 'text-pink-600', 'text-amber-600']
   let colorIdx = 0
   function getSpeakerColor(speaker: string) {
     if (!SPEAKER_COLORS[speaker]) { SPEAKER_COLORS[speaker] = PALETTE[colorIdx++ % PALETTE.length] }
@@ -85,8 +85,8 @@ export default async function SharePage({ params }: Props) {
       <div className="space-y-6">
         {/* AI Summary */}
         {note?.summary && (
-          <section className="rounded-2xl border border-indigo-500/15 bg-indigo-500/5 p-6">
-            <p className="text-[11px] font-bold text-indigo-500 uppercase tracking-wider mb-3">Summary</p>
+          <section className="rounded-2xl border border-[#0075de]/15 bg-[#0075de]/5 p-6">
+            <p className="text-[11px] font-bold text-[#0075de] uppercase tracking-wider mb-3">Summary</p>
             <p className="text-[15px] text-foreground leading-relaxed">{note.summary}</p>
           </section>
         )}
@@ -152,7 +152,7 @@ export default async function SharePage({ params }: Props) {
       {/* Footer */}
       <div className="mt-12 pt-6 border-t border-border flex items-center justify-between">
         <p className="text-[12px] text-muted-foreground">Shared via Notus · AI Meeting Notes</p>
-        <Link href="/" className="text-[12px] text-indigo-500 hover:text-indigo-400 font-medium" style={{ transition: 'color 150ms ease-out' }}>
+        <Link href="/" className="text-[12px] text-[#0075de] hover:text-[#62aef0] font-medium" style={{ transition: 'color 150ms ease-out' }}>
           Try Notus →
         </Link>
       </div>

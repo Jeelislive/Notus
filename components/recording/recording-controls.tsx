@@ -99,9 +99,9 @@ export function RecordingControls({ status, error, elapsedSeconds, audioLevel, i
         </div>
         <div className="flex items-center gap-2.5 ml-4 shrink-0">
           {tabAudioAvailable ? (
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20">
-              <Monitor className="size-3 text-indigo-500" />
-              <span className="text-[11px] font-medium text-indigo-600 dark:text-indigo-400">Tab audio</span>
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#0075de]/10 border border-[#0075de]/20">
+              <Monitor className="size-3 text-[#0075de]" />
+              <span className="text-[11px] font-medium text-[#0075de] dark:text-[#62aef0]">Tab audio</span>
             </div>
           ) : (
             <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20">

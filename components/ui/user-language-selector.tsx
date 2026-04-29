@@ -83,7 +83,7 @@ export function UserLanguageSelector({
                 <div className="text-xs text-muted-foreground">{language.name}</div>
               </div>
               {selectedLanguage === language.code && (
-                <Check className="size-4 text-indigo-500" />
+                <Check className="size-4 text-[#0075de]" />
               )}
             </button>
           ))}

@@ -176,7 +176,7 @@ export function ActionItemsPopup({
                   <div
                     className={`size-4 rounded border-2 flex items-center justify-center ${
                       selected.has(i)
-                        ? 'bg-indigo-600 border-indigo-600'
+                        ? 'bg-[#0075de] border-[#0075de]'
                         : 'border-zinc-400 dark:border-zinc-600'
                     }`}
                     style={{ transition: 'background-color 120ms ease-out, border-color 120ms ease-out' }}
@@ -188,7 +188,7 @@ export function ActionItemsPopup({
                   <p className="text-[14px] text-foreground leading-snug">{item.text}</p>
                   <div className="flex flex-wrap items-center gap-1.5">
                     {item.assignee && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#f2f9ff] text-[#097fe8] dark:bg-[#0075de]/15 dark:text-[#62aef0]">
                         {item.assignee}
                       </span>
                     )}
@@ -292,7 +292,7 @@ export function ActionItemsPopup({
                               <select
                                 value={jiraIssueType[i] ?? 'Task'}
                                 onChange={(e) => setJiraIssueType((p) => ({ ...p, [i]: e.target.value }))}
-                                className="flex h-8 w-full rounded-lg border border-zinc-700 bg-muted/50 px-2.5 text-[12px] text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="flex h-8 w-full rounded-lg border border-zinc-700 bg-muted/50 px-2.5 text-[12px] text-foreground focus:outline-none focus:ring-2 focus:ring-[#097fe8]"
                               >
                                 <option value="Task">Task</option>
                                 <option value="Bug">Bug</option>

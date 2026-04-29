@@ -135,7 +135,7 @@ export function SidebarNav({ user }: SidebarNavProps) {
       )}
 
       <aside
-        className="fixed left-0 top-0 h-full bg-background flex flex-col z-50 overflow-hidden"
+        className="fixed left-0 top-0 h-full bg-background border-r border-border flex flex-col z-50 overflow-hidden"
         style={sidebarStyle}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -150,7 +150,7 @@ export function SidebarNav({ user }: SidebarNavProps) {
           }}
         >
           <div className="flex items-center" style={{ gap: isCollapsed ? 0 : '12px' }}>
-            <div className="size-8 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: '#6366f1' }}>
+            <div className="size-8 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: '#0075de' }}>
               <svg width="16" height="14" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect x="0"    y="5"   width="2.5" height="4"  rx="1.25" fill="white" fillOpacity="0.5"/>
                 <rect x="3.5"  y="2"   width="2.5" height="10" rx="1.25" fill="white"/>
@@ -218,8 +218,8 @@ export function SidebarNav({ user }: SidebarNavProps) {
                   'flex items-center rounded-xl text-[15px] active:scale-[0.97] overflow-hidden',
                   isCollapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5',
                   active
-                    ? 'bg-primary/10 text-indigo-500 dark:text-indigo-400 font-semibold'
-                    : 'text-muted-foreground font-medium hover:text-foreground hover:bg-muted/50'
+                    ? 'bg-primary/10 text-primary font-semibold'
+                    : 'text-muted-foreground font-medium hover:text-foreground hover:bg-muted/60'
                 )}
                 style={{
                   transition: `transform 100ms ${EASE_OUT}, background-color 150ms ease, color 150ms ease`,
@@ -280,10 +280,10 @@ export function SidebarNav({ user }: SidebarNavProps) {
             style={{ transition: 'background-color 120ms ease' }}
           >
             <div
-              className="size-8 rounded-full bg-primary/15 border border-indigo-500/20 flex items-center justify-center shrink-0"
+              className="size-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0"
               title={isCollapsed ? (user.name || user.email) : undefined}
             >
-              <span className="text-[13px] font-bold text-indigo-500 dark:text-indigo-400">
+              <span className="text-[13px] font-bold text-primary">
                 {(user.name || user.email).charAt(0).toUpperCase()}
               </span>
             </div>

@@ -124,7 +124,7 @@ export function LoginForm() {
             <Label htmlFor="password">Password</Label>
             <Link
               href="/forgot-password"
-              className="text-xs text-indigo-600 hover:text-indigo-500"
+              className="text-xs text-[#0075de] hover:text-[#0075de]"
             style={{ transition: 'color 150ms ease-out' }}
             >
               Forgot password?
@@ -156,7 +156,7 @@ export function LoginForm() {
 
       <p className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{' '}
-        <Link href="/signup" className="text-indigo-600 hover:text-indigo-500" style={{ transition: 'color 150ms ease-out' }}>
+        <Link href="/signup" className="text-[#0075de] hover:text-[#0075de]" style={{ transition: 'color 150ms ease-out' }}>
           Sign up
         </Link>
       </p>

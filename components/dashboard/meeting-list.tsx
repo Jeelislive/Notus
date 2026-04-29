@@ -30,7 +30,7 @@ const MEETING_TYPE_LABELS: Record<NonNullable<Meeting['meetingType']>, string> =
 function TypeBadge({ templateName, meetingType }: { templateName: Meeting['templateName']; meetingType: Meeting['meetingType'] }) {
   const label = templateName || MEETING_TYPE_LABELS[meetingType ?? 'other']
   return (
-    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[12px] font-medium border border-border bg-muted/60 text-muted-foreground whitespace-nowrap">
+    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[12px] font-semibold border border-border bg-muted text-muted-foreground whitespace-nowrap tracking-[0.01em]">
       {label}
     </span>
   )
@@ -596,7 +596,7 @@ export function MeetingTable({ meetings }: MeetingListProps) {
               onClick={() => setActiveTab(tab.key)}
               className={`px-4 py-3.5 text-[13px] font-medium border-b-2 -mb-px ${
                 activeTab === tab.key
-                  ? 'text-foreground border-foreground'
+                  ? 'text-[#0075de] border-[#0075de] font-semibold'
                   : 'text-muted-foreground border-transparent hover:text-foreground'
               }`}
               style={{ transition: 'color 120ms ease-out, border-color 120ms ease-out' }}
@@ -617,7 +617,7 @@ export function MeetingTable({ meetings }: MeetingListProps) {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Filter meetings..."
-              className="pl-8 pr-3 py-1.5 rounded-md border border-border bg-muted/40 text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50 w-full"
+              className="pl-8 pr-3 py-1.5 rounded border border-border bg-muted/40 text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-[#097fe8]/50 focus:border-[#0075de]/50 w-full"
               style={{ transition: 'border-color 150ms ease-out, box-shadow 150ms ease-out' }}
             />
           </div>

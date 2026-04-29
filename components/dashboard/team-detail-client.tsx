@@ -136,8 +136,8 @@ export function TeamDetailClient({ team, members, currentUserId }: TeamDetailCli
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-8">
         <div className="flex items-center gap-4">
-          <div className="size-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/15 flex items-center justify-center shrink-0">
-            <span className="text-[22px] font-bold text-indigo-500 dark:text-indigo-400 leading-none">
+          <div className="size-14 rounded-2xl bg-[#0075de]/10 border border-[#0075de]/15 flex items-center justify-center shrink-0">
+            <span className="text-[22px] font-bold text-[#0075de] dark:text-[#62aef0] leading-none">
               {team.name.charAt(0).toUpperCase()}
             </span>
           </div>
@@ -224,7 +224,7 @@ export function TeamDetailClient({ team, members, currentUserId }: TeamDetailCli
                 <div className="flex items-center gap-2 shrink-0">
                   <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md ${
                     member.role === 'admin'
-                      ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
+                      ? 'bg-[#0075de]/10 text-[#0075de] dark:text-[#62aef0]'
                       : 'bg-muted text-muted-foreground'
                   }`}>
                     {member.role === 'admin' ? <Shield className="size-2.5" /> : <User className="size-2.5" />}

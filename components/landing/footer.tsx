@@ -37,7 +37,7 @@ export function Footer() {
           {/* Logo column */}
           <div className="col-span-2 sm:col-span-1 space-y-4">
             <Link href="/" className="flex items-center gap-2 group w-fit">
-              <div className="size-6 rounded-lg bg-indigo-600 flex items-center justify-center">
+              <div className="size-6 rounded-lg bg-[#0075de] flex items-center justify-center">
                 <svg className="size-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                 </svg>
@@ -65,7 +65,7 @@ export function Footer() {
                     >
                       {label}
                       {badge && (
-                        <span className="text-[9px] font-semibold text-indigo-500 bg-indigo-500/10 border border-indigo-500/20 rounded-full px-2 py-0.5">
+                        <span className="text-[9px] font-semibold text-[#0075de] bg-[#0075de]/10 border border-[#0075de]/20 rounded-full px-2 py-0.5">
                           {badge}
                         </span>
                       )}
@@ -85,7 +85,7 @@ export function Footer() {
           {/* Left: Logo + tagline */}
           <div className="flex items-center gap-3">
             <Link href="/" className="flex items-center gap-2">
-              <div className="size-5 rounded-md bg-indigo-600 flex items-center justify-center">
+              <div className="size-5 rounded-md bg-[#0075de] flex items-center justify-center">
                 <svg className="size-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                 </svg>
@@ -104,7 +104,7 @@ export function Footer() {
               type="email"
               placeholder="Email address"
               className="h-8 w-44 rounded-lg border border-border bg-background px-3 text-xs text-foreground placeholder:text-muted-foreground/50
-                focus:outline-none focus:ring-1 focus:ring-indigo-500/50 focus:border-indigo-500/50
+                focus:outline-none focus:ring-1 focus:ring-[#097fe8]/50 focus:border-[#0075de]/50
                 transition-colors duration-150"
             />
             <button

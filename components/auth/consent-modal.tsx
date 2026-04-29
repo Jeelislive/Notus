@@ -40,15 +40,15 @@ export function ConsentModal({ open, onOpenChange }: ConsentModalProps) {
               <h3 className="font-semibold text-zinc-200 mb-2">Legal Requirements</h3>
               <ul className="space-y-2 list-none">
                 <li className="flex gap-2">
-                  <span className="text-indigo-500 dark:text-indigo-400 shrink-0">•</span>
+                  <span className="text-[#0075de] dark:text-[#62aef0] shrink-0">•</span>
                   <span><strong className="text-foreground">GDPR (EU):</strong> Requires explicit consent for recording individuals. You must inform participants and obtain consent before recording.</span>
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-indigo-500 dark:text-indigo-400 shrink-0">•</span>
+                  <span className="text-[#0075de] dark:text-[#62aef0] shrink-0">•</span>
                   <span><strong className="text-foreground">CCPA (California):</strong> Requires disclosure of data collection practices. Inform participants how their voice data will be used.</span>
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-indigo-500 dark:text-indigo-400 shrink-0">•</span>
+                  <span className="text-[#0075de] dark:text-[#62aef0] shrink-0">•</span>
                   <span><strong className="text-foreground">Wiretapping Laws:</strong> Many US states and countries require all-party consent for recording conversations. Know your local laws.</span>
                 </li>
               </ul>
@@ -57,9 +57,9 @@ export function ConsentModal({ open, onOpenChange }: ConsentModalProps) {
             <section>
               <h3 className="font-semibold text-zinc-200 mb-2">How to Inform Participants</h3>
               <ul className="space-y-1 list-none">
-                <li className="flex gap-2"><span className="text-indigo-500 dark:text-indigo-400">•</span> Verbally announce at the start of the meeting: &ldquo;This meeting is being recorded&rdquo;</li>
-                <li className="flex gap-2"><span className="text-indigo-500 dark:text-indigo-400">•</span> Include a recording notice in your meeting invite</li>
-                <li className="flex gap-2"><span className="text-indigo-500 dark:text-indigo-400">•</span> Use meeting platforms that display a recording indicator</li>
+                <li className="flex gap-2"><span className="text-[#0075de] dark:text-[#62aef0]">•</span> Verbally announce at the start of the meeting: &ldquo;This meeting is being recorded&rdquo;</li>
+                <li className="flex gap-2"><span className="text-[#0075de] dark:text-[#62aef0]">•</span> Include a recording notice in your meeting invite</li>
+                <li className="flex gap-2"><span className="text-[#0075de] dark:text-[#62aef0]">•</span> Use meeting platforms that display a recording indicator</li>
               </ul>
             </section>
 

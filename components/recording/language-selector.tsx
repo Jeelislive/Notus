@@ -76,7 +76,7 @@ export function LanguageSelector({
                 <div className="text-xs text-muted-foreground">{language.name}</div>
               </div>
               {selectedLanguage === language.code && (
-                <div className="size-1.5 rounded-full bg-indigo-500" />
+                <div className="size-1.5 rounded-full bg-[#0075de]" />
               )}
             </button>
           ))}
