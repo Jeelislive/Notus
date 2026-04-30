@@ -13,7 +13,6 @@ export interface LiveSegment {
   isFinal: boolean
 }
 
-// Helper to get user's transcription language preference
 async function getUserTranscriptionLanguage(): Promise<string> {
   try {
     const response = await fetch('/api/user/language-preferences')
@@ -37,10 +36,12 @@ interface DGWord {
   confidence: number
   speaker: number
   speaker_confidence?: number
+  _channel?: number // 0 = local mic ("You"), 1 = remote/system audio
 }
 
 interface DGResult {
   type: 'Results'
+  channel_index?: [number, number] // [thisChannel, totalChannels]
   is_final: boolean
   speech_final: boolean
   start: number
@@ -110,7 +111,8 @@ export function useRecording({ meetingId }: { meetingId: string }) {
   const [audioLevel, setAudioLevel] = useState(0)
   const [reDiarizing, setReDiarizing] = useState(false)
 
-  const streamRef = useRef<MediaStream | null>(null)
+  const micStreamRef = useRef<MediaStream | null>(null)     // local mic — always captured
+  const displayStreamRef = useRef<MediaStream | null>(null) // system/tab audio — remote participants
   const wsRef = useRef<WebSocket | null>(null)
   const processorRef = useRef<ScriptProcessorNode | null>(null)
   const audioCtxRef = useRef<AudioContext | null>(null)
@@ -120,9 +122,8 @@ export function useRecording({ meetingId }: { meetingId: string }) {
   const startTimeRef = useRef(0)
   const segCountRef = useRef(0)
   const isActiveRef = useRef(false)
-  // Track the interim segment id so we can replace it cleanly
-  const interimIdRef = useRef<string | null>(null)
-  // Batch re-diarization
+  // Per-channel interim segment IDs: channel 0 = mic ("You"), channel 1 = remote
+  const interimIdRef = useRef<Record<number, string | null>>({ 0: null, 1: null })
   const audioChunksRef = useRef<Int16Array[]>([])
   const tokenRef = useRef<string>('')
   const nChannelsRef = useRef(1)
@@ -141,44 +142,45 @@ export function useRecording({ meetingId }: { meetingId: string }) {
   }
 
   // ── Process a Deepgram result message ──────────────────────────────────────
-  // Deepgram streams two kinds:
-  //   is_final=false → interim (unstable, good for real-time display)
-  //   is_final=true  → final (stable, split by speaker, save to DB)
 
   const processResult = useCallback((result: DGResult) => {
     const alt = result.channel.alternatives[0]
-    if (!alt) return
+    if (!alt) { console.warn('[processResult] no alternative in result'); return }
     const transcript = alt.transcript.trim()
-    if (!transcript || isHallucination(transcript)) return
+
+    if (!transcript) { console.log('[processResult] empty transcript, skipping'); return }
+    if (isHallucination(transcript)) { console.log(`[processResult] hallucination filtered: "${transcript}"`); return }
 
     const chunkStartMs = Math.round(result.start * 1000)
+    const channelIdx = result.channel_index?.[0] ?? 0
+    const isLocalMic = channelIdx === 0 && nChannelsRef.current === 2
+    const totalChannels = nChannelsRef.current
+
+    console.log(`[processResult] ch=${channelIdx}/${totalChannels} is_final=${result.is_final} isLocalMic=${isLocalMic} words=${alt.words?.length ?? 0} text="${transcript.slice(0, 60)}"`)
 
     if (!result.is_final) {
-      // Show interim - one segment with the current speaker
-      const speaker = alt.words?.[0]?.speaker ?? 0
-      const interimId = interimIdRef.current ?? `interim-${chunkStartMs}`
-      interimIdRef.current = interimId
+      const rawSpeaker = alt.words?.[0]?.speaker ?? 0
+      const speakerLabel = isLocalMic ? 'You' : `Speaker ${rawSpeaker + 1}`
+      const interimId = interimIdRef.current[channelIdx] ?? `interim-ch${channelIdx}-${chunkStartMs}`
+      interimIdRef.current[channelIdx] = interimId
       setLiveSegments((prev) => [
         ...prev.filter((s) => s.id !== interimId),
-        {
-          id: interimId,
-          speaker: `Speaker ${speaker + 1}`,
-          content: transcript,
-          startMs: chunkStartMs,
-          isFinal: false,
-        },
+        { id: interimId, speaker: speakerLabel, content: transcript, startMs: chunkStartMs, isFinal: false },
       ])
       return
     }
 
-    // Final - clear interim, split into per-speaker segments
-    const currentInterimId = interimIdRef.current
-    interimIdRef.current = null
+    // Final — clear interim for this channel, split into per-speaker segments
+    const currentInterimId = interimIdRef.current[channelIdx]
+    interimIdRef.current[channelIdx] = null
     setLiveSegments((prev) => prev.filter((s) => s.id !== currentInterimId))
 
-    if (!alt.words?.length) return
+    if (!alt.words?.length) { console.warn('[processResult] final result has no words'); return }
 
-    // Group consecutive words from the same speaker
+    // Log unique speakers found in this final result
+    const uniqueSpkrs = [...new Set(alt.words.map(w => w.speaker))]
+    console.log(`[processResult] final — unique speakers in chunk: [${uniqueSpkrs.join(', ')}]`)
+
     const segments: LiveSegment[] = []
     let buffer = ''
     let bufferStart = alt.words[0].start
@@ -190,7 +192,7 @@ export function useRecording({ meetingId }: { meetingId: string }) {
         if (buffer.trim()) {
           segments.push({
             id: `seg-${++segCountRef.current}`,
-            speaker: `Speaker ${currentSpeaker + 1}`,
+            speaker: isLocalMic ? 'You' : `Speaker ${currentSpeaker + 1}`,
             content: buffer.trim(),
             startMs: Math.round(bufferStart * 1000),
             isFinal: true,
@@ -206,18 +208,17 @@ export function useRecording({ meetingId }: { meetingId: string }) {
     if (buffer.trim()) {
       segments.push({
         id: `seg-${++segCountRef.current}`,
-        speaker: `Speaker ${currentSpeaker + 1}`,
+        speaker: isLocalMic ? 'You' : `Speaker ${currentSpeaker + 1}`,
         content: buffer.trim(),
         startMs: Math.round(bufferStart * 1000),
         isFinal: true,
       })
     }
 
-    if (!segments.length) return
-
+    if (!segments.length) { console.warn('[processResult] final — produced 0 segments after grouping'); return }
+    console.log(`[processResult] final — produced ${segments.length} segment(s):`, segments.map(s => `${s.speaker}: "${s.content.slice(0, 40)}"`))
     setLiveSegments((prev) => [...prev, ...segments])
 
-    // Persist to DB (fire-and-forget)
     for (const seg of segments) {
       fetch('/api/transcript', {
         method: 'POST',
@@ -243,64 +244,73 @@ export function useRecording({ meetingId }: { meetingId: string }) {
     setLiveSegments([])
     setAudioLevel(0)
     segCountRef.current = 0
-    interimIdRef.current = null
+    interimIdRef.current = { 0: null, 1: null }
     audioChunksRef.current = []
 
     try {
-      // Get user's transcription language preference
       const userLanguage = await getUserTranscriptionLanguage()
-      console.log(`[Recording] User language preference: ${userLanguage}`)
 
-      // 1. Get a short-lived Deepgram token from our server
+      console.log(`[Recording] language pref: ${userLanguage}`)
+
       const tokenRes = await fetch('/api/deepgram-token')
       if (!tokenRes.ok) throw new Error('Could not create Deepgram session')
       const { token: deepgramToken } = await tokenRes.json()
-      const token = deepgramToken
-      tokenRef.current = token
+      tokenRef.current = deepgramToken
+      console.log('[Recording] Deepgram token acquired')
 
-      // 2. Capture audio
-      let stream: MediaStream
-      const supportsTabAudio = typeof navigator?.mediaDevices?.getDisplayMedia === 'function'
-      if (supportsTabAudio) {
+      // Always capture mic — this is the local speaker ("You"), always perfectly isolated
+      const micStream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: false, autoGainControl: true, channelCount: 1 },
+        video: false,
+      })
+      micStreamRef.current = micStream
+
+      // Try to capture system/tab audio — remote participants (mixed, but separate from local mic)
+      let displayStream: MediaStream | null = null
+      if (typeof navigator?.mediaDevices?.getDisplayMedia === 'function') {
         try {
-          stream = await navigator.mediaDevices.getDisplayMedia({ audio: true, video: false })
-        } catch {
-          stream = await navigator.mediaDevices.getUserMedia({
-            audio: { echoCancellation: true, noiseSuppression: false, autoGainControl: true, channelCount: 1 },
-            video: false,
-          })
+          displayStream = await navigator.mediaDevices.getDisplayMedia({ audio: true, video: false })
+          displayStreamRef.current = displayStream
+        } catch (e) {
+          console.warn('[Audio] System audio capture declined — mic-only mode. Reason:', e)
         }
-      } else {
-        stream = await navigator.mediaDevices.getUserMedia({
-          audio: { echoCancellation: true, noiseSuppression: false, autoGainControl: true, channelCount: 1 },
-          video: false,
-        })
       }
-      streamRef.current = stream
 
-      // 3. Detect actual channel count - screen share audio is often stereo
-      const nChannels = Math.min(stream.getAudioTracks()[0]?.getSettings()?.channelCount ?? 1, 2)
+      const nChannels = displayStream ? 2 : 1
       nChannelsRef.current = nChannels
-      console.log('[Audio] channel count:', nChannels)
+      console.log(`[Audio] mode: ${nChannels === 2 ? 'DUAL — ch0=mic(You) + ch1=system(remote)' : 'MIC ONLY — no system audio, diarization will be single-channel'}`)
+      if (nChannels === 1) console.warn('[Audio] Single channel mode: Deepgram must separate speakers from one mixed stream — accuracy limited')
 
-      // Audio context at 16kHz - matches linear16 format sent to Deepgram
       const audioCtx = new AudioContext({ sampleRate: 16000 })
       audioCtxRef.current = audioCtx
-      const source = audioCtx.createMediaStreamSource(stream)
+
+      const micSource = audioCtx.createMediaStreamSource(micStream)
+
+      // Analyser always on mic for accurate local level metering
       const analyser = audioCtx.createAnalyser()
       analyser.fftSize = 256
-      source.connect(analyser)
+      micSource.connect(analyser)
       analyserRef.current = analyser
 
-      // 4. Open Deepgram WebSocket with the user's language
-      // nova-3 natively supports these codes; everything else uses 'multi' for auto-detection
+      let processorInput: AudioNode
+
+      if (displayStream) {
+        // Merge mic (ch0) and display audio (ch1) into a 2-channel stream
+        const displaySource = audioCtx.createMediaStreamSource(displayStream)
+        const merger = audioCtx.createChannelMerger(2)
+        micSource.connect(merger, 0, 0)     // mic mono → channel 0
+        displaySource.connect(merger, 0, 1) // display ch0 → channel 1 (downmix to mono)
+        processorInput = merger
+      } else {
+        processorInput = micSource
+      }
+
       const DEEPGRAM_NATIVE = new Set(['en', 'hi', 'es', 'fr', 'de', 'it', 'pt', 'ja', 'ko', 'zh', 'ru', 'nl', 'sv', 'pl', 'tr', 'id', 'uk', 'ar'])
       const dgLanguage = userLanguage === 'auto'
         ? 'multi'
         : DEEPGRAM_NATIVE.has(userLanguage) ? userLanguage : 'multi'
-      console.log(`[Recording] Deepgram language param: ${dgLanguage} (user pref: ${userLanguage})`)
-      const ws = new WebSocket(
-        'wss://api.deepgram.com/v1/listen' +
+
+      const dgUrl = 'wss://api.deepgram.com/v1/listen' +
         '?model=nova-3' +
         '&diarize=true' +
         `&language=${dgLanguage}` +
@@ -311,22 +321,25 @@ export function useRecording({ meetingId }: { meetingId: string }) {
         '&vad_events=true' +
         '&encoding=linear16' +
         '&sample_rate=16000' +
-        `&channels=${nChannels}`,
-        ['token', token]
-      )
+        `&channels=${nChannels}` +
+        (nChannels === 2 ? '&multichannel=true' : '')
+
+      console.log('[Deepgram] WS URL params:', dgUrl.split('?')[1])
+
+      const ws = new WebSocket(dgUrl, ['token', deepgramToken])
       wsRef.current = ws
 
-      ws.onopen = () => console.log('[Deepgram] WebSocket open')
+      ws.onopen = () => console.log('[Deepgram] WebSocket open — streaming started')
 
       ws.onmessage = (msg) => {
         try {
           const data = JSON.parse(msg.data as string)
-          // Log every message type so we can see what's coming back
           if (data.type === 'Results') {
             const alt = data.channel?.alternatives?.[0]
             const words = alt?.words ?? []
+            const chIdx = data.channel_index?.[0] ?? 0
             const speakerMap = words.map((w: DGWord) => `${w.speaker ?? '?'}:${w.word}`).join(' ')
-            console.log(`[DG] is_final=${data.is_final} speech_final=${data.speech_final} | ${speakerMap || alt?.transcript}`)
+            console.log(`[DG] ch=${chIdx} is_final=${data.is_final} | ${speakerMap || alt?.transcript}`)
             processResult(data as DGResult)
           } else {
             console.log('[DG] event:', data.type, data)
@@ -339,16 +352,14 @@ export function useRecording({ meetingId }: { meetingId: string }) {
       ws.onerror = (e) => console.error('[Deepgram] WebSocket error', e)
       ws.onclose = (e) => console.log('[Deepgram] WebSocket closed', e.code, e.reason)
 
-      // 5. Stream raw linear16 PCM to Deepgram - 4096 frames at 16kHz ≈ 256ms per chunk
       // eslint-disable-next-line deprecation/deprecation
       const processor = audioCtx.createScriptProcessor(4096, nChannels, nChannels)
-      source.connect(processor)
-      processor.connect(audioCtx.destination) // required - processor won't fire without output
+      processorInput.connect(processor)
+      processor.connect(audioCtx.destination)
 
       processor.onaudioprocess = (e) => {
         if (!isActiveRef.current || ws.readyState !== WebSocket.OPEN) return
         const samplesPerChannel = e.inputBuffer.length
-        // Build interleaved int16 PCM for all channels (Deepgram expects LRLRLR... for stereo)
         const i16 = new Int16Array(samplesPerChannel * nChannels)
         for (let ch = 0; ch < nChannels; ch++) {
           const f32 = e.inputBuffer.getChannelData(ch)
@@ -358,7 +369,7 @@ export function useRecording({ meetingId }: { meetingId: string }) {
           }
         }
         ws.send(i16.buffer)
-        audioChunksRef.current.push(i16) // accumulate for batch re-diarization
+        audioChunksRef.current.push(i16)
       }
       processorRef.current = processor
 
@@ -368,20 +379,19 @@ export function useRecording({ meetingId }: { meetingId: string }) {
       isActiveRef.current = true
       setStatus('recording')
 
-      // Elapsed timer
       timerRef.current = setInterval(() => {
         setElapsedSeconds(Math.floor((Date.now() - startTimeRef.current) / 1000))
       }, 1000)
 
-      // Audio level meter
       levelTimerRef.current = setInterval(() => {
         setAudioLevel(getRmsLevel())
       }, 80)
 
-      // Handle track end (e.g. user stops screen share)
-      stream.getTracks()[0]?.addEventListener('ended', () => {
-        if (isActiveRef.current) stop()
-      })
+      // If either stream ends (e.g. user stops screen share), stop recording
+      const handleTrackEnd = () => { if (isActiveRef.current) stop() }
+      micStream.getTracks()[0]?.addEventListener('ended', handleTrackEnd)
+      displayStream?.getTracks()[0]?.addEventListener('ended', handleTrackEnd)
+
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       setError(
@@ -390,7 +400,8 @@ export function useRecording({ meetingId }: { meetingId: string }) {
           : msg
       )
       setStatus('idle')
-      streamRef.current?.getTracks().forEach((t) => t.stop())
+      micStreamRef.current?.getTracks().forEach((t) => t.stop())
+      displayStreamRef.current?.getTracks().forEach((t) => t.stop())
     }
   }, [meetingId, processResult]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -403,11 +414,12 @@ export function useRecording({ meetingId }: { meetingId: string }) {
     setAudioLevel(0)
 
     const durationSeconds = Math.floor((Date.now() - startTimeRef.current) / 1000)
+    const savedChannels = nChannelsRef.current
+    const savedToken = tokenRef.current
 
     if (timerRef.current) clearInterval(timerRef.current)
     if (levelTimerRef.current) { clearInterval(levelTimerRef.current); levelTimerRef.current = null }
 
-    // Disconnect PCM processor
     const processor = processorRef.current
     if (processor) {
       processor.disconnect()
@@ -415,11 +427,9 @@ export function useRecording({ meetingId }: { meetingId: string }) {
     }
     processorRef.current = null
 
-    // Give Deepgram a moment to process the last audio, then close
     setTimeout(() => {
       const ws = wsRef.current
       if (ws && ws.readyState === WebSocket.OPEN) {
-        // Send CloseStream message so Deepgram finalises the last utterance
         ws.send(JSON.stringify({ type: 'CloseStream' }))
         ws.close()
       }
@@ -430,66 +440,97 @@ export function useRecording({ meetingId }: { meetingId: string }) {
     audioCtxRef.current = null
     analyserRef.current = null
 
-    streamRef.current?.getTracks().forEach((t) => t.stop())
-    streamRef.current = null
+    micStreamRef.current?.getTracks().forEach((t) => t.stop())
+    displayStreamRef.current?.getTracks().forEach((t) => t.stop())
+    micStreamRef.current = null
+    displayStreamRef.current = null
+
+    const chunks = audioChunksRef.current
+    audioChunksRef.current = []
 
     await stopRecording(meetingId, durationSeconds)
     setStatus('idle')
     setElapsedSeconds(0)
 
-    // Trigger AI post-processing
     fetch('/api/ai/enhance', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ meetingId }),
     }).catch((e) => console.error('[AI enhance]', e))
 
-    // Batch re-diarization - runs in background after recording stops
-    // Produces accurate speaker labels (especially for 4+ speakers) then updates DB
-    const chunks = audioChunksRef.current
-    const savedToken = tokenRef.current
-    const savedChannels = nChannelsRef.current
-    audioChunksRef.current = [] // free ref immediately
-
-    if (chunks.length > 0 && savedToken) {
+    // Batch re-diarization with multichannel support
+    if (chunks.length === 0) {
+      console.warn('[BatchDiarize] no audio chunks recorded — skipping')
+    } else if (!savedToken) {
+      console.error('[BatchDiarize] no Deepgram token — cannot re-diarize')
+    } else {
       setReDiarizing(true);
       (async () => {
         try {
-          console.log(`[BatchDiarize] encoding ${chunks.length} chunks (${savedChannels}ch)…`)
+          console.log(`[BatchDiarize] START — ${chunks.length} chunks, ${savedChannels}ch, meetingId=${meetingId}`)
           const wav = encodeWAV(chunks, 16000, savedChannels)
-          console.log(`[BatchDiarize] WAV size: ${(wav.size / 1024 / 1024).toFixed(1)} MB`)
+          console.log(`[BatchDiarize] WAV encoded — size: ${(wav.size / 1024 / 1024).toFixed(2)} MB, duration: ~${(chunks.length * 4096 / 16000).toFixed(1)}s`)
 
-          const dgRes = await fetch(
-            'https://api.deepgram.com/v1/listen' +
+          const batchUrl = 'https://api.deepgram.com/v1/listen' +
             '?model=nova-3' +
             '&diarize=true' +
-            '&language=auto' + // Changed from 'en' to 'auto' for multi-language support
             '&punctuate=true' +
-            '&smart_format=true',
-            {
-              method: 'POST',
-              headers: { Authorization: `Token ${savedToken}`, 'Content-Type': 'audio/wav' },
-              body: wav,
-            }
-          )
+            '&smart_format=true' +
+            `&channels=${savedChannels}` +
+            (savedChannels === 2 ? '&multichannel=true' : '')
 
-          if (!dgRes.ok) throw new Error(`Deepgram batch ${dgRes.status}`)
+          console.log(`[BatchDiarize] sending to Deepgram — params: ${batchUrl.split('?')[1]}`)
+
+          const dgRes = await fetch(batchUrl, {
+            method: 'POST',
+            headers: { Authorization: `Token ${savedToken}`, 'Content-Type': 'audio/wav' },
+            body: wav,
+          })
+
+          if (!dgRes.ok) {
+            const errText = await dgRes.text()
+            throw new Error(`Deepgram batch ${dgRes.status}: ${errText}`)
+          }
 
           const dgData = await dgRes.json()
-          const words = dgData.results?.channels?.[0]?.alternatives?.[0]?.words ?? []
-          console.log(`[BatchDiarize] got ${words.length} words from batch API`)
+          const channelsReturned = dgData.results?.channels?.length ?? 0
+          console.log(`[BatchDiarize] Deepgram responded — channels returned: ${channelsReturned}`)
+
+          let words: DGWord[] = []
+
+          if (savedChannels === 2 && channelsReturned >= 2) {
+            const ch0 = (dgData.results.channels[0]?.alternatives?.[0]?.words ?? []).map((w: DGWord) => ({ ...w, _channel: 0 }))
+            const ch1 = (dgData.results.channels[1]?.alternatives?.[0]?.words ?? []).map((w: DGWord) => ({ ...w, _channel: 1 }))
+            const ch0Speakers = [...new Set(ch0.map((w: DGWord) => w.speaker))]
+            const ch1Speakers = [...new Set(ch1.map((w: DGWord) => w.speaker))]
+            console.log(`[BatchDiarize] ch0 (You/mic): ${ch0.length} words, speakers: [${ch0Speakers.join(', ')}]`)
+            console.log(`[BatchDiarize] ch1 (remote): ${ch1.length} words, speakers: [${ch1Speakers.join(', ')}]`)
+            words = ([...ch0, ...ch1] as DGWord[]).sort((a, b) => a.start - b.start)
+          } else {
+            words = dgData.results?.channels?.[0]?.alternatives?.[0]?.words ?? []
+            const allSpeakers = [...new Set(words.map((w: DGWord) => w.speaker))]
+            console.log(`[BatchDiarize] single-ch: ${words.length} words, unique speakers detected: [${allSpeakers.join(', ')}]`)
+            if (allSpeakers.length === 1) console.warn('[BatchDiarize] ⚠️ only 1 speaker detected — Deepgram may have failed to diarize. Check audio quality or use dual-stream capture.')
+          }
+
+          console.log(`[BatchDiarize] sending ${words.length} words to /api/re-diarize`)
 
           if (words.length > 0) {
-            await fetch('/api/re-diarize', {
+            const reRes = await fetch('/api/re-diarize', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ meetingId, words }),
             })
+            const reData = await reRes.json()
+            console.log(`[BatchDiarize] re-diarize complete — ${reData.updated} segments saved to DB`)
+          } else {
+            console.warn('[BatchDiarize] 0 words from Deepgram — nothing to re-diarize')
           }
         } catch (err) {
-          console.error('[BatchDiarize]', err)
+          console.error('[BatchDiarize] FAILED:', err)
         } finally {
           setReDiarizing(false)
+          console.log('[BatchDiarize] done — reDiarizing set to false, router.refresh() will fire')
         }
       })()
     }

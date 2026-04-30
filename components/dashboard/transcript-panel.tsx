@@ -100,6 +100,28 @@ export function TranscriptPanel({ transcript, liveSegments, status, isRecording,
       : transcript
   const groups = groupBySpeaker(rawSegments)
 
+  // Build effective speaker mapping:
+  // Post-recording: speakerMappings has {"Speaker 1": "Alice"} — use directly
+  // During live recording: speakerMappings has {"attendee_0": "Alice", "attendee_1": "Bob"}
+  //   → assign attendee names to speakers by first-appearance order in the live transcript
+  const attendeeNames = Object.keys(speakerMappings ?? {})
+    .filter((k) => k.startsWith('attendee_'))
+    .sort((a, b) => parseInt(a.split('_')[1]) - parseInt(b.split('_')[1]))
+    .map((k) => (speakerMappings ?? {})[k])
+
+  const effectiveMappings: Record<string, string> = { ...(speakerMappings ?? {}) }
+  if (attendeeNames.length > 0) {
+    const uniqueSpeakers: string[] = []
+    for (const g of groups) {
+      if (!uniqueSpeakers.includes(g.speaker)) uniqueSpeakers.push(g.speaker)
+    }
+    uniqueSpeakers.forEach((spk, idx) => {
+      if (attendeeNames[idx] && !effectiveMappings[spk]) {
+        effectiveMappings[spk] = attendeeNames[idx]
+      }
+    })
+  }
+
   useEffect(() => {
     const el = scrollRef.current
     if (el) el.scrollTop = el.scrollHeight
@@ -144,7 +166,7 @@ export function TranscriptPanel({ transcript, liveSegments, status, isRecording,
         ) : (
           groups.map((group) => {
             const color = getColor(group.speaker)
-            const resolvedName = speakerMappings?.[group.speaker] ?? group.speaker
+            const resolvedName = effectiveMappings[group.speaker] ?? group.speaker
             // Use translated content for each segment if available
             const translatedTexts = translatedSegmentMap && !isRecording
               ? group.texts.map((_, i) => {

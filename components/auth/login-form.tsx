@@ -52,7 +52,8 @@ export function LoginForm() {
     setGoogleLoading(true)
     try {
       await signIn.social({ provider: 'google', callbackURL: '/dashboard' })
-    } catch {
+    } catch (err) {
+      console.error('Google sign-in error:', err)
       setError('Google sign-in failed. Please try again.')
       setGoogleLoading(false)
     }

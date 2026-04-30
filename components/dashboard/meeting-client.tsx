@@ -75,19 +75,21 @@ export function MeetingClient({
       .finally(() => setIsTranslating(false))
   }, [needsTranslation, translation, transcript.length, meeting.id, meeting.status, preferredLanguage])
 
-  // When re-diarization finishes, refresh server data then show speaker naming modal
+  // When re-diarization finishes, refresh then show naming modal only if no attendees were pre-set
   useEffect(() => {
     if (prevReDiarizingRef.current && !reDiarizing) {
-      setTimeout(() => setShowNamingModal(true), 1200)
+      const hasPreSetAttendees = Object.keys(mappings).some((k) => k.startsWith('attendee_'))
+      if (!hasPreSetAttendees) setTimeout(() => setShowNamingModal(true), 1200)
       router.refresh()
     }
     prevReDiarizingRef.current = reDiarizing
-  }, [reDiarizing, router])
+  }, [reDiarizing, router, mappings])
 
-  // On mount: show naming modal if multiple speakers and no mappings yet
+  // On mount: show naming modal if multiple speakers and no mappings at all
   useEffect(() => {
     const uniqueSpeakers = [...new Set(transcript.map((s) => s.speaker).filter(Boolean))]
-    if (uniqueSpeakers.length > 1 && Object.keys(mappings).length === 0) {
+    const hasPreSetAttendees = Object.keys(mappings).some((k) => k.startsWith('attendee_'))
+    if (uniqueSpeakers.length > 1 && Object.keys(mappings).length === 0 && !hasPreSetAttendees) {
       setShowNamingModal(true)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

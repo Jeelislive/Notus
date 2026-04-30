@@ -22,6 +22,18 @@ export async function createMeeting(formData: FormData) {
   const meetingType = ((formData.get('meetingType') as string) || 'other') as
     'one_on_one' | 'team_meeting' | 'standup' | 'interview' | 'client' | 'other'
 
+  // Attendees entered at creation time — stored as attendee_0, attendee_1, ...
+  // Re-diarize will auto-map these to Speaker 1, Speaker 2 by first-appearance order
+  const attendeesRaw = (formData.get('attendees') as string) ?? ''
+  const attendeeNames = attendeesRaw
+    .split(',')
+    .map((n) => n.trim())
+    .filter(Boolean)
+  const speakerMappings: Record<string, string> =
+    attendeeNames.length > 0
+      ? Object.fromEntries(attendeeNames.map((name, i) => [`attendee_${i}`, name]))
+      : {}
+
   const [meeting] = await db
     .insert(meetings)
     .values({
@@ -31,6 +43,7 @@ export async function createMeeting(formData: FormData) {
       templateId: templateId || null,
       meetingType,
       templateName: templateName || null,
+      speakerMappings: Object.keys(speakerMappings).length > 0 ? speakerMappings : undefined,
     })
     .returning()
 
