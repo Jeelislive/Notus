@@ -3,7 +3,9 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import { LayoutDashboard, Settings, LogOut, Users, FileText, Search, Puzzle, Menu, X } from 'lucide-react'
+import { LayoutDashboard, Settings, LogOut, Users, Puzzle, Menu, X } from 'lucide-react'
+import { createAvatar } from '@dicebear/core'
+import { avataaars } from '@dicebear/collection'
 import { cn } from '@/lib/utils'
 import { signOut } from '@/lib/auth-client'
 import { ThemeSwitcher } from '@/components/theme-switcher'
@@ -46,16 +48,6 @@ export function SidebarNav({ user }: SidebarNavProps) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault()
-        router.push('/dashboard/search')
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [router])
 
   function handleMouseEnter() {
     if (isMobile) return
@@ -78,8 +70,6 @@ export function SidebarNav({ user }: SidebarNavProps) {
 
   const navItems = [
     { href: '/dashboard',                  label: 'Meetings',     icon: LayoutDashboard },
-    { href: '/dashboard/notes',            label: 'Notes',        icon: FileText },
-    { href: '/dashboard/search',           label: 'Search',       icon: Search },
     { href: '/dashboard/teams',            label: 'Teams',        icon: Users },
     { href: '/dashboard/integrations',     label: 'Integrations', icon: Puzzle },
     { href: '/dashboard/settings',         label: 'Settings',     icon: Settings },
@@ -149,21 +139,24 @@ export function SidebarNav({ user }: SidebarNavProps) {
             transition: t('padding'),
           }}
         >
-          <div className="flex items-center" style={{ gap: isCollapsed ? 0 : '12px' }}>
-            <div className="size-8 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: '#0075de' }}>
+          <div className="flex items-center" style={{ gap: isCollapsed ? 0 : '10px' }}>
+            <div className="size-8 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: '#0075de' }}>
               <svg width="16" height="14" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="0"    y="5"   width="2.5" height="4"  rx="1.25" fill="white" fillOpacity="0.5"/>
+                <rect x="0"    y="5"   width="2.5" height="4"  rx="1.25" fill="white" fillOpacity="0.4"/>
                 <rect x="3.5"  y="2"   width="2.5" height="10" rx="1.25" fill="white"/>
-                <rect x="7"    y="3.5" width="2.5" height="7"  rx="1.25" fill="white" fillOpacity="0.75"/>
+                <rect x="7"    y="3.5" width="2.5" height="7"  rx="1.25" fill="white" fillOpacity="0.7"/>
                 <rect x="10.5" y="0"   width="2.5" height="14" rx="1.25" fill="white"/>
-                <rect x="14"   y="4.5" width="2.5" height="5"  rx="1.25" fill="white" fillOpacity="0.5"/>
+                <rect x="14"   y="4.5" width="2.5" height="5"  rx="1.25" fill="white" fillOpacity="0.4"/>
               </svg>
             </div>
-            {/* Text slides in - overflow-hidden is on the text wrapper only, not the icon */}
+            {/* Text slides in */}
             <div style={{ overflow: 'hidden', width: isCollapsed ? 0 : 'auto', transition: t('width') }}>
               <span
-                className="font-bold text-foreground text-[17px] tracking-tight whitespace-nowrap block"
+                className="text-foreground text-[18px] whitespace-nowrap block"
                 style={{
+                  fontFamily: 'var(--font-inter), Inter, sans-serif',
+                  fontWeight: 700,
+                  letterSpacing: '-0.4px',
                   opacity:   isCollapsed ? 0 : 1,
                   transform: isCollapsed ? 'translateX(-6px)' : 'translateX(0)',
                   transition: t('opacity, transform'),
@@ -215,17 +208,17 @@ export function SidebarNav({ user }: SidebarNavProps) {
                 title={isCollapsed ? item.label : undefined}
                 onClick={() => isMobile && setMobileOpen(false)}
                 className={cn(
-                  'flex items-center rounded-xl text-[15px] active:scale-[0.97] overflow-hidden',
-                  isCollapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5',
+                  'flex items-center rounded-lg text-[14px] active:scale-[0.97] overflow-hidden',
+                  isCollapsed ? 'justify-center px-0 py-2.5' : 'gap-2.5 px-3 py-2',
                   active
-                    ? 'bg-primary/10 text-primary font-semibold'
-                    : 'text-muted-foreground font-medium hover:text-foreground hover:bg-muted/60'
+                    ? 'bg-muted text-foreground font-semibold'
+                    : 'text-muted-foreground font-medium hover:text-foreground hover:bg-muted/70'
                 )}
                 style={{
                   transition: `transform 100ms ${EASE_OUT}, background-color 150ms ease, color 150ms ease`,
                 }}
               >
-                <Icon className="size-[18px] shrink-0" strokeWidth={active ? 2.25 : 1.75} />
+                <Icon className="size-[17px] shrink-0" strokeWidth={active ? 2 : 1.6} />
                 <span
                   className="whitespace-nowrap"
                   style={{
@@ -245,31 +238,6 @@ export function SidebarNav({ user }: SidebarNavProps) {
           })}
         </nav>
 
-        {/* ── Search bar - slides down + fades in after nav items ── */}
-        <div
-          className="px-4 pb-3"
-          style={{
-            opacity:       isCollapsed ? 0 : 1,
-            transform:     isCollapsed ? 'translateY(-4px)' : 'translateY(0)',
-            maxHeight:     isCollapsed ? 0 : 60,
-            overflow:      'hidden',
-            pointerEvents: isCollapsed ? 'none' : 'auto',
-            transition: isCollapsed
-              ? `opacity ${COLLAPSE_MS}ms ${EASE_OUT}, transform ${COLLAPSE_MS}ms ${EASE_OUT}, max-height ${COLLAPSE_MS}ms ${EASE_OUT}`
-              : `opacity ${EXPAND_MS}ms ${DRAWER} ${navItems.length * 25}ms, transform ${EXPAND_MS}ms ${DRAWER} ${navItems.length * 25}ms, max-height ${EXPAND_MS}ms ${DRAWER}`,
-          }}
-        >
-          <button
-            onClick={() => { router.push('/dashboard/search'); if (isMobile) setMobileOpen(false) }}
-            className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl border border-border text-[13px] text-muted-foreground hover:text-foreground hover:bg-muted/50 active:scale-[0.97]"
-            style={{ transition: `transform 100ms ${EASE_OUT}, background-color 120ms ease, color 120ms ease` }}
-          >
-            <Search className="size-4 shrink-0" strokeWidth={1.75} />
-            <span className="flex-1 text-left">Search…</span>
-            <kbd className="inline-flex items-center font-mono text-[11px] text-muted-foreground/60 bg-muted/60 px-1.5 py-0.5 rounded-md">⌘K</kbd>
-          </button>
-        </div>
-
         {/* ── User section ── */}
         <div className="px-2 py-3">
           <div
@@ -279,14 +247,18 @@ export function SidebarNav({ user }: SidebarNavProps) {
             )}
             style={{ transition: 'background-color 120ms ease' }}
           >
-            <div
-              className="size-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0"
-              title={isCollapsed ? (user.name || user.email) : undefined}
-            >
-              <span className="text-[13px] font-bold text-primary">
-                {(user.name || user.email).charAt(0).toUpperCase()}
-              </span>
-            </div>
+            {(() => {
+              const svg = createAvatar(avataaars, { seed: user.email, size: 32, backgroundColor: ['b6e3f4','c0aede','d1d4f9','ffd5dc','ffdfbf'] }).toString()
+              const src = `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
+              return (
+                <img
+                  src={src}
+                  alt={user.name || user.email}
+                  className="size-8 rounded-full shrink-0"
+                  title={isCollapsed ? (user.name || user.email) : undefined}
+                />
+              )
+            })()}
 
             <div
               className="flex-1 min-w-0 overflow-hidden"
@@ -303,14 +275,16 @@ export function SidebarNav({ user }: SidebarNavProps) {
               <p className="text-[12px] text-muted-foreground/70 truncate leading-snug">{user.email}</p>
             </div>
 
-            <button
-              onClick={handleSignOut}
-              className="shrink-0 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted active:scale-[0.85] opacity-0 group-hover:opacity-100"
-              style={{ transition: `transform 100ms ${EASE_OUT}, opacity 150ms ease, background-color 120ms ease` }}
-              title="Sign out"
-            >
-              <LogOut className="size-4" />
-            </button>
+            {!isCollapsed && (
+              <button
+                onClick={handleSignOut}
+                className="shrink-0 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted active:scale-[0.85] opacity-0 group-hover:opacity-100"
+                style={{ transition: `transform 100ms ${EASE_OUT}, opacity 150ms ease, background-color 120ms ease` }}
+                title="Sign out"
+              >
+                <LogOut className="size-4" />
+              </button>
+            )}
           </div>
         </div>
       </aside>

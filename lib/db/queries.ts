@@ -1,8 +1,51 @@
 import { db } from './index'
-import { meetings, notes, transcriptSegments, profiles, teams, teamMembers, meetingTranslations } from './schema'
-import { eq, desc, ilike, sql, and } from 'drizzle-orm'
+import { meetings, notes, transcriptSegments, profiles, teams, teamMembers, meetingTranslations, folders } from './schema'
+import { eq, desc, ilike, sql, and, isNull } from 'drizzle-orm'
+
+export async function getFoldersByUser(userId: string) {
+  return db.select().from(folders).where(eq(folders.userId, userId)).orderBy(desc(folders.createdAt))
+}
+
+export async function ensureDefaultFolders(userId: string) {
+  const existing = await db.select({ name: folders.name }).from(folders).where(eq(folders.userId, userId))
+  const names = new Set(existing.map((f) => f.name))
+  if (!names.has('Other')) {
+    await db.insert(folders).values({ userId, name: 'Other', description: 'Uncategorized meetings', icon: 'folder' })
+  }
+}
+
+export async function getFolderWithMeetings(folderId: string, userId: string) {
+  const folder = await db.select().from(folders)
+    .where(and(eq(folders.id, folderId), eq(folders.userId, userId)))
+    .limit(1)
+  if (!folder[0]) return null
+  const folderMeetings = await db.select().from(meetings)
+    .where(and(eq(meetings.folderId, folderId), eq(meetings.userId, userId)))
+    .orderBy(desc(meetings.createdAt))
+  return { ...folder[0], meetings: folderMeetings }
+}
+
+export async function getAllMeetingsStats(userId: string) {
+  const all = await db
+    .select({ status: meetings.status, folderId: meetings.folderId })
+    .from(meetings)
+    .where(eq(meetings.userId, userId))
+  return {
+    total: all.length,
+    completed: all.filter((m) => m.status === 'completed').length,
+    inFolders: all.filter((m) => m.folderId !== null).length,
+  }
+}
 
 export async function getMeetingsByUser(userId: string) {
+  return db
+    .select()
+    .from(meetings)
+    .where(and(eq(meetings.userId, userId), isNull(meetings.folderId)))
+    .orderBy(desc(meetings.createdAt))
+}
+
+export async function getAllMeetingsByUser(userId: string) {
   return db
     .select()
     .from(meetings)

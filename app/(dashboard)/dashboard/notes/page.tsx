@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
 import { getSession } from '@/lib/session'
-import { getMeetingsByUser, getMeetingTranslation, getUserPreferredLanguage } from '@/lib/db/queries'
+import { getAllMeetingsByUser, getMeetingTranslation, getUserPreferredLanguage } from '@/lib/db/queries'
 import { db } from '@/lib/db'
 import { notes, profiles, userIntegrations } from '@/lib/db/schema'
 import { inArray, eq, and } from 'drizzle-orm'
@@ -20,13 +20,15 @@ export default async function NotesPage({
   if (!session) redirect('/login')
 
   const [allMeetings, profileRows, jiraIntegration, preferredLanguage] = await Promise.all([
-    getMeetingsByUser(session.user.id),
+    getAllMeetingsByUser(session.user.id),
     db.select().from(profiles).where(eq(profiles.id, session.user.id)).limit(1),
     db.query.userIntegrations.findFirst({
       where: and(eq(userIntegrations.userId, session.user.id), eq(userIntegrations.provider, 'jira')),
     }),
     getUserPreferredLanguage(session.user.id),
   ])
+
+  if (allMeetings.length === 0) redirect('/dashboard')
 
   const jiraConfig = jiraIntegration?.config
     ? (jiraIntegration.config as { domain: string; email: string; apiToken: string; projectKey: string })
@@ -45,14 +47,12 @@ export default async function NotesPage({
         .orderBy(notes.createdAt)
     : []
 
-  // Group notes by meetingId
   const notesByMeeting: Record<string, typeof allNotes> = {}
   for (const note of allNotes) {
     if (!notesByMeeting[note.meetingId]) notesByMeeting[note.meetingId] = []
     notesByMeeting[note.meetingId].push(note)
   }
 
-  // Pre-load cached translations for all meetings (if user has non-English preferred language)
   const translationsByMeeting: Record<string, { summary?: string | null; summaryStructured?: string | null; actionItems?: string | null; followUpEmail?: string | null }> = {}
   if (preferredLanguage !== 'en' && meetingIds.length > 0) {
     const translationResults = await Promise.all(

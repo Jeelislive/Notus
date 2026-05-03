@@ -70,41 +70,50 @@ export function RecordingControls({ status, error, elapsedSeconds, audioLevel, i
 
   if (status === 'requesting') {
     return (
-      <div className="flex items-center gap-2.5 px-5 py-4 rounded-2xl border border-border text-[13px] text-muted-foreground">
-        <Loader2 className="size-4 animate-spin" />
-        Requesting microphone access…
+      <div className="flex items-center gap-3 px-5 py-4 rounded-2xl border border-border text-[13px] text-muted-foreground bg-muted/30">
+        <Loader2 className="size-4 animate-spin shrink-0" />
+        <span>Requesting microphone access…</span>
       </div>
     )
   }
 
   if (status === 'stopping') {
     return (
-      <div className="flex items-center gap-2.5 px-5 py-4 rounded-2xl border border-border text-[13px] text-muted-foreground">
-        <Loader2 className="size-4 animate-spin" />
-        Finalizing recording and generating transcript…
+      <div className="flex items-center gap-3 px-5 py-4 rounded-2xl border border-border text-[13px] text-muted-foreground bg-muted/30">
+        <Loader2 className="size-4 animate-spin shrink-0" />
+        <span>Finalizing recording and generating transcript…</span>
       </div>
     )
   }
 
   return (
-    <div className="space-y-2.5">
-      <div className="flex items-center justify-between p-5 rounded-2xl border border-border">
-        <div className="space-y-0.5">
-          <p className="text-[15px] font-semibold text-foreground">Start recording</p>
+    <div className="space-y-3">
+      <div className="flex flex-col items-center gap-5 px-6 py-8 rounded-2xl border border-border bg-muted/20">
+        {/* Icon */}
+        <div className="size-14 rounded-2xl bg-red-500/10 flex items-center justify-center">
+          <Mic className="size-7 text-red-500" strokeWidth={1.5} />
+        </div>
+
+        {/* Text */}
+        <div className="text-center space-y-1">
+          <p className="text-[16px] font-semibold text-foreground">Start recording</p>
           <p className="text-[13px] text-muted-foreground">
             {tabAudioAvailable
-              ? 'Capture tab or mic audio - transcript appears in real time'
+              ? 'Capture tab or mic audio · transcript appears in real time'
               : 'Capture microphone audio with live transcription'}
           </p>
         </div>
-        <div className="flex items-center gap-2.5 ml-4 shrink-0">
-          {tabAudioAvailable ? (
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#0075de]/10 border border-[#0075de]/20">
+
+        {/* Actions */}
+        <div className="flex items-center gap-3">
+          {tabAudioAvailable && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#0075de]/10 border border-[#0075de]/20">
               <Monitor className="size-3 text-[#0075de]" />
               <span className="text-[11px] font-medium text-[#0075de] dark:text-[#62aef0]">Tab audio</span>
             </div>
-          ) : (
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20">
+          )}
+          {!tabAudioAvailable && (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20">
               <Mic className="size-3 text-amber-500" />
               <span className="text-[11px] font-medium text-amber-600 dark:text-amber-400">Mic only</span>
             </div>

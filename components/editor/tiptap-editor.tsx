@@ -1,6 +1,6 @@
 'use client'
 
-import { useEditor, EditorContent, Extension } from '@tiptap/react'
+import { useEditor, EditorContent, Extension, type Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import TaskList from '@tiptap/extension-task-list'
@@ -8,8 +8,9 @@ import TaskItem from '@tiptap/extension-task-item'
 import Typography from '@tiptap/extension-typography'
 import { TextStyle } from '@tiptap/extension-text-style'
 import Color from '@tiptap/extension-color'
+import Highlight from '@tiptap/extension-highlight'
 import { useEffect, useRef, useState } from 'react'
-import { Sparkles, Send, Loader2, ChevronDown, Undo2, Redo2 } from 'lucide-react'
+import { Sparkles, Send, Loader2, Bold, Heading1, Heading2, Heading3, List, ListOrdered, Type, RemoveFormatting } from 'lucide-react'
 
 // ── Custom FontSize extension ──────────────────────────────────────────────
 const FontSize = Extension.create({
@@ -48,12 +49,39 @@ const FontSize = Extension.create({
   },
 })
 
+// ── Smart Enter: heading → bullet list ────────────────────────────────────
+const SmartEnter = Extension.create({
+  name: 'smartEnter',
+  priority: 200,
+  addKeyboardShortcuts() {
+    return {
+      Enter: () => {
+        const { state } = this.editor
+        const { $from, empty } = state.selection
+        const node = $from.node()
+        if (
+          !empty ||
+          node.type.name !== 'heading' ||
+          node.textContent.length === 0 ||
+          $from.parentOffset !== node.content.size
+        ) return false
+        return (this.editor as Editor).chain()
+          .splitBlock({ keepMarks: false })
+          .toggleBulletList()
+          .run()
+      },
+    }
+  },
+})
+
 // ── Types ──────────────────────────────────────────────────────────────────
 interface TiptapEditorProps {
   content: string
   onChange: (html: string) => void
   placeholder?: string
   editable?: boolean
+  highlights?: { word: string; color: string }[] | null
+  onHighlightsApplied?: () => void
 }
 
 interface SelectionBubble {
@@ -64,22 +92,8 @@ interface SelectionBubble {
   y: number
 }
 
-const FONT_SIZES = ['12px', '14px', '16px', '18px', '20px', '24px', '28px', '32px', '36px', '48px']
-const COLORS = [
-  { label: 'Default', value: '' },
-  { label: 'Red', value: '#ef4444' },
-  { label: 'Orange', value: '#f97316' },
-  { label: 'Yellow', value: '#eab308' },
-  { label: 'Green', value: '#22c55e' },
-  { label: 'Blue', value: '#3b82f6' },
-  { label: 'Indigo', value: '#6366f1' },
-  { label: 'Purple', value: '#a855f7' },
-  { label: 'Pink', value: '#ec4899' },
-  { label: 'Gray', value: '#71717a' },
-]
-
 // ── Component ──────────────────────────────────────────────────────────────
-export function TiptapEditor({ content, onChange, placeholder, editable = true }: TiptapEditorProps) {
+export function TiptapEditor({ content, onChange, placeholder, editable = true, highlights, onHighlightsApplied }: TiptapEditorProps) {
   const isUpdatingFromProp = useRef(false)
   const [bubble, setBubble] = useState<SelectionBubble | null>(null)
   const [askOpen, setAskOpen] = useState(false)
@@ -87,17 +101,41 @@ export function TiptapEditor({ content, onChange, placeholder, editable = true }
   const [askLoading, setAskLoading] = useState(false)
   const askOpenRef = useRef(false)
   const bubbleRef = useRef<HTMLDivElement>(null)
-  const [colorOpen, setColorOpen] = useState(false)
-  const [sizeOpen, setSizeOpen] = useState(false)
+  const editorRef = useRef<ReturnType<typeof useEditor>>(null)
 
   useEffect(() => { askOpenRef.current = askOpen }, [askOpen])
+
+  useEffect(() => {
+    function onMouseUp() {
+      const ed = editorRef.current
+      if (!ed) return
+      const { from, to } = ed.state.selection
+      if (from === to) return
+      const text = ed.state.doc.textBetween(from, to, ' ')
+      if (!text.trim()) return
+      try {
+        const domSel = window.getSelection()
+        if (!domSel?.rangeCount) return
+        const range = domSel.getRangeAt(0)
+        const rects = range.getClientRects()
+        let rect = rects.length > 0 ? rects[0] : range.getBoundingClientRect()
+        for (let i = 1; i < rects.length; i++) {
+          if (rects[i].bottom > rect.bottom) rect = rects[i]
+        }
+        if (!rect.width && !rect.height) return
+        setBubble({ text, from, to, x: rect.right, y: rect.bottom })
+      } catch { /* ignore */ }
+    }
+    document.addEventListener('mouseup', onMouseUp)
+    return () => document.removeEventListener('mouseup', onMouseUp)
+  }, [])
 
   // Close bubble on outside click
   useEffect(() => {
     if (!bubble) return
     function handleMouseDown(e: MouseEvent) {
       if (bubbleRef.current && !bubbleRef.current.contains(e.target as Node)) {
-        setBubble(null); setAskOpen(false); setAskPrompt('')
+        setBubble(null); setAskOpen(false); setAskPrompt('');
       }
     }
     document.addEventListener('mousedown', handleMouseDown)
@@ -135,7 +173,9 @@ export function TiptapEditor({ content, onChange, placeholder, editable = true }
       Typography,
       TextStyle,
       Color,
+      Highlight.configure({ multicolor: true }),
       FontSize,
+      SmartEnter,
     ],
     content,
     editable,
@@ -144,29 +184,18 @@ export function TiptapEditor({ content, onChange, placeholder, editable = true }
     },
     onSelectionUpdate({ editor }) {
       const { from, to } = editor.state.selection
-      if (from === to) {
-        if (!askOpenRef.current) setBubble(null)
-        return
-      }
-      const text = editor.state.doc.textBetween(from, to, ' ')
-      if (!text.trim()) { if (!askOpenRef.current) setBubble(null); return }
-      try {
-        const domSel = window.getSelection()
-        if (!domSel?.rangeCount) return
-        const rect = domSel.getRangeAt(0).getBoundingClientRect()
-        if (!rect.width && !rect.height) return
-        setBubble({ text, from, to, x: rect.left + rect.width / 2, y: rect.top })
-        if (!askOpenRef.current) setAskOpen(false)
-      } catch { /* ignore */ }
+      if (from === to && !askOpenRef.current) setBubble(null)
     },
     editorProps: {
       attributes: {
         class: 'tiptap-content focus:outline-none min-h-full text-foreground leading-relaxed',
-        style: 'font-size: 15px',
       },
     },
     immediatelyRender: false,
   })
+
+  // Keep editorRef in sync
+  useEffect(() => { editorRef.current = editor }, [editor])
 
   // Sync external content changes
   useEffect(() => {
@@ -184,145 +213,81 @@ export function TiptapEditor({ content, onChange, placeholder, editable = true }
     editor.setEditable(editable)
   }, [editable, editor])
 
-  // Current font size in selection
-  const currentSize = editor?.getAttributes('textStyle').fontSize ?? '15px'
+  // Apply auto-highlights (e.g. after AI notes generation)
+  useEffect(() => {
+    if (!editor || !highlights?.length) return
+    const { doc } = editor.state
+    const toApply: { from: number; to: number; color: string }[] = []
+    for (const { word, color } of highlights) {
+      doc.descendants((node, pos) => {
+        if (!node.isText || !node.text) return
+        let idx = node.text.indexOf(word)
+        while (idx !== -1) {
+          toApply.push({ from: pos + idx, to: pos + idx + word.length, color })
+          idx = node.text.indexOf(word, idx + word.length)
+        }
+      })
+    }
+    if (!toApply.length) { onHighlightsApplied?.(); return }
+    const chain = editor.chain()
+    for (const { from, to, color } of toApply) {
+      chain
+        .setTextSelection({ from, to })
+        .setHighlight({ color: color === 'red' ? '#fca5a5' : '#93c5fd' })
+    }
+    chain.setTextSelection({ from: 1 }).run()
+    onHighlightsApplied?.()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [highlights])
+
+  const toolbarItems = editor ? [
+    { label: 'P',    icon: <Type className="size-5" />,        title: 'Paragraph',  active: editor.isActive('paragraph'),           action: () => editor.chain().focus().setParagraph().run() },
+    { label: 'H1',   icon: <Heading1 className="size-5" />,    title: 'Heading 1',  active: editor.isActive('heading', { level: 1 }), action: () => editor.chain().focus().toggleHeading({ level: 1 }).run() },
+    { label: 'H2',   icon: <Heading2 className="size-5" />,    title: 'Heading 2',  active: editor.isActive('heading', { level: 2 }), action: () => editor.chain().focus().toggleHeading({ level: 2 }).run() },
+    { label: 'H3',   icon: <Heading3 className="size-5" />,    title: 'Heading 3',  active: editor.isActive('heading', { level: 3 }), action: () => editor.chain().focus().toggleHeading({ level: 3 }).run() },
+    null,
+    { label: 'B',    icon: <Bold className="size-5" />,        title: 'Bold',       active: editor.isActive('bold'),                action: () => editor.chain().focus().toggleBold().run() },
+    null,
+    { label: '•',    icon: <List className="size-5" />,        title: 'Bullet list',active: editor.isActive('bulletList'),          action: () => editor.chain().focus().toggleBulletList().run() },
+    { label: '1.',   icon: <ListOrdered className="size-5" />, title: 'Numbered',   active: editor.isActive('orderedList'),         action: () => editor.chain().focus().toggleOrderedList().run() },
+  ] : []
 
   return (
     <div className="tiptap-wrapper h-full flex flex-col">
-      {editor && editable && (
-        <div className="flex items-center gap-1.5 px-5 py-4 border-b border-border flex-wrap shrink-0 bg-muted/30">
-
-          {/* Undo / Redo */}
-          <ToolbarButton onClick={() => editor.chain().focus().undo().run()} active={false} title="Undo (⌘Z)" disabled={!editor.can().undo()}>
-            <Undo2 className="size-[18px]" />
-          </ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().redo().run()} active={false} title="Redo (⌘⇧Z)" disabled={!editor.can().redo()}>
-            <Redo2 className="size-[18px]" />
-          </ToolbarButton>
-
-          <Divider />
-
-          {/* Text format */}
-          <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive('bold')} title="Bold">
-            <strong className="text-[18px]">B</strong>
-          </ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive('italic')} title="Italic">
-            <em className="text-[18px]">I</em>
-          </ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive('strike')} title="Strikethrough">
-            <s className="text-[18px]">S</s>
-          </ToolbarButton>
-
-          <Divider />
-
-          {/* Headings */}
-          <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive('heading', { level: 1 })} title="Heading 1">H1</ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive('heading', { level: 2 })} title="Heading 2">H2</ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={editor.isActive('heading', { level: 3 })} title="Heading 3">H3</ToolbarButton>
-
-          <Divider />
-
-          {/* Lists */}
-          <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive('bulletList')} title="Bullet List">
-            <span className="text-base leading-none">•―</span>
-          </ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive('orderedList')} title="Numbered List">1.</ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().toggleTaskList().run()} active={editor.isActive('taskList')} title="Task List">
-            <span className="text-base leading-none">☐</span>
-          </ToolbarButton>
-
-          <Divider />
-
-          {/* Quote + Code */}
-          <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive('blockquote')} title="Quote">
-            <span className="text-base leading-none">&quot;</span>
-          </ToolbarButton>
-          <ToolbarButton onClick={() => editor.chain().focus().toggleCodeBlock().run()} active={editor.isActive('codeBlock')} title="Code Block">
-            {'</>'}
-          </ToolbarButton>
-
-          <Divider />
-
-          {/* Font size picker */}
-          <div className="relative">
-            <button
-              type="button"
-              title="Font size"
-              onClick={() => { setSizeOpen((v) => !v); setColorOpen(false) }}
-              className="flex items-center gap-1 px-3.5 py-2.5 rounded-xl text-[15px] font-semibold text-foreground/60 hover:text-foreground hover:bg-muted active:scale-[0.93]"
-              style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), background-color 120ms ease-out, color 120ms ease-out', fontFamily: 'ui-monospace, monospace' }}
-            >
-              {currentSize.replace('px', '')}
-              <ChevronDown className="size-3" />
-            </button>
-            {sizeOpen && (
-              <div className="absolute top-full left-0 mt-1 bg-background border border-border rounded-xl shadow-lg py-1 z-50 animate-dropdown min-w-[72px]">
-                {FONT_SIZES.map((size) => (
-                  <button
-                    key={size}
-                    type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault()
-                      editor.chain().focus().setMark('textStyle', { fontSize: size }).run()
-                      setSizeOpen(false)
-                    }}
-                    className={`w-full text-left px-3 py-1.5 text-[13px] hover:bg-muted/60 ${currentSize === size ? 'text-[#0075de] font-semibold' : 'text-foreground/70'}`}
-                    style={{ fontFamily: 'ui-monospace, monospace' }}
-                  >
-                    {size.replace('px', '')}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Color picker */}
-          <div className="relative">
-            <button
-              type="button"
-              title="Text color"
-              onClick={() => { setColorOpen((v) => !v); setSizeOpen(false) }}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-[16px] font-semibold text-foreground/60 hover:text-foreground hover:bg-muted active:scale-[0.93]"
-              style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), background-color 120ms ease-out, color 120ms ease-out' }}
-            >
-              <span className="font-bold text-[15px]" style={{ color: editor.getAttributes('textStyle').color || 'currentColor' }}>A</span>
-              <div
-                className="w-3 h-1 rounded-full"
-                style={{ background: editor.getAttributes('textStyle').color || 'currentColor' }}
-              />
-              <ChevronDown className="size-3" />
-            </button>
-            {colorOpen && (
-              <div className="absolute top-full left-0 mt-1 bg-background border border-border rounded-xl shadow-lg p-2 z-50 animate-dropdown grid grid-cols-5 gap-1.5 w-[136px]">
-                {COLORS.map(({ label, value }) => (
-                  <button
-                    key={label}
-                    type="button"
-                    title={label}
-                    onMouseDown={(e) => {
-                      e.preventDefault()
-                      if (!value) {
-                        editor.chain().focus().unsetColor().run()
-                      } else {
-                        editor.chain().focus().setColor(value).run()
-                      }
-                      setColorOpen(false)
-                    }}
-                    className="size-6 rounded-lg border border-border/60 hover:scale-110 active:scale-95 flex items-center justify-center"
-                    style={{
-                      background: value || 'var(--foreground)',
-                      transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1)',
-                    }}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-
+      {/* Formatting toolbar */}
+      {editable && editor && (
+        <div className="flex items-center gap-0.5 px-6 py-1.5 border-b border-border shrink-0">
+          {toolbarItems.map((item, i) =>
+            item === null ? (
+              <div key={i} className="w-px h-4 bg-border mx-1" />
+            ) : (
+              <button
+                key={item.title}
+                onClick={item.action}
+                title={item.title}
+                className={`flex items-center justify-center p-2.5 rounded-md text-[13px] font-medium transition-colors ${
+                  item.active
+                    ? 'bg-foreground text-background'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                }`}
+              >
+                {item.icon}
+              </button>
+            )
+          )}
+          <div className="w-px h-4 bg-border mx-1" />
+          <button
+            title="Remove all highlights"
+            onClick={() => {
+              editor.chain().focus().selectAll().unsetHighlight().run()
+            }}
+            className="flex items-center justify-center p-2.5 rounded-md text-[13px] font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-muted"
+          >
+            <RemoveFormatting className="size-5" />
+          </button>
         </div>
       )}
-
-      <div className="p-5 overflow-y-auto flex-1 min-h-0" onClick={() => { setColorOpen(false); setSizeOpen(false) }}>
+      <div className="p-6 overflow-y-auto flex-1 min-h-0 pb-20">
         <EditorContent editor={editor} />
       </div>
 
@@ -333,8 +298,8 @@ export function TiptapEditor({ content, onChange, placeholder, editable = true }
           style={{
             position: 'fixed',
             left: `${Math.max(140, Math.min(bubble.x, typeof window !== 'undefined' ? window.innerWidth - 140 : 800))}px`,
-            top: `${bubble.y}px`,
-            transform: 'translateX(-50%) translateY(calc(-100% - 10px))',
+            top: `${bubble.y + 8}px`,
+            transform: 'translateX(-50%)',
             zIndex: 9999,
           }}
           onMouseDown={(e) => {
@@ -351,31 +316,32 @@ export function TiptapEditor({ content, onChange, placeholder, editable = true }
               Ask Notus
             </button>
           ) : (
-            <div
-              className="flex items-center gap-2 pl-3 pr-2 py-2 rounded-2xl bg-background border border-[#0075de]/40 shadow-xl shadow-black/15 w-[300px]"
+            <div className="flex flex-col rounded-2xl bg-background border border-[#0075de]/40 shadow-xl shadow-black/15 w-[300px] overflow-hidden"
               style={{ animation: 'bubbleExpand 150ms cubic-bezier(0.23,1,0.32,1) both' }}
             >
-              <Sparkles className="size-3.5 text-[#0075de] shrink-0" />
-              <input
-                autoFocus
-                value={askPrompt}
-                onChange={(e) => setAskPrompt(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) editor && handleAsk(editor)
-                  if (e.key === 'Escape') { setAskOpen(false); setAskPrompt(''); setBubble(null) }
-                }}
-                placeholder="e.g. make this red, increase font size…"
-                disabled={askLoading}
-                className="flex-1 text-[13px] bg-transparent text-foreground placeholder:text-muted-foreground/50 focus:outline-none min-w-0"
-              />
-              <button
-                onClick={() => editor && handleAsk(editor)}
-                disabled={askLoading || !askPrompt.trim()}
-                className="p-1.5 rounded-lg text-[#0075de] hover:bg-[#0075de]/10 disabled:text-muted-foreground/40 active:scale-[0.85] shrink-0"
-                style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), background-color 120ms ease-out' }}
-              >
-                {askLoading ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
-              </button>
+              <div className="flex items-center gap-2 pl-3 pr-2 py-2">
+                <Sparkles className="size-3.5 text-[#0075de] shrink-0" />
+                <input
+                  autoFocus
+                  value={askPrompt}
+                  onChange={(e) => setAskPrompt(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) { editor && handleAsk(editor) }
+                    if (e.key === 'Escape') { setAskOpen(false); setAskPrompt(''); setBubble(null) }
+                  }}
+                  placeholder="Ask Notus anything…"
+                  disabled={askLoading}
+                  className="flex-1 text-[13px] bg-transparent text-foreground placeholder:text-muted-foreground/50 focus:outline-none min-w-0"
+                />
+                <button
+                  onClick={() => editor && handleAsk(editor)}
+                  disabled={askLoading || !askPrompt.trim()}
+                  className="p-1.5 rounded-lg text-[#0075de] hover:bg-[#0075de]/10 disabled:text-muted-foreground/40 active:scale-[0.85] shrink-0"
+                  style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), background-color 120ms ease-out' }}
+                >
+                  {askLoading ? <Loader2 className="size-3.5 animate-spin" /> : <Send className="size-3.5" />}
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -384,28 +350,3 @@ export function TiptapEditor({ content, onChange, placeholder, editable = true }
   )
 }
 
-// ── Sub-components ──────────────────────────────────────────────────────────
-function ToolbarButton({ onClick, active, title, children, disabled }: {
-  onClick: () => void; active: boolean; title: string; children: React.ReactNode; disabled?: boolean
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={title}
-      disabled={disabled}
-      className={`px-3.5 py-2.5 rounded-xl text-[16px] font-mono font-semibold active:scale-[0.93] disabled:opacity-25 disabled:pointer-events-none ${
-        active
-          ? 'bg-[#0075de]/20 text-[#0075de] dark:text-[#62aef0]'
-          : 'text-foreground/60 hover:text-foreground hover:bg-muted'
-      }`}
-      style={{ transition: 'transform 100ms cubic-bezier(0.23,1,0.32,1), background-color 120ms ease-out, color 120ms ease-out' }}
-    >
-      {children}
-    </button>
-  )
-}
-
-function Divider() {
-  return <div className="w-px h-7 bg-border mx-1.5" />
-}

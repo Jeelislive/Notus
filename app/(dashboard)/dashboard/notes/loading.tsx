@@ -1,31 +1,72 @@
 export default function NotesLoading() {
   return (
-    <div className="flex h-full gap-4 animate-pulse">
-      {/* Left sidebar - meeting list */}
-      <div className="w-64 shrink-0 flex flex-col gap-2">
-        <div className="h-8 w-32 rounded-lg bg-muted mb-2" />
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="h-16 rounded-xl bg-muted/60" style={{ opacity: 1 - i * 0.1 }} />
-        ))}
-      </div>
+    <div className="flex flex-1 -mx-4 -mt-16 -mb-4 md:-mx-8 md:-mt-8 md:-mb-8 overflow-hidden animate-pulse">
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col gap-4">
-        {/* Tab bar */}
-        <div className="flex gap-2">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-9 w-20 rounded-lg bg-muted" />
-          ))}
+      {/* ── Main content ── */}
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
+
+        {/* Header */}
+        <div className="px-8 pt-4 pb-0 border-b border-border shrink-0">
+          <div className="flex items-center gap-3 mb-2 min-w-0">
+            <div className="h-5 w-14 rounded-full bg-muted shrink-0" />
+            <div className="h-6 w-56 rounded-lg bg-muted" />
+          </div>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="h-3.5 w-24 rounded bg-muted/50" />
+            <div className="h-3.5 w-16 rounded bg-muted/50" />
+          </div>
+          <div className="flex items-center gap-1 -mx-1">
+            <div className="h-8 w-16 rounded-t-md bg-muted/60" />
+            <div className="h-8 w-20 rounded-t-md bg-muted/30" />
+          </div>
         </div>
 
-        {/* Editor area */}
-        <div className="flex-1 rounded-xl bg-muted/30 border border-border p-6 flex flex-col gap-3">
-          <div className="h-5 w-3/4 rounded bg-muted" />
-          <div className="h-4 w-full rounded bg-muted/60" />
-          <div className="h-4 w-5/6 rounded bg-muted/60" />
-          <div className="h-4 w-4/5 rounded bg-muted/60" />
-          <div className="mt-4 h-4 w-full rounded bg-muted/60" />
-          <div className="h-4 w-2/3 rounded bg-muted/60" />
+        {/* Formatting toolbar */}
+        <div className="flex items-center gap-0.5 px-6 py-1.5 border-b border-border shrink-0">
+          {Array.from({ length: 9 }).map((_, i) =>
+            i === 4 || i === 6 ? (
+              <div key={i} className="w-px h-4 bg-border mx-1" />
+            ) : (
+              <div key={i} className="size-9 rounded-md bg-muted/40" />
+            )
+          )}
+        </div>
+
+        {/* Editor body */}
+        <div className="p-6 flex-1 space-y-4">
+          <div className="h-7 w-2/5 rounded-lg bg-muted" />
+          <div className="space-y-2.5">
+            {[85, 70, 90, 55, 75].map((w, i) => (
+              <div key={i} className="h-4 rounded bg-muted/50" style={{ width: `${w}%` }} />
+            ))}
+          </div>
+          <div className="h-6 w-1/3 rounded-lg bg-muted mt-6" />
+          <div className="space-y-2.5">
+            {[65, 80, 72].map((w, i) => (
+              <div key={i} className="h-4 rounded bg-muted/50" style={{ width: `${w}%` }} />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Right panel ── */}
+      <div className="hidden lg:flex flex-col w-[520px] xl:w-[580px] border-l border-border shrink-0">
+        <div className="flex items-center justify-between px-4 py-3.5 border-b border-border shrink-0">
+          <div className="h-4 w-40 rounded bg-muted" />
+          <div className="flex items-center gap-1">
+            <div className="size-8 rounded-lg bg-muted/50" />
+            <div className="size-8 rounded-lg bg-muted/50" />
+            <div className="size-8 rounded-lg bg-muted/50" />
+          </div>
+        </div>
+        <div className="flex-1 px-4 py-5 space-y-2">
+          <div className="h-3 w-20 rounded bg-muted/50 mb-4" />
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-12 rounded-xl border border-border bg-muted/20" style={{ opacity: 1 - i * 0.1 }} />
+          ))}
+        </div>
+        <div className="px-4 pb-4 pt-3 border-t border-border">
+          <div className="h-12 rounded-2xl border border-border bg-muted/20" />
         </div>
       </div>
     </div>

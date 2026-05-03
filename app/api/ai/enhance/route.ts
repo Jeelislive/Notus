@@ -115,7 +115,13 @@ ${transcript}`
     // Mark meeting completed
     await db.update(meetings).set({ status: 'completed', updatedAt: new Date() }).where(eq(meetings.id, meetingId))
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({
+      success: true,
+      summary: summaryText,
+      actionItems: JSON.stringify(actionItemStrings),
+      summaryStructured,
+      followUpEmail,
+    })
   } catch (err) {
     console.error('[AI enhance] Error:', err)
     // Still mark completed even on AI failure

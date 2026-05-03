@@ -38,7 +38,7 @@ export default async function SettingsPage() {
               <p className="text-[15px] text-foreground">Plan</p>
               <p className="text-[13px] text-muted-foreground mt-0.5">Free · 300 min/month</p>
             </div>
-            <span className="text-[13px] text-[#0075de] dark:text-[#62aef0] font-medium">Upgrade coming soon</span>
+            <span className="text-[13px] text-muted-foreground font-medium">Upgrade coming soon</span>
           </div>
         </div>
       </div>
@@ -49,8 +49,8 @@ export default async function SettingsPage() {
         className="flex items-center justify-between px-5 py-4 rounded-2xl border border-border bg-background hover:border-border/80 hover:shadow-sm active:scale-[0.99] transition-all duration-150 group"
       >
         <div className="flex items-center gap-3">
-          <div className="size-9 rounded-xl bg-[#0075de]/10 flex items-center justify-center shrink-0">
-            <Puzzle className="size-4 text-[#0075de]" strokeWidth={1.75} />
+          <div className="size-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
+            <Puzzle className="size-4 text-muted-foreground" strokeWidth={1.75} />
           </div>
           <div>
             <p className="text-[15px] font-medium text-foreground">Integrations</p>

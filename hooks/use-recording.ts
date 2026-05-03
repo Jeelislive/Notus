@@ -448,7 +448,8 @@ export function useRecording({ meetingId }: { meetingId: string }) {
     const chunks = audioChunksRef.current
     audioChunksRef.current = []
 
-    await stopRecording(meetingId, durationSeconds)
+    // Don't await — let DB write happen in background so UI unblocks immediately
+    stopRecording(meetingId, durationSeconds).catch((e) => console.error('[stopRecording]', e))
     setStatus('idle')
     setElapsedSeconds(0)
 

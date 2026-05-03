@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter, Bitter } from 'next/font/google'
+import { Inter, Bitter, EB_Garamond } from 'next/font/google'
 import { Suspense } from 'react'
 import { ThemeProvider } from '@/components/theme-provider'
 import { PostHogProvider } from '@/components/posthog-provider'
@@ -18,6 +18,14 @@ const bitter = Bitter({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   variable: '--font-bitter',
+  display: 'swap',
+})
+
+const garamond = EB_Garamond({
+  subsets: ['latin'],
+  weight: ['400'],
+  style: ['normal', 'italic'],
+  variable: '--font-display',
   display: 'swap',
 })
 
@@ -47,7 +55,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${bitter.variable}`} suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${bitter.variable} ${garamond.variable}`} suppressHydrationWarning>
       <body>
         <PostHogProvider>
           <ThemeProvider

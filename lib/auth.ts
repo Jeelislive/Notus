@@ -9,6 +9,7 @@ import {
   profiles,
 } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
+import { ensureDefaultFolders } from '@/lib/db/queries'
 import { Resend } from 'resend'
 
 const resend = new Resend(process.env.RESEND_API_KEY!)
@@ -66,6 +67,7 @@ export const auth = betterAuth({
               emailVerified: user.emailVerified,
             })
           }
+          await ensureDefaultFolders(user.id)
         },
       },
     },

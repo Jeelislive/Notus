@@ -38,12 +38,12 @@ export default async function TeamsPage() {
             <a
               key={team.id}
               href={`/dashboard/teams/${team.id}`}
-              className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 hover:border-[#0075de]/30 hover:bg-muted/30 animate-meeting-row group"
+              className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4 hover:bg-muted/30 hover:shadow-sm animate-meeting-row group"
               style={{ animationDelay: `${i * 40}ms` }}
             >
               {/* Avatar */}
-              <div className="size-11 rounded-xl bg-[#0075de]/10 border border-[#0075de]/15 flex items-center justify-center shrink-0">
-                <span className="text-[17px] font-bold text-[#0075de] dark:text-[#62aef0] leading-none">
+              <div className="size-11 rounded-xl bg-muted border border-border flex items-center justify-center shrink-0">
+                <span className="text-[17px] font-semibold text-foreground leading-none">
                   {team.name.charAt(0).toUpperCase()}
                 </span>
               </div>

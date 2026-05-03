@@ -49,6 +49,65 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
   }
 
+  // Handle highlight command — return JSON list of words to highlight (no content replacement)
+  if (prompt === '__highlight__') {
+    const highlightSystem = `You are a meeting notes analyst. Your job is to find the most critical words and short phrases in the text.
+
+OUTPUT: A valid JSON array only. No explanation. No markdown. No code fences. Just the raw JSON array.
+
+FORMAT: [{"word":"exact text","color":"red"}, {"word":"exact text","color":"blue"}]
+
+COLOR RULES:
+- "red" = urgent, action required, blocker, risk, deadline, must-do, problem, issue, failed, critical, overdue, missing, blocked
+- "blue" = person name, decision made, key metric, product name, company name, important concept, agreed outcome, goal, milestone
+
+SELECTION RULES:
+- Pick 4 to 7 items total — mix red and blue
+- Each "word" field must be an EXACT substring from the input — same case, same spelling, copy verbatim
+- Prefer specific nouns, verbs, names, numbers, and named concepts over generic filler words
+- Short phrases (2-5 words) are much better than single generic words like "meeting" or "team"
+- Never pick stop words: the, a, an, is, was, are, were, and, or, but, in, on, at, to, for, of, with, this, that`
+
+    const highlightUser = `Find the most important words and phrases in this text. Return only JSON:\n\n${selectedText}`
+
+    let raw = ''
+
+    // Try Claude Haiku first for better quality
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': process.env.ANTHROPIC_API_KEY!,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 512,
+          system: highlightSystem,
+          messages: [{ role: 'user', content: highlightUser }],
+        }),
+      })
+      if (res.ok) {
+        const data = await res.json()
+        raw = data.content?.[0]?.text ?? ''
+      }
+    } catch { /* fall through to Groq */ }
+
+    if (!raw) {
+      raw = await groqChat(highlightSystem, highlightUser, 0.1)
+    }
+
+    try {
+      const cleaned = raw.trim().replace(/^```json?\n?/, '').replace(/\n?```$/, '').trim()
+      const parsed = JSON.parse(cleaned)
+      const highlights = Array.isArray(parsed) ? parsed : parsed.highlights ?? []
+      return NextResponse.json({ highlights })
+    } catch {
+      return NextResponse.json({ highlights: [] })
+    }
+  }
+
   const isFormatting = isFormattingRequest(prompt)
 
   const systemPrompt = isFormatting

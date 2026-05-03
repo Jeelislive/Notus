@@ -150,6 +150,24 @@ export const teamMembers = pgTable(
   (t) => [uniqueIndex('team_members_team_user_idx').on(t.teamId, t.userId)]
 )
 
+export const folders = pgTable('folders', {
+  id: uuid('id')
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: text('user_id')
+    .notNull()
+    .references(() => profiles.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  description: text('description'),
+  icon: text('icon').default('📁').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true })
+    .default(sql`now()`)
+    .notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true })
+    .default(sql`now()`)
+    .notNull(),
+})
+
 export const meetings = pgTable('meetings', {
   id: uuid('id')
     .primaryKey()
@@ -158,6 +176,7 @@ export const meetings = pgTable('meetings', {
     .notNull()
     .references(() => profiles.id, { onDelete: 'cascade' }),
   teamId: uuid('team_id').references(() => teams.id, { onDelete: 'set null' }),
+  folderId: uuid('folder_id').references(() => folders.id, { onDelete: 'set null' }),
   title: text('title').notNull().default('Untitled Meeting'),
   status: meetingStatusEnum('status').default('pending').notNull(),
   meetingType: meetingTypeEnum('meeting_type').default('other').notNull(),
@@ -319,6 +338,7 @@ export const userIntegrations = pgTable(
   (t) => [uniqueIndex('user_integrations_user_provider_idx').on(t.userId, t.provider)]
 )
 
+export type Folder = typeof folders.$inferSelect
 export type AuthUser = typeof authUser.$inferSelect
 export type Profile = typeof profiles.$inferSelect
 export type Team = typeof teams.$inferSelect
