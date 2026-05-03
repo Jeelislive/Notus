@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     .orderBy(asc(transcriptSegments.startMs))
 
   const transcriptText = segments.length > 0
-    ? segments.map((s) => `${s.speaker ? `[${s.speaker}] ` : ''}${s.text}`).join('\n')
+    ? segments.map((s) => `${s.speaker ? `[${s.speaker}] ` : ''}${s.content}`).join('\n')
     : ''
 
   const rawNotes = content ? content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim() : ''
