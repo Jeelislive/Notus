@@ -235,7 +235,7 @@ export function TiptapEditor({ content, onChange, placeholder, editable = true, 
         .setTextSelection({ from, to })
         .setHighlight({ color: color === 'red' ? '#fca5a5' : '#93c5fd' })
     }
-    chain.setTextSelection({ from: 1 }).run()
+    chain.setTextSelection(1).run()
     onHighlightsApplied?.()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [highlights])
