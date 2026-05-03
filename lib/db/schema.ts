@@ -103,11 +103,12 @@ export const profiles = pgTable('profiles', {
   consentGiven: boolean('consent_given').default(false).notNull(),
   consentAt: timestamp('consent_at', { withTimezone: true }),
   emailVerified: boolean('email_verified').default(false).notNull(),
-  planType: text('plan_type').default('free').notNull(),
-  preferredLanguage: text('preferred_language').default('en').notNull(), // User's preferred interface language
-  transcriptionLanguage: text('transcription_language').default('auto').notNull(), // User's preferred transcription language
-  stripeCustomerId: text('stripe_customer_id'),
-  stripeSubscriptionId: text('stripe_subscription_id'),
+  planType: text('plan_type').default('free').notNull(), // 'free' | 'pro'
+  planExpiresAt: timestamp('plan_expires_at', { withTimezone: true }),
+  razorpayCustomerId: text('razorpay_customer_id'),
+  razorpaySubscriptionId: text('razorpay_subscription_id'),
+  preferredLanguage: text('preferred_language').default('en').notNull(),
+  transcriptionLanguage: text('transcription_language').default('auto').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true })
     .default(sql`now()`)
     .notNull(),

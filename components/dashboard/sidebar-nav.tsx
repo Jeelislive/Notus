@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import { LayoutDashboard, Settings, LogOut, Users, Puzzle, Menu, X } from 'lucide-react'
+import { LayoutDashboard, Settings, LogOut, Users, Puzzle, Menu, X, CreditCard } from 'lucide-react'
 import { createAvatar } from '@dicebear/core'
 import { avataaars } from '@dicebear/collection'
 import { cn } from '@/lib/utils'
@@ -72,6 +72,7 @@ export function SidebarNav({ user }: SidebarNavProps) {
     { href: '/dashboard',                  label: 'Meetings',     icon: LayoutDashboard },
     { href: '/dashboard/teams',            label: 'Teams',        icon: Users },
     { href: '/dashboard/integrations',     label: 'Integrations', icon: Puzzle },
+    { href: '/dashboard/billing',          label: 'Billing',      icon: CreditCard },
     { href: '/dashboard/settings',         label: 'Settings',     icon: Settings },
   ]
 

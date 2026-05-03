@@ -18,6 +18,7 @@ import { parseAgendaContent, type CurrentUser } from '@/components/dashboard/one
 import type { StructuredSummaryData } from '@/components/dashboard/structured-summary'
 import { updateNoteContent, completeMeeting } from '@/app/actions/meetings'
 import { toast } from '@/hooks/use-toast'
+import { UpgradeModal } from '@/components/dashboard/upgrade-modal'
 import { formatDate, formatDuration } from '@/lib/utils'
 
 type Tab = 'notes' | 'email'
@@ -809,9 +810,25 @@ function RecordingPopup({
   const { status, error, elapsedSeconds, liveSegments, start, stop } = useRecording({ meetingId })
   const [existingSegments, setExistingSegments] = useState<string[]>([])
   const [loadingExisting, setLoadingExisting] = useState(false)
+  const [upgradeOpen, setUpgradeOpen] = useState(false)
+  const [usageData, setUsageData] = useState<{ minutesUsed: number; minutesLimit: number; userEmail: string; userName: string } | null>(null)
   const transcriptEndRef = useRef<HTMLDivElement>(null)
   const didStopRef = useRef(false)
   const hasExisting = existingSegments.length > 0
+
+  async function handleStart() {
+    const res = await fetch('/api/billing/usage')
+    if (res.ok) {
+      const data = await res.json()
+      if (!data.isPro && data.minutesUsed >= data.freeLimit) {
+        setUsageData({ minutesUsed: data.minutesUsed, minutesLimit: data.freeLimit, userEmail: data.userEmail ?? '', userName: data.userName ?? '' })
+        setUpgradeOpen(true)
+        return
+      }
+    }
+    start()
+    toast(hasExisting ? 'Resuming recording…' : 'Recording started', { variant: 'success' })
+  }
 
   useEffect(() => {
     if (open) didStopRef.current = false
@@ -867,6 +884,7 @@ function RecordingPopup({
   }
 
   return (
+    <>
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose() }}>
       <DialogContent className="max-w-[75vw] w-[75vw] flex flex-col gap-0 p-0 overflow-hidden" style={{ height: '75vh', maxHeight: '75vh' }}>
         <div className="flex flex-1 min-h-0 overflow-hidden">
@@ -899,7 +917,7 @@ function RecordingPopup({
                     </p>
                   </div>
                   <button
-                    onClick={() => { start(); toast(hasExisting ? 'Resuming recording…' : 'Recording started', { variant: 'success' }) }}
+                    onClick={handleStart}
                     disabled={loadingExisting}
                     className="flex items-center gap-2.5 px-7 py-3.5 rounded-2xl bg-red-600 hover:bg-red-500 text-white text-[15px] font-semibold shadow-lg shadow-red-500/25 transition-all active:scale-95 disabled:opacity-50"
                   >
@@ -1022,5 +1040,17 @@ function RecordingPopup({
         </div>
       </DialogContent>
     </Dialog>
+
+    {upgradeOpen && usageData && (
+      <UpgradeModal
+        open={upgradeOpen}
+        onClose={() => setUpgradeOpen(false)}
+        minutesUsed={usageData.minutesUsed}
+        minutesLimit={usageData.minutesLimit}
+        userEmail={usageData.userEmail}
+        userName={usageData.userName}
+      />
+    )}
+  </>
   )
 }
