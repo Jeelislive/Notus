@@ -27,7 +27,7 @@ const TEMPLATE_TO_TYPE: Record<string, MeetingType> = {
   'user-interview':     'interview',
 }
 
-export function CreateMeetingButton() {
+export function CreateMeetingButton({ folderId }: { folderId?: string } = {}) {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState<'title' | 'template' | 'attendees'>('title')
   const [title, setTitle] = useState('')
@@ -74,6 +74,7 @@ export function CreateMeetingButton() {
     fd.set('templateContent', template?.content ?? '')
     fd.set('templateId', '')
     fd.set('templateName', template?.name ?? '')
+    if (folderId) fd.set('folderId', folderId)
     if (!skipAttendees) {
       const filled = attendees.map((n) => n.trim()).filter(Boolean)
       fd.set('attendees', filled.join(','))

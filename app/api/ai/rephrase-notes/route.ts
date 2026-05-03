@@ -11,16 +11,15 @@ export async function POST(request: NextRequest) {
   const { meetingId, content, useGroq } = await request.json()
   if (!meetingId) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
 
-  const meeting = await db.query.meetings.findFirst({
-    where: and(eq(meetings.id, meetingId), eq(meetings.userId, session.user.id)),
-  })
+  const [meeting, segments] = await Promise.all([
+    db.query.meetings.findFirst({
+      where: and(eq(meetings.id, meetingId), eq(meetings.userId, session.user.id)),
+    }),
+    db.select().from(transcriptSegments)
+      .where(eq(transcriptSegments.meetingId, meetingId))
+      .orderBy(asc(transcriptSegments.startMs)),
+  ])
   if (!meeting) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-
-  // Fetch transcript for richer context
-  const segments = await db.select()
-    .from(transcriptSegments)
-    .where(eq(transcriptSegments.meetingId, meetingId))
-    .orderBy(asc(transcriptSegments.startMs))
 
   const transcriptText = segments.length > 0
     ? segments.map((s) => `${s.speaker ? `[${s.speaker}] ` : ''}${s.content}`).join('\n')

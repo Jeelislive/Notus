@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSession } from '@/lib/session'
 import { db } from '@/lib/db'
 import { meetings, folders } from '@/lib/db/schema'
-import { eq, and } from 'drizzle-orm'
+import { eq, and, desc } from 'drizzle-orm'
 
 // ANALYZE ONLY — no DB writes. Returns a proposed action for the client to confirm.
 export async function POST(request: NextRequest) {
@@ -14,17 +14,18 @@ export async function POST(request: NextRequest) {
 
   if (!folderId || !message) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
 
-  const folder = await db
-    .select()
-    .from(folders)
-    .where(and(eq(folders.id, folderId), eq(folders.userId, session.user.id)))
-    .limit(1)
+  const [folderRows, allMeetings] = await Promise.all([
+    db.select().from(folders)
+      .where(and(eq(folders.id, folderId), eq(folders.userId, session.user.id)))
+      .limit(1),
+    db.select({ id: meetings.id, title: meetings.title, folderId: meetings.folderId, status: meetings.status, createdAt: meetings.createdAt, durationSeconds: meetings.durationSeconds })
+      .from(meetings)
+      .where(eq(meetings.userId, session.user.id))
+      .orderBy(desc(meetings.createdAt))
+      .limit(50),
+  ])
+  const folder = folderRows
   if (!folder[0]) return NextResponse.json({ error: 'Folder not found' }, { status: 404 })
-
-  const allMeetings = await db
-    .select({ id: meetings.id, title: meetings.title, folderId: meetings.folderId, status: meetings.status, createdAt: meetings.createdAt, durationSeconds: meetings.durationSeconds })
-    .from(meetings)
-    .where(eq(meetings.userId, session.user.id))
 
   const meetingList = allMeetings.length
     ? allMeetings

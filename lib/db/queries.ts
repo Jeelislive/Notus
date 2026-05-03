@@ -1,6 +1,6 @@
 import { db } from './index'
 import { meetings, notes, transcriptSegments, profiles, teams, teamMembers, meetingTranslations, folders } from './schema'
-import { eq, desc, ilike, sql, and, isNull } from 'drizzle-orm'
+import { eq, desc, ilike, sql, and, isNull, inArray } from 'drizzle-orm'
 
 export async function getFoldersByUser(userId: string) {
   return db.select().from(folders).where(eq(folders.userId, userId)).orderBy(desc(folders.createdAt))
@@ -206,4 +206,16 @@ export async function getUserPreferredLanguage(userId: string): Promise<string> 
     .where(eq(profiles.id, userId))
     .limit(1)
   return result[0]?.preferredLanguage ?? 'en'
+}
+
+// Batch fetch translations for multiple meetings in a single query
+export async function getMeetingTranslationsBatch(meetingIds: string[], language: string) {
+  if (meetingIds.length === 0) return {}
+  const rows = await db
+    .select()
+    .from(meetingTranslations)
+    .where(and(inArray(meetingTranslations.meetingId, meetingIds), eq(meetingTranslations.language, language)))
+  const map: Record<string, typeof rows[0]> = {}
+  for (const row of rows) map[row.meetingId] = row
+  return map
 }

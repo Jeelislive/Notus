@@ -34,29 +34,35 @@ export async function POST(request: NextRequest) {
       : 'This folder currently has no meetings.'
     systemPrompt = `${folderPrefix}${meetingInfo} Answer questions helpfully and let the user know when transcript data is not yet available.`
   } else {
-    // Verify ownership of all requested meetings
-    const ownedMeetings = await db
-      .select()
-      .from(meetings)
-      .where(and(inArray(meetings.id, meetingIds), eq(meetings.userId, session.user.id)))
+    // Verify ownership of all requested meetings and fetch segments concurrently
+    const [ownedMeetings, allSegsRaw] = await Promise.all([
+      db
+        .select()
+        .from(meetings)
+        .where(and(inArray(meetings.id, meetingIds), eq(meetings.userId, session.user.id))),
+      db
+        .select()
+        .from(transcriptSegments)
+        .where(inArray(transcriptSegments.meetingId, meetingIds))
+        .orderBy(asc(transcriptSegments.startMs)),
+    ])
 
     if (!ownedMeetings.length) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
     const isMulti = ownedMeetings.length > 1
 
-    const segmentsByMeeting = await Promise.all(
-      ownedMeetings.map((m) =>
-        db
-          .select()
-          .from(transcriptSegments)
-          .where(eq(transcriptSegments.meetingId, m.id))
-          .orderBy(asc(transcriptSegments.startMs))
-      )
-    )
+    const ownedIds = new Set(ownedMeetings.map((m) => m.id))
+    const allSegs = allSegsRaw.filter((s) => ownedIds.has(s.meetingId))
+
+    const segMap: Record<string, typeof allSegs> = {}
+    for (const s of allSegs) {
+      if (!segMap[s.meetingId]) segMap[s.meetingId] = []
+      segMap[s.meetingId].push(s)
+    }
 
     if (isMulti) {
-      const meetingBlocks = ownedMeetings.map((m, i) => {
-        const segs = segmentsByMeeting[i]
+      const meetingBlocks = ownedMeetings.map((m) => {
+        const segs = segMap[m.id] ?? []
         const transcript = segs.map((s) => `${s.speaker ?? 'Speaker'}: ${s.content}`).join('\n')
         const date = m.createdAt ? new Date(m.createdAt).toLocaleDateString() : ''
         return transcript
@@ -66,7 +72,7 @@ export async function POST(request: NextRequest) {
       systemPrompt = `${folderPrefix}You have access to ${ownedMeetings.length} meeting transcripts in this folder. Answer questions by synthesising across all of them. Cite which meeting you're referencing when relevant. Be concise and accurate.\n\n${meetingBlocks}`
     } else {
       const meeting = ownedMeetings[0]
-      const transcript = segmentsByMeeting[0].map((s) => `${s.speaker ?? 'Speaker'}: ${s.content}`).join('\n')
+      const transcript = (segMap[meeting.id] ?? []).map((s) => `${s.speaker ?? 'Speaker'}: ${s.content}`).join('\n')
       systemPrompt = transcript
         ? `${folderPrefix}You have access to this meeting transcript. Answer questions about it concisely and accurately. If asked about something not in the transcript, say so.\n\nMeeting: "${meeting.title}"\n\nTranscript:\n${transcript}`
         : `${folderPrefix}The meeting "${meeting.title}" has no transcript yet. Let the user know and answer general questions helpfully.`

@@ -39,18 +39,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing meetingId or sections' }, { status: 400 })
   }
 
-  // Verify ownership
-  const meeting = await db.query.meetings.findFirst({
-    where: and(eq(meetings.id, meetingId), eq(meetings.userId, session.user.id)),
-  })
+  const [meeting, segments] = await Promise.all([
+    db.query.meetings.findFirst({
+      where: and(eq(meetings.id, meetingId), eq(meetings.userId, session.user.id)),
+    }),
+    db.select().from(transcriptSegments)
+      .where(eq(transcriptSegments.meetingId, meetingId))
+      .orderBy(asc(transcriptSegments.startMs)),
+  ])
   if (!meeting) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-
-  // Fetch transcript
-  const segments = await db
-    .select()
-    .from(transcriptSegments)
-    .where(eq(transcriptSegments.meetingId, meetingId))
-    .orderBy(asc(transcriptSegments.startMs))
 
   if (!segments.length) {
     return NextResponse.json({ error: 'No transcript available for this meeting' }, { status: 422 })

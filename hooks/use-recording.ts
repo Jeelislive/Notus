@@ -453,12 +453,6 @@ export function useRecording({ meetingId }: { meetingId: string }) {
     setStatus('idle')
     setElapsedSeconds(0)
 
-    fetch('/api/ai/enhance', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ meetingId }),
-    }).catch((e) => console.error('[AI enhance]', e))
-
     // Batch re-diarization with multichannel support
     if (chunks.length === 0) {
       console.warn('[BatchDiarize] no audio chunks recorded — skipping')

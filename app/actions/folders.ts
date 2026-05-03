@@ -26,7 +26,6 @@ export async function createFolder(name: string, description: string, icon: stri
 
 export async function deleteFolder(folderId: string) {
   const user = await getUser()
-  // Unassign meetings from folder before deleting
   await db.update(meetings)
     .set({ folderId: null })
     .where(and(eq(meetings.folderId, folderId), eq(meetings.userId, user.id)))
@@ -39,8 +38,6 @@ export async function updateFolder(folderId: string, name: string, description: 
   await db.update(folders)
     .set({ name: name.trim(), description: description.trim() || null, icon, updatedAt: new Date() })
     .where(and(eq(folders.id, folderId), eq(folders.userId, user.id)))
-  revalidatePath('/dashboard')
-  revalidatePath(`/dashboard/folder/${folderId}`)
 }
 
 export async function assignMeetingToFolder(meetingId: string, folderId: string | null) {
@@ -48,5 +45,4 @@ export async function assignMeetingToFolder(meetingId: string, folderId: string 
   await db.update(meetings)
     .set({ folderId, updatedAt: new Date() })
     .where(and(eq(meetings.id, meetingId), eq(meetings.userId, user.id)))
-  revalidatePath('/dashboard')
 }

@@ -166,7 +166,7 @@ export const folders = pgTable('folders', {
   updatedAt: timestamp('updated_at', { withTimezone: true })
     .default(sql`now()`)
     .notNull(),
-})
+}, (t) => [index('folders_user_id_idx').on(t.userId)])
 
 export const meetings = pgTable('meetings', {
   id: uuid('id')
@@ -183,7 +183,7 @@ export const meetings = pgTable('meetings', {
   templateName: text('template_name'),
   visibility: meetingVisibilityEnum('visibility').default('private').notNull(),
   durationSeconds: integer('duration_seconds').default(0),
-  detectedLanguage: text('detected_language').default('auto'), // Auto-detected language of the meeting
+  detectedLanguage: text('detected_language').default('auto'),
   audioStoragePath: text('audio_storage_path'),
   shareToken: text('share_token').unique(),
   templateId: uuid('template_id'),
@@ -197,7 +197,12 @@ export const meetings = pgTable('meetings', {
   updatedAt: timestamp('updated_at', { withTimezone: true })
     .default(sql`now()`)
     .notNull(),
-})
+}, (t) => [
+  index('meetings_user_id_idx').on(t.userId),
+  index('meetings_user_id_created_at_idx').on(t.userId, t.createdAt),
+  index('meetings_folder_id_idx').on(t.folderId),
+  index('meetings_status_idx').on(t.status),
+])
 
 export const transcriptSegments = pgTable(
   'transcript_segments',
@@ -243,7 +248,10 @@ export const notes = pgTable('notes', {
   updatedAt: timestamp('updated_at', { withTimezone: true })
     .default(sql`now()`)
     .notNull(),
-})
+}, (t) => [
+  index('notes_meeting_id_idx').on(t.meetingId),
+  index('notes_user_id_idx').on(t.userId),
+])
 
 export const templates = pgTable('templates', {
   id: uuid('id')

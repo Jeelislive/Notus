@@ -4,6 +4,27 @@ import { db } from '@/lib/db'
 import { transcriptSegments, meetings } from '@/lib/db/schema'
 import { eq, and } from 'drizzle-orm'
 
+export async function GET(request: NextRequest) {
+  const session = await getSession()
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  const meetingId = request.nextUrl.searchParams.get('meetingId')
+  if (!meetingId) return NextResponse.json({ error: 'Missing meetingId' }, { status: 400 })
+
+  const meeting = await db.query.meetings.findFirst({
+    where: and(eq(meetings.id, meetingId), eq(meetings.userId, session.user.id)),
+  })
+  if (!meeting) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+  const segments = await db
+    .select()
+    .from(transcriptSegments)
+    .where(eq(transcriptSegments.meetingId, meetingId))
+    .orderBy(transcriptSegments.startMs)
+
+  return NextResponse.json({ segments })
+}
+
 export async function POST(request: NextRequest) {
   const session = await getSession()
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

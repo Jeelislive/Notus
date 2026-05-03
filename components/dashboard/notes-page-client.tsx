@@ -5,20 +5,18 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import {
   FileText, Sparkles, Copy, Check,
   Send, Loader2, Mail, Calendar, Clock,
-  Mic, Wand2, ChevronRight, Link2,
+  Mic, Wand2, Link2, Square,
 } from 'lucide-react'
 import { useRecording } from '@/hooks/use-recording'
-import { RecordingControls } from '@/components/recording/recording-controls'
-import { TranscriptPanel } from '@/components/dashboard/transcript-panel'
 import type { Meeting, Note } from '@/lib/db/schema'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { ShiningText } from '@/components/ui/shining-text'
 import { TypewriterText } from '@/components/ui/typewriter-text'
 import { TiptapEditor } from '@/components/editor/tiptap-editor'
 import { parseAgendaContent, type CurrentUser } from '@/components/dashboard/one-on-one-agenda'
 import type { StructuredSummaryData } from '@/components/dashboard/structured-summary'
-import { updateNoteContent } from '@/app/actions/meetings'
+import { updateNoteContent, completeMeeting } from '@/app/actions/meetings'
 import { toast } from '@/hooks/use-toast'
 import { formatDate, formatDuration } from '@/lib/utils'
 
@@ -70,8 +68,6 @@ function MeetingTypePill({ type }: { type: string }) {
   )
 }
 
-interface JiraConfig { domain: string; email: string; apiToken: string; projectKey: string }
-
 type NoteTranslation = {
   summary?: string | null
   summaryStructured?: string | null
@@ -84,16 +80,13 @@ interface NotesPageClientProps {
   notesByMeeting: Record<string, Note[]>
   selectedNoteId: string | null
   currentUser: CurrentUser
-  jiraConfig?: JiraConfig | null
   preferredLanguage?: string
   translationsByMeeting?: Record<string, NoteTranslation>
 }
 
-export function NotesPageClient({ meetings, notesByMeeting, selectedNoteId, jiraConfig, preferredLanguage = 'en', translationsByMeeting = {} }: NotesPageClientProps) {
+export function NotesPageClient({ meetings, notesByMeeting, selectedNoteId, preferredLanguage = 'en', translationsByMeeting = {} }: NotesPageClientProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
-  const [showMeetingPicker, setShowMeetingPicker] = useState(false)
   const meetingParam = searchParams.get('meeting')
   const allNotes = Object.values(notesByMeeting).flat()
   const resolvedNoteId = selectedNoteId ?? (meetingParam ? (notesByMeeting[meetingParam]?.[0]?.id ?? null) : null)
@@ -113,11 +106,6 @@ export function NotesPageClient({ meetings, notesByMeeting, selectedNoteId, jira
     router.push(`/dashboard/notes?${params.toString()}`, { scroll: false })
   }
 
-  function toggleExpand(meetingId: string) {
-    setExpanded((prev) => ({ ...prev, [meetingId]: !prev[meetingId] }))
-  }
-
-
   return (
     <div className="flex flex-1 -mx-4 -mt-16 -mb-4 md:-mx-8 md:-mt-8 md:-mb-8 overflow-hidden">
       {activeNote && activeMeeting ? (
@@ -125,16 +113,9 @@ export function NotesPageClient({ meetings, notesByMeeting, selectedNoteId, jira
           meeting={activeMeeting}
           note={activeNote}
           meetingType={detectMeetingType(notesByMeeting[activeMeeting.id] ?? [])}
-          jiraConfig={jiraConfig}
           preferredLanguage={preferredLanguage}
           translation={translationsByMeeting[activeMeeting.id] ?? null}
-          allMeetings={meetings}
-          allNotesByMeeting={notesByMeeting}
-          expanded={expanded}
-          onToggleExpand={toggleExpand}
           onSelectNote={selectNote}
-          showMeetingPicker={showMeetingPicker}
-          setShowMeetingPicker={setShowMeetingPicker}
           key={activeNote.id}
         />
       ) : (
@@ -154,18 +135,13 @@ export function NotesPageClient({ meetings, notesByMeeting, selectedNoteId, jira
 // Note editor
 // ─────────────────────────────────────────────
 function NoteEditor({
-  meeting, note, meetingType, jiraConfig,
-  preferredLanguage = 'en', translation, allMeetings = [],
-  allNotesByMeeting = {}, expanded, onToggleExpand, onSelectNote,
-  showMeetingPicker, setShowMeetingPicker,
+  meeting, note, meetingType,
+  preferredLanguage = 'en', translation, onSelectNote,
 }: {
   meeting: Meeting; note: Note; meetingType: string | null
-  jiraConfig?: JiraConfig | null; preferredLanguage?: string
-  translation?: NoteTranslation | null; allMeetings?: Meeting[]
-  allNotesByMeeting?: Record<string, Note[]>
-  expanded: Record<string, boolean>; onToggleExpand: (id: string) => void
+  preferredLanguage?: string
+  translation?: NoteTranslation | null
   onSelectNote: (id: string) => void
-  showMeetingPicker: boolean; setShowMeetingPicker: (v: boolean) => void
 }) {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('notes')
@@ -190,6 +166,7 @@ function NoteEditor({
   const [chatInput, setChatInput] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
   const [showRecordingPopup, setShowRecordingPopup] = useState(false)
+  const [generatingNotes, setGeneratingNotes] = useState(false)
   const [liveTranslation, setLiveTranslation] = useState<NoteTranslation | null>(translation ?? null)
   const [isTranslating, setIsTranslating] = useState(false)
   const translationTriggeredRef = useRef(false)
@@ -204,7 +181,7 @@ function NoteEditor({
   const [localSummaryStructured, setLocalSummaryStructured] = useState<string | null>(null)
   const [localFollowUpEmail, setLocalFollowUpEmail] = useState<string | null>(null)
 
-  const isProcessing = meeting.status === 'processing' || generating
+  const isProcessing = (meeting.status === 'processing' || generating) && !generatingNotes
   const hasAI = !!(localSummary ?? note.summary ?? localActionItems ?? note.actionItems ?? localFollowUpEmail ?? note.followUpEmail)
 
   useEffect(() => {
@@ -570,7 +547,7 @@ function NoteEditor({
                   </button>
                   {emailContent && (
                     <button
-                      onClick={() => { navigator.clipboard.writeText(emailContent); setCopiedEmail(true); setTimeout(() => setCopiedEmail(false), 2000) }}
+                      onClick={() => { navigator.clipboard.writeText(emailContent); setCopiedEmail(true); setTimeout(() => setCopiedEmail(false), 2000); toast('Email copied', { variant: 'success' }) }}
                       className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] text-muted-foreground hover:text-foreground hover:bg-muted border border-border transition-colors"
                     >
                       {copiedEmail ? <><Check className="size-3" />Copied</> : <><Copy className="size-3" />Copy</>}
@@ -643,7 +620,7 @@ function NoteEditor({
           <p className="text-[13px] font-semibold text-foreground truncate flex-1 mr-3">{meeting.title}</p>
           <div className="flex items-center gap-1 shrink-0">
             <button
-              onClick={() => { navigator.clipboard.writeText(window.location.href); setCopiedLink(true); setTimeout(() => setCopiedLink(false), 2000) }}
+              onClick={() => { navigator.clipboard.writeText(window.location.href); setCopiedLink(true); setTimeout(() => setCopiedLink(false), 2000); toast('Link copied', { variant: 'success' }) }}
               title="Copy link"
               className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
             >
@@ -658,7 +635,8 @@ function NoteEditor({
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ meetingId: meeting.id }),
                   })
-                  if (res.ok) { setSentEmail(true); setTimeout(() => setSentEmail(false), 3000) }
+                  if (res.ok) { setSentEmail(true); setTimeout(() => setSentEmail(false), 3000); toast('Notes emailed to you', { variant: 'success' }) }
+                  else toast('Failed to send email', { variant: 'destructive' })
                 } finally { setSendingEmail(false) }
               }}
               disabled={sendingEmail}
@@ -673,6 +651,7 @@ function NoteEditor({
                 navigator.clipboard.writeText(text)
                 setCopiedText(true)
                 setTimeout(() => setCopiedText(false), 2000)
+                toast('Copied to clipboard', { variant: 'success' })
               }}
               title="Copy notes text"
               className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -742,68 +721,304 @@ function NoteEditor({
         </div>
       </div>
 
+      {/* Full-screen AI analyzing overlay */}
+      {generatingNotes && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="flex flex-col gap-6 w-[340px]">
+            <div>
+              <p className="text-[16px] font-semibold text-foreground">AI is analyzing your meeting</p>
+              <p className="text-[13px] text-muted-foreground mt-1">This usually takes 10–30 seconds</p>
+            </div>
+            <div className="space-y-3">
+              {['Analyzing transcript', 'Generating summary', 'Writing notes'].map((step, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="size-1.5 rounded-full bg-foreground/40 shrink-0" style={{ animation: 'notus-pulse 1.5s ease-in-out infinite', animationDelay: `${i * 0.5}s` }} />
+                  <span className="text-[13px] text-muted-foreground">{step}…</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+      <style>{`
+        @keyframes notus-pulse {
+          0%, 100% { opacity: 0.3; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.4); }
+        }
+      `}</style>
+
       <RecordingPopup
         meetingId={meeting.id}
         meetingTitle={meeting.title}
+        meetingStatus={meeting.status}
         open={showRecordingPopup}
         onClose={() => setShowRecordingPopup(false)}
-        onComplete={() => { setShowRecordingPopup(false); router.refresh() }}
+        onStopped={() => {
+          setShowRecordingPopup(false)
+          setGeneratingNotes(true)
+          setTimeout(async () => {
+            try {
+              // Generate formatted notes HTML + highlights (same as "Generate Notes" btn)
+              const rephraseRes = await fetch('/api/ai/rephrase-notes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ meetingId: meeting.id, content, useGroq: false }),
+              })
+              const rephraseData = await rephraseRes.json()
+              if (rephraseData.html) {
+                setContent(rephraseData.html)
+                setHasRephrased(true)
+                setSaveStatus('saved')
+                // Auto-highlight key sentences
+                const plainText = rephraseData.html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+                fetch('/api/ai/selection', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ selectedText: plainText, prompt: '__highlight__' }),
+                })
+                  .then((r) => r.json())
+                  .then((json) => { if (json.highlights?.length) setPendingHighlights(json.highlights) })
+                  .catch(() => {})
+                toast('Notes ready', { variant: 'success' })
+              }
+            } finally {
+              await completeMeeting(meeting.id)
+              setGeneratingNotes(false)
+              router.refresh()
+            }
+          }, 3000)
+        }}
       />
     </div>
   )
 }
 
 // ── Recording popup ───────────────────────────────────────────────────────
+function formatTime(seconds: number) {
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  return `${m}:${String(s).padStart(2, '0')}`
+}
+
 function RecordingPopup({
-  meetingId, meetingTitle, open, onClose, onComplete,
+  meetingId, meetingTitle, meetingStatus, open, onClose, onStopped,
 }: {
-  meetingId: string; meetingTitle: string
-  open: boolean; onClose: () => void; onComplete: () => void
+  meetingId: string; meetingTitle: string; meetingStatus: string | null
+  open: boolean; onClose: () => void; onStopped: () => void
 }) {
-  const { status, error, elapsedSeconds, audioLevel, liveSegments, start, stop } = useRecording({ meetingId })
-  const prevStatusRef = useRef<string>(status)
+  const { status, error, elapsedSeconds, liveSegments, start, stop } = useRecording({ meetingId })
+  const [existingSegments, setExistingSegments] = useState<string[]>([])
+  const [loadingExisting, setLoadingExisting] = useState(false)
+  const transcriptEndRef = useRef<HTMLDivElement>(null)
+  const didStopRef = useRef(false)
+  const hasExisting = existingSegments.length > 0
 
   useEffect(() => {
-    if (prevStatusRef.current === 'stopping' && status === 'idle') onComplete()
-    prevStatusRef.current = status
-  }, [status, onComplete])
+    if (open) didStopRef.current = false
+  }, [open])
 
+  // Fetch all existing segments at once when popup opens
+  useEffect(() => {
+    if (!open) return
+    setLoadingExisting(true)
+    fetch(`/api/transcript?meetingId=${meetingId}`)
+      .then((r) => r.json())
+      .then((data) => {
+        const segs = (data.segments ?? []).map((s: { content: string }) => s.content)
+        setExistingSegments(segs)
+      })
+      .catch(() => {})
+      .finally(() => setLoadingExisting(false))
+  }, [open, meetingId])
+
+  // Auto-scroll as new text arrives
+  useEffect(() => {
+    transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [liveSegments.length])
+
+  // Build the accumulated final text from live segments for typewriter
+  const finalLiveText = liveSegments
+    .filter((s) => s.isFinal)
+    .map((s) => s.content)
+    .join(' ')
+
+  const interimSeg = liveSegments.find((s) => !s.isFinal)
+
+  const isRecording = status === 'recording'
   const isActive = status === 'recording' || status === 'stopping' || status === 'requesting'
 
+  function triggerStop() {
+    if (didStopRef.current) return
+    didStopRef.current = true
+    stop()
+    onStopped()
+  }
+
+  function handleStopAndClose() {
+    triggerStop()
+  }
+
   function handleClose() {
-    if (isActive) stop() // fire-and-forget — runs in background
-    onClose()
+    if (isActive) {
+      triggerStop()
+    } else {
+      onClose()
+    }
   }
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose() }}>
-      <DialogContent className="max-w-lg flex flex-col gap-0 p-0 overflow-hidden" style={{ maxHeight: '70vh' }}>
-        <DialogHeader className="px-6 pt-5 pb-4 border-b border-border shrink-0">
-          <DialogTitle className="text-[15px]">{meetingTitle}</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-[75vw] w-[75vw] flex flex-col gap-0 p-0 overflow-hidden" style={{ height: '75vh', maxHeight: '75vh' }}>
+        <div className="flex flex-1 min-h-0 overflow-hidden">
 
-        <div className="flex flex-col gap-4 px-6 py-5 flex-1 min-h-0 overflow-hidden">
-          <RecordingControls
-            status={status}
-            error={error}
-            elapsedSeconds={elapsedSeconds}
-            audioLevel={audioLevel}
-            initialStatus="pending"
-            onStart={start}
-            onStop={stop}
-          />
-
-          {(liveSegments.length > 0 || isActive) && (
-            <div className="flex-1 min-h-0 overflow-hidden">
-              <TranscriptPanel
-                transcript={[]}
-                liveSegments={liveSegments}
-                status={isActive ? 'recording' : 'completed'}
-                isRecording={isActive}
-                speakerMappings={{}}
-              />
+          {/* ── Left panel ─────────────────────────────────────────────── */}
+          <div className="flex flex-col w-[320px] shrink-0 border-r border-border bg-muted/10">
+            <div className="px-6 pt-6 pb-5 border-b border-border">
+              <p className="text-[11px] font-semibold text-muted-foreground/50 uppercase tracking-widest mb-1.5">Meeting</p>
+              <p className="text-[18px] font-semibold text-foreground leading-snug">{meetingTitle}</p>
             </div>
-          )}
+
+            <div className="flex-1 flex flex-col items-center justify-center px-6 gap-6">
+              {status === 'idle' && (
+                <>
+                  <div className="relative flex items-center justify-center">
+                    <span className="absolute size-28 rounded-full bg-red-500/8 animate-ping" style={{ animationDuration: '2.4s' }} />
+                    <span className="absolute size-20 rounded-full bg-red-500/12" />
+                    <div className="relative size-16 rounded-full bg-red-500/15 border border-red-500/30 flex items-center justify-center">
+                      <Mic className="size-7 text-red-500" strokeWidth={1.5} />
+                    </div>
+                  </div>
+                  <div className="text-center space-y-1.5">
+                    <p className="text-[17px] font-semibold text-foreground">
+                      {hasExisting ? 'Resume recording' : 'Ready to record'}
+                    </p>
+                    <p className="text-[13px] text-muted-foreground leading-relaxed">
+                      {hasExisting
+                        ? 'New audio will be appended to existing transcript'
+                        : 'Transcript appears live as you speak'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => { start(); toast(hasExisting ? 'Resuming recording…' : 'Recording started', { variant: 'success' }) }}
+                    disabled={loadingExisting}
+                    className="flex items-center gap-2.5 px-7 py-3.5 rounded-2xl bg-red-600 hover:bg-red-500 text-white text-[15px] font-semibold shadow-lg shadow-red-500/25 transition-all active:scale-95 disabled:opacity-50"
+                  >
+                    <span className="size-2.5 rounded-full bg-white animate-rec" />
+                    {hasExisting ? 'Resume recording' : 'Start recording'}
+                  </button>
+                </>
+              )}
+
+              {status === 'requesting' && (
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <Loader2 className="size-8 animate-spin text-muted-foreground" />
+                  <p className="text-[14px] text-muted-foreground">Requesting microphone…</p>
+                </div>
+              )}
+
+              {isRecording && (
+                <>
+                  <div className="relative flex items-center justify-center">
+                    <span className="absolute size-28 rounded-full bg-red-500/10 animate-ping" style={{ animationDuration: '1.8s' }} />
+                    <div className="relative size-16 rounded-full bg-red-500/20 border border-red-500/50 flex items-center justify-center">
+                      <span className="size-4 rounded-full bg-red-500" />
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[38px] font-mono font-bold text-red-500 tabular-nums leading-none">{formatTime(elapsedSeconds)}</p>
+                    <p className="text-[13px] text-muted-foreground mt-2">Recording in progress</p>
+                  </div>
+                  <button
+                    onClick={handleStopAndClose}
+                    className="flex items-center gap-2.5 px-7 py-3.5 rounded-2xl border border-red-500/30 text-red-500 hover:bg-red-500/10 text-[15px] font-semibold transition-all active:scale-95"
+                  >
+                    <Square className="size-4 fill-current" />
+                    Stop recording
+                  </button>
+                </>
+              )}
+
+              {status === 'stopping' && (
+                <div className="flex flex-col items-center gap-4 text-center">
+                  <Loader2 className="size-8 animate-spin text-muted-foreground" />
+                  <p className="text-[14px] text-muted-foreground">Finalizing…</p>
+                </div>
+              )}
+
+              {error && <p className="text-[13px] text-red-500 text-center px-2">{error}</p>}
+            </div>
+
+            <div className="px-6 py-5 border-t border-border">
+              <button
+                onClick={handleClose}
+                className="w-full py-2.5 rounded-xl text-[13px] text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+
+          {/* ── Right panel: transcript ─────────────────────────────────── */}
+          <div className="flex-1 flex flex-col min-w-0 min-h-0">
+            <div className="px-6 pt-5 pb-4 border-b border-border shrink-0 flex items-center gap-2">
+              <p className="text-[12px] font-semibold text-muted-foreground/50 uppercase tracking-widest">Transcript</p>
+              {isRecording && (
+                <span className="flex items-center gap-1.5 ml-2">
+                  <span className="size-1.5 rounded-full bg-red-500 animate-rec" />
+                  <span className="text-[11px] text-red-500 font-medium">Live</span>
+                </span>
+              )}
+            </div>
+
+            <div className="flex-1 min-h-0 overflow-y-auto px-8 py-6">
+              {loadingExisting ? (
+                <div className="flex items-center justify-center h-full gap-3">
+                  <Loader2 className="size-5 animate-spin text-muted-foreground" />
+                  <p className="text-[14px] text-muted-foreground">Loading transcript…</p>
+                </div>
+              ) : !hasExisting && !finalLiveText && !interimSeg ? (
+                <div className="flex flex-col items-center justify-center h-full gap-3 text-center">
+                  <div className="size-12 rounded-2xl bg-muted/50 border border-border flex items-center justify-center">
+                    <Mic className="size-5 text-muted-foreground/30" strokeWidth={1.5} />
+                  </div>
+                  <p className="text-[14px] text-muted-foreground/60">Transcript will appear here as you speak</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {/* Existing DB segments — each as its own paragraph, shown instantly */}
+                  {existingSegments.map((seg, i) => (
+                    <p key={i} className="text-[15px] leading-relaxed text-muted-foreground/70 font-normal">
+                      {seg}
+                    </p>
+                  ))}
+
+                  {/* New live final text — typewriter on a fresh paragraph */}
+                  {finalLiveText && (
+                    <p className="text-[15px] leading-relaxed text-foreground font-normal">
+                      <TypewriterText text={finalLiveText} speed={22} />
+                      {isRecording && !interimSeg && (
+                        <span className="inline-block w-[2px] h-[1em] bg-red-400 rounded-full align-text-bottom animate-pulse ml-0.5" />
+                      )}
+                    </p>
+                  )}
+
+                  {/* Interim segment — dimmed, on its own line */}
+                  {interimSeg && (
+                    <p className="text-[15px] leading-relaxed text-muted-foreground/40 font-normal">
+                      {interimSeg.content}
+                      <span className="inline-block w-[2px] h-[1em] bg-red-400 rounded-full align-text-bottom animate-pulse ml-0.5" />
+                    </p>
+                  )}
+
+                  {/* Cursor when recording but nothing spoken yet */}
+                  {isRecording && !finalLiveText && !interimSeg && (
+                    <span className="inline-block w-[2px] h-[1em] bg-red-400 rounded-full align-text-bottom animate-pulse" />
+                  )}
+                </div>
+              )}
+              <div ref={transcriptEndRef} />
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

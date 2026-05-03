@@ -12,6 +12,8 @@ import {
 import type { Folder, Meeting } from '@/lib/db/schema'
 import { getFolderIcon } from '@/lib/folder-icons'
 import { deleteFolder, updateFolder } from '@/app/actions/folders'
+import { deleteMeeting } from '@/app/actions/meetings'
+import { CreateMeetingButton } from '@/components/dashboard/create-meeting-button'
 import { toast } from '@/hooks/use-toast'
 import { formatDuration } from '@/lib/utils'
 import { TypewriterText } from '@/components/ui/typewriter-text'
@@ -445,6 +447,8 @@ export function FolderViewClient({ folder }: { folder: FolderWithMeetings }) {
               </div>
             </div>
 
+            <div className="flex items-center gap-2">
+            <CreateMeetingButton folderId={folder.id} />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
@@ -461,6 +465,7 @@ export function FolderViewClient({ folder }: { folder: FolderWithMeetings }) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            </div>
           </div>
         </div>
 
@@ -485,33 +490,48 @@ export function FolderViewClient({ folder }: { folder: FolderWithMeetings }) {
                 {meetings.map((m) => {
                   const duration = (m.durationSeconds ?? 0) > 0 ? formatDuration(m.durationSeconds ?? 0) : null
                   return (
-                    <Link
-                      key={m.id}
-                      href={`/dashboard/notes?meeting=${m.id}`}
-                      className="group flex items-center gap-3.5 px-6 md:px-8 py-3 hover:bg-muted/30 transition-colors"
-                    >
-                      <div className="size-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
-                        <FileText className="size-4 text-muted-foreground" strokeWidth={1.75} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className={`size-1.5 rounded-full shrink-0 ${m.status === 'completed' ? 'bg-emerald-400' : m.status === 'recording' ? 'bg-red-400 animate-pulse' : 'bg-zinc-400'}`} />
-                          <p className="text-[14px] font-medium text-foreground truncate">{m.title}</p>
+                    <div key={m.id} className="group flex items-center gap-3.5 px-6 md:px-8 py-3 hover:bg-muted/30 transition-colors">
+                      <Link href={`/dashboard/notes?meeting=${m.id}`} className="flex items-center gap-3.5 flex-1 min-w-0">
+                        <div className="size-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                          <FileText className="size-4 text-muted-foreground" strokeWidth={1.75} />
                         </div>
-                        <div className="flex items-center gap-2 mt-0.5 ml-3.5">
-                          <span className="text-[11.5px] text-muted-foreground/70">{formatTime(new Date(m.createdAt))}</span>
-                          {duration && (
-                            <>
-                              <span className="text-[11px] text-muted-foreground/30">·</span>
-                              <span className="text-[11.5px] text-muted-foreground/70 flex items-center gap-1">
-                                <Clock className="size-2.5" />{duration}
-                              </span>
-                            </>
-                          )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className={`size-1.5 rounded-full shrink-0 ${m.status === 'completed' ? 'bg-emerald-400' : m.status === 'recording' ? 'bg-red-400 animate-pulse' : 'bg-zinc-400'}`} />
+                            <p className="text-[14px] font-medium text-foreground truncate">{m.title}</p>
+                          </div>
+                          <div className="flex items-center gap-2 mt-0.5 ml-3.5">
+                            <span className="text-[11.5px] text-muted-foreground/70">{formatTime(new Date(m.createdAt))}</span>
+                            {duration && (
+                              <>
+                                <span className="text-[11px] text-muted-foreground/30">·</span>
+                                <span className="text-[11.5px] text-muted-foreground/70 flex items-center gap-1">
+                                  <Clock className="size-2.5" />{duration}
+                                </span>
+                              </>
+                            )}
+                          </div>
                         </div>
+                      </Link>
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                              <MoreHorizontal className="size-4" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem destructive onClick={async () => {
+                              setLocalMeetings((prev) => prev.filter((x) => x.id !== m.id))
+                              await deleteMeeting(m.id)
+                              toast('Meeting deleted', { variant: 'success' })
+                            }}>
+                              <Trash2 className="size-3.5" />Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
-                      <Sparkles className="size-3.5 text-muted-foreground/30 opacity-0 group-hover:opacity-100 shrink-0 transition-opacity" />
-                    </Link>
+                    </div>
                   )
                 })}
               </div>

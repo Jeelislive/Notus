@@ -30,21 +30,20 @@ export async function POST(request: NextRequest) {
   const { meetingId } = await request.json()
   if (!meetingId) return NextResponse.json({ error: 'Missing meetingId' }, { status: 400 })
 
-  // Verify ownership
-  const meeting = await db.query.meetings.findFirst({
-    where: and(eq(meetings.id, meetingId), eq(meetings.userId, session.user.id)),
-  })
+  // Verify ownership + fetch transcript + fetch note in parallel
+  const [meeting, segments, existingNote] = await Promise.all([
+    db.query.meetings.findFirst({
+      where: and(eq(meetings.id, meetingId), eq(meetings.userId, session.user.id)),
+    }),
+    db.select().from(transcriptSegments)
+      .where(eq(transcriptSegments.meetingId, meetingId))
+      .orderBy(asc(transcriptSegments.startMs)),
+    db.query.notes.findFirst({ where: eq(notes.meetingId, meetingId) }),
+  ])
+
   if (!meeting) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  // Fetch transcript
-  const segments = await db
-    .select()
-    .from(transcriptSegments)
-    .where(eq(transcriptSegments.meetingId, meetingId))
-    .orderBy(asc(transcriptSegments.startMs))
-
   if (!segments.length) {
-    // No transcript - just mark completed
     await db.update(meetings).set({ status: 'completed', updatedAt: new Date() }).where(eq(meetings.id, meetingId))
     return NextResponse.json({ success: true })
   }
@@ -99,21 +98,20 @@ ${transcript}`
     const actionItemStrings: string[] = structured?.actionItems?.map((a) => a.text) ?? []
     const summaryStructured = structured ? JSON.stringify(structured) : null
 
-    // Update notes with AI content
-    const existingNote = await db.query.notes.findFirst({ where: eq(notes.meetingId, meetingId) })
-    if (existingNote) {
-      await db.update(notes).set({
-        summary: summaryText,
-        summaryStructured,
-        actionItems: JSON.stringify(actionItemStrings),
-        followUpEmail,
-        aiProcessedAt: new Date(),
-        updatedAt: new Date(),
-      }).where(eq(notes.meetingId, meetingId))
-    }
-
-    // Mark meeting completed
-    await db.update(meetings).set({ status: 'completed', updatedAt: new Date() }).where(eq(meetings.id, meetingId))
+    // Update notes + mark meeting completed in parallel
+    await Promise.all([
+      existingNote
+        ? db.update(notes).set({
+            summary: summaryText,
+            summaryStructured,
+            actionItems: JSON.stringify(actionItemStrings),
+            followUpEmail,
+            aiProcessedAt: new Date(),
+            updatedAt: new Date(),
+          }).where(eq(notes.meetingId, meetingId))
+        : Promise.resolve(),
+      db.update(meetings).set({ status: 'completed', updatedAt: new Date() }).where(eq(meetings.id, meetingId)),
+    ])
 
     return NextResponse.json({
       success: true,

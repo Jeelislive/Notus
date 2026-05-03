@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
 import { getSession } from '@/lib/session'
-import { getAllMeetingsByUser, getMeetingTranslation, getUserPreferredLanguage } from '@/lib/db/queries'
+import { getAllMeetingsByUser, getMeetingTranslationsBatch, getUserPreferredLanguage } from '@/lib/db/queries'
 import { db } from '@/lib/db'
 import { notes, profiles, userIntegrations } from '@/lib/db/schema'
 import { inArray, eq, and } from 'drizzle-orm'
@@ -53,20 +53,16 @@ export default async function NotesPage({
     notesByMeeting[note.meetingId].push(note)
   }
 
+  // Single batched query instead of N individual calls
   const translationsByMeeting: Record<string, { summary?: string | null; summaryStructured?: string | null; actionItems?: string | null; followUpEmail?: string | null }> = {}
   if (preferredLanguage !== 'en' && meetingIds.length > 0) {
-    const translationResults = await Promise.all(
-      meetingIds.map((id) => getMeetingTranslation(id, preferredLanguage))
-    )
-    for (let i = 0; i < meetingIds.length; i++) {
-      const t = translationResults[i]
-      if (t) {
-        translationsByMeeting[meetingIds[i]] = {
-          summary: t.summary,
-          summaryStructured: t.summaryStructured,
-          actionItems: t.actionItems,
-          followUpEmail: t.followUpEmail,
-        }
+    const batchedTranslations = await getMeetingTranslationsBatch(meetingIds, preferredLanguage)
+    for (const [id, t] of Object.entries(batchedTranslations)) {
+      translationsByMeeting[id] = {
+        summary: t.summary,
+        summaryStructured: t.summaryStructured,
+        actionItems: t.actionItems,
+        followUpEmail: t.followUpEmail,
       }
     }
   }
@@ -78,7 +74,6 @@ export default async function NotesPage({
         notesByMeeting={notesByMeeting}
         selectedNoteId={selectedNoteId ?? null}
         currentUser={currentUser}
-        jiraConfig={jiraConfig}
         preferredLanguage={preferredLanguage}
         translationsByMeeting={translationsByMeeting}
       />

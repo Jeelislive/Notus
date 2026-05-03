@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import {
   MoreHorizontal, Pencil, Trash2, Mic, FileText,
   Search, Clock, Sparkles, Users, ListChecks,
@@ -19,6 +20,7 @@ import { Input } from '@/components/ui/input'
 import { deleteMeeting, renameMeeting } from '@/app/actions/meetings'
 import { assignMeetingToFolder } from '@/app/actions/folders'
 import { CreateFolderDialog } from '@/components/dashboard/create-folder-dialog'
+import { CreateMeetingButton } from '@/components/dashboard/create-meeting-button'
 import { toast } from '@/hooks/use-toast'
 import { formatDuration } from '@/lib/utils'
 
@@ -93,7 +95,13 @@ function StatusDot({ status }: { status: Meeting['status'] }) {
 }
 
 // ── Meeting row ───────────────────────────────────────────
-function MeetingRow({ meeting, folders, index }: { meeting: Meeting; folders: Folder[]; index: number }) {
+function MeetingRow({ meeting, folders, index, onDelete, onRename, onMoveFolder }: {
+  meeting: Meeting; folders: Folder[]; index: number
+  onDelete: (id: string) => void
+  onRename: (id: string, title: string) => void
+  onMoveFolder: (id: string, folderId: string | null) => void
+}) {
+  const router = useRouter()
   const [renameOpen, setRenameOpen] = useState(false)
   const [renameValue, setRenameValue] = useState(meeting.title)
   const [renaming, setRenaming] = useState(false)
@@ -103,22 +111,28 @@ function MeetingRow({ meeting, folders, index }: { meeting: Meeting; folders: Fo
 
   async function handleRename() {
     setRenaming(true)
+    onRename(meeting.id, renameValue)
+    setRenameOpen(false)
     const result = await renameMeeting(meeting.id, renameValue)
     setRenaming(false)
-    if (result?.error) toast(result.error, { variant: 'destructive' })
-    else { toast('Meeting renamed', { variant: 'success' }); setRenameOpen(false) }
+    if (result?.error) { onRename(meeting.id, meeting.title); toast(result.error, { variant: 'destructive' }) }
+    else { toast('Meeting renamed', { variant: 'success' }); router.refresh() }
   }
 
   async function handleDelete() {
     setDeleteOpen(false)
-    setDeleting(true)
+    onDelete(meeting.id)
     const result = await deleteMeeting(meeting.id)
-    if (result?.success) toast('Meeting deleted', { variant: 'success' })
+    if (!result?.success) { toast('Failed to delete', { variant: 'destructive' }); router.refresh() }
+    else toast('Meeting deleted', { variant: 'success' })
   }
 
   async function handleMoveToFolder(folderId: string | null) {
+    onMoveFolder(meeting.id, folderId)
+    setFolderPickerOpen(false)
     await assignMeetingToFolder(meeting.id, folderId)
     toast(folderId ? 'Added to folder' : 'Removed from folder', { variant: 'success' })
+    router.refresh()
   }
 
   const typeLabel = meeting.templateName || MEETING_TYPE_LABELS[meeting.meetingType ?? 'other']
@@ -275,12 +289,21 @@ function FolderCard({ folder }: { folder: Folder }) {
 }
 
 // ── Main component ────────────────────────────────────────
-export function MeetingTable({ meetings, folders }: { meetings: Meeting[]; folders: Folder[] }) {
+export function MeetingTable({ meetings: initialMeetings, folders }: { meetings: Meeting[]; folders: Folder[] }) {
+  const [meetings, setMeetings] = useState(initialMeetings)
   const [createFolderOpen, setCreateFolderOpen] = useState(false)
 
-  const filtered = meetings
+  function onDelete(id: string) {
+    setMeetings((prev) => prev.filter((m) => m.id !== id))
+  }
+  function onRename(id: string, title: string) {
+    setMeetings((prev) => prev.map((m) => m.id === id ? { ...m, title } : m))
+  }
+  function onMoveFolder(id: string, folderId: string | null) {
+    setMeetings((prev) => prev.map((m) => m.id === id ? { ...m, folderId } : m))
+  }
 
-  const groups = groupMeetingsByDate(filtered)
+  const groups = groupMeetingsByDate(meetings)
 
   return (
     <div>
@@ -290,13 +313,16 @@ export function MeetingTable({ meetings, folders }: { meetings: Meeting[]; folde
           <div>
             <div className="px-6 pt-6 pb-3 flex items-center justify-between">
               <p className="text-[11.5px] font-bold text-foreground/60 uppercase tracking-[0.1em]">Folders</p>
-              <button
-                onClick={() => setCreateFolderOpen(true)}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border text-[12px] font-medium text-foreground/80 hover:text-foreground hover:bg-muted/60 transition-colors"
-              >
-                <FolderPlus className="size-3.5" />
-                New folder
-              </button>
+              <div className="flex items-center gap-2">
+                <CreateMeetingButton />
+                <button
+                  onClick={() => setCreateFolderOpen(true)}
+                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-border text-[12px] font-medium text-foreground/80 hover:text-foreground hover:bg-muted/60 transition-colors"
+                >
+                  <FolderPlus className="size-3.5" />
+                  New folder
+                </button>
+              </div>
             </div>
             <div className="px-6 grid grid-cols-2 gap-2.5 pb-2">
               {folders.map((f) => <FolderCard key={f.id} folder={f} />)}
@@ -313,7 +339,7 @@ export function MeetingTable({ meetings, folders }: { meetings: Meeting[]; folde
             <p className="text-[15px] font-medium text-foreground mb-1">No meetings yet</p>
             <p className="text-[13px] text-muted-foreground max-w-xs">Your meetings will appear here.</p>
           </div>
-        ) : filtered.length === 0 ? (
+        ) : meetings.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <div className="size-12 rounded-xl bg-muted/50 border border-border flex items-center justify-center mb-3">
               <Search className="size-5 text-muted-foreground/30" strokeWidth={1.5} />
@@ -346,7 +372,7 @@ export function MeetingTable({ meetings, folders }: { meetings: Meeting[]; folde
                     <p className="text-[11.5px] font-bold text-foreground/50 uppercase tracking-[0.1em]">{label}</p>
                   </div>
                   {groupMeetings.map((m, i) => (
-                    <MeetingRow key={m.id} meeting={m} folders={folders} index={rowIndex + i} />
+                    <MeetingRow key={m.id} meeting={m} folders={folders} index={rowIndex + i} onDelete={onDelete} onRename={onRename} onMoveFolder={onMoveFolder} />
                   ))}
                 </div>
               )

@@ -19,9 +19,7 @@ export async function POST(request: NextRequest) {
   const note = await getNoteByMeetingId(meetingId)
   const userEmail = session.user.email
 
-  const notesText = note?.content
-    ? note.content.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').trim()
-    : 'No notes recorded.'
+  const notesHtml = note?.content || '<p style="color:#888">No notes recorded.</p>'
 
   const summaryText = note?.summary ?? null
   const actionItemsRaw = note?.actionItems ?? null
@@ -58,7 +56,7 @@ export async function POST(request: NextRequest) {
 
       <div style="margin: 20px 0;">
         <p style="margin: 0 0 10px; font-size: 11px; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: 0.08em;">Notes</p>
-        <div style="font-size: 14px; line-height: 1.8; color: #333; white-space: pre-wrap;">${notesText}</div>
+        <div style="font-size: 14px; line-height: 1.8; color: #333;">${notesHtml}</div>
       </div>
 
       <div style="border-top: 1px solid #eee; padding-top: 16px; margin-top: 32px;">

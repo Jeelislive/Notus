@@ -14,8 +14,10 @@ const connectionString = process.env.DATABASE_URL!
 const client =
   globalThis.__pgClient ??
   postgres(connectionString, {
-    prepare: false, // required for pgBouncer / Supabase transaction pooler
-    max: 3,         // hard cap - leave headroom for Better Auth + app queries
+    prepare: false,  // required for pgBouncer / Supabase transaction pooler
+    max: 10,         // enough for concurrent requests without exhausting Supabase free tier
+    idle_timeout: 20,
+    connect_timeout: 10,
   })
 
 if (process.env.NODE_ENV !== 'production') {
