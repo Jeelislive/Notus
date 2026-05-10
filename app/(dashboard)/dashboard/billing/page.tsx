@@ -10,12 +10,14 @@ export default async function BillingPage() {
   const usage = await getUserUsage(session.user.id)
 
   return (
-    <BillingClient
-      minutesUsed={usage.minutesUsed}
-      minutesLimit={FREE_MINUTES}
-      isPro={usage.isPro}
-      userEmail={session.user.email}
-      userName={session.user.name ?? ''}
-    />
+    <div className="h-full overflow-y-auto min-h-0">
+      <BillingClient
+        minutesUsed={usage.minutesUsed}
+        minutesLimit={FREE_MINUTES}
+        isPro={usage.isPro}
+        userEmail={session.user.email}
+        userName={session.user.name ?? ''}
+      />
+    </div>
   )
 }
